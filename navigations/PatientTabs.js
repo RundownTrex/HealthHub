@@ -1,5 +1,5 @@
 import React from "react";
-import { Image, View, Text, StyleSheet } from "react-native";
+import { Image, View, Text, StyleSheet, StatusBar } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "../screens/Patient/HomeScreen";
@@ -27,7 +27,7 @@ export default function PatientTabs() {
         options={{
           headerTitle: "Home",
           headerTitleAlign: "center",
-          headerStyle: { backgroundColor: colors.lightaccent },
+          headerStyle: { ...styles.headstyle },
           headerTitleStyle: {
             color: colors.whitetext,
             fontWeight: 200,
@@ -45,7 +45,7 @@ export default function PatientTabs() {
                 style={{
                   width: 30,
                   height: 30,
-                  tintColor: focused ? colors.lightaccent : colors.whitetext,
+                  tintColor: focused ? colors.lightaccent : colors.tenpercent,
                 }}
               />
               {focused && (
@@ -53,7 +53,7 @@ export default function PatientTabs() {
                   style={[
                     styles.label,
                     {
-                      color: focused ? colors.lightaccent : colors.darkgraytext,
+                      color: focused ? colors.lightaccent : colors.tenpercent,
                     },
                   ]}
                 >
@@ -81,7 +81,7 @@ export default function PatientTabs() {
                 style={{
                   width: 30,
                   height: 30,
-                  tintColor: focused ? colors.lightaccent : colors.whitetext,
+                  tintColor: focused ? colors.lightaccent : colors.tenpercent,
                 }}
               />
               {focused && (
@@ -89,11 +89,11 @@ export default function PatientTabs() {
                   style={[
                     styles.label,
                     {
-                      color: focused ? colors.lightaccent : colors.darkgraytext,
+                      color: focused ? colors.lightaccent : colors.tenpercent,
                     },
                   ]}
                 >
-                  Appointment
+                  Appointments
                 </Text>
               )}
             </View>
@@ -117,7 +117,7 @@ export default function PatientTabs() {
                 style={{
                   width: 30,
                   height: 30,
-                  tintColor: focused ? colors.lightaccent : colors.whitetext,
+                  tintColor: focused ? colors.lightaccent : colors.tenpercent,
                 }}
               />
               {focused && (
@@ -125,7 +125,7 @@ export default function PatientTabs() {
                   style={[
                     styles.label,
                     {
-                      color: focused ? colors.lightaccent : colors.darkgraytext,
+                      color: focused ? colors.lightaccent : colors.tenpercent,
                     },
                   ]}
                 >
@@ -153,7 +153,7 @@ export default function PatientTabs() {
                 style={{
                   width: 30,
                   height: 30,
-                  tintColor: focused ? colors.lightaccent : colors.whitetext,
+                  tintColor: focused ? colors.lightaccent : colors.tenpercent,
                 }}
               />
               {focused && (
@@ -161,7 +161,7 @@ export default function PatientTabs() {
                   style={[
                     styles.label,
                     {
-                      color: focused ? colors.lightaccent : colors.darkgraytext,
+                      color: focused ? colors.lightaccent : colors.tenpercent,
                     },
                   ]}
                 >
@@ -179,15 +179,20 @@ export default function PatientTabs() {
 const styles = StyleSheet.create({
   bottomtab: {
     height: 60,
-    backgroundColor: colors.blacktext,
+    backgroundColor: colors.darkback,
     paddingTop: 0,
     marginTop: 0,
-    borderTopWidth: 0,
+    borderTopWidth: 1,
+    borderTopColor: colors.somewhatlightback,
   },
   iconContainer: {
     alignItems: "center",
   },
   label: {
     fontSize: 14,
+  },
+
+  headstyle: {
+    backgroundColor: colors.accent,
   },
 });

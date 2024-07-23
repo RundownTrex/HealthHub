@@ -1,20 +1,22 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, StatusBar, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import PatientTabs from "./navigations/PatientTabs";
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <PatientTabs />
-    </NavigationContainer>
+    <View style={styles.container}>
+      <StatusBar />
+      <NavigationContainer >
+        <PatientTabs />
+      </NavigationContainer>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    // marginTop: StatusBar.currentHeight,
     flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
+
   },
 });

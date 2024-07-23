@@ -8,6 +8,8 @@ const colors = {
   accent: "#FF5722",
   complementary: "#008597",
   lightaccent: "#E1882A",
+  tenpercent: "#B0BEC5",
+  somewhatlightback: "#424242",
 };
 
 export default colors;
