@@ -1,7 +1,7 @@
 import React from "react";
 import { Image, View, Text, StyleSheet, StatusBar } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
-import Svg, { Path } from "react-native-svg";
+
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "../screens/Patient/HomeScreen";
 import Appointment from "../screens/Patient/Appointment";
@@ -28,64 +28,26 @@ function LocationIcon(props) {
   );
 }
 
+
+
 export default function PatientTabs() {
   return (
     <Tab.Navigator
       backBehavior="firstRoute"
       initialRouteName="Home"
       screenOptions={{
-        // tabBarActiveTintColor: colors.darkgraytext,
-        // tabBarInactiveTintColor: colors.blacktext,
         tabBarStyle: { ...styles.bottomtab },
         tabBarShowLabel: false,
-
         headerTintColor: colors.lightaccent,
-        // headerTransparent: true,
       }}
     >
       <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{
-          headerTitle: () => (
-            <View style={{}}>
-              <Text style={{ color: colors.whitetext, fontSize: 12 }}>
-                Good morning,
-              </Text>
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: 500,
-                  color: colors.whitetext,
-                }}
-              >
-                John Doe
-              </Text>
-            </View>
-          ),
-
-          headerRight: () => (
-            <View style={styles.locationblock}>
-              <LocationIcon />
-              <Text
-                style={{
-                  color: colors.whitetext,
-                  alignSelf: "flex-start",
-                  fontSize: 16,
-                }}
-              >
-                Mumbai
-              </Text>
-            </View>
-          ),
-          headerTitleAlign: "left",
-          headerStyle: { ...styles.headstyle },
-          headerTitleStyle: {
-            color: colors.whitetext,
-            fontWeight: 200,
-            fontSize: 20,
-            fontFamily: "Roboto",
-          },
+          headerShown: false,
+          // headerTitleAlign: "left",
+          headerStyle: { ...styles.headstyle, opacity: 1 },
           tabBarIcon: ({ focused, color, size }) => (
             <View style={styles.iconContainer}>
               <Image
