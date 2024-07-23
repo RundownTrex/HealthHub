@@ -5,7 +5,7 @@ import PatientTabs from "./navigations/PatientTabs";
 export default function App() {
   return (
     <View style={styles.container}>
-      <StatusBar />
+      {/* <StatusBar /> */}
       <NavigationContainer >
         <PatientTabs />
       </NavigationContainer>
