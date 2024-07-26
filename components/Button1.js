@@ -1,14 +1,17 @@
-import React from "react";
-import { TouchableOpacity, Text, StyleSheet, Dimensions } from "react-native";
+import React, { useState } from "react";
+import { Pressable, Text, StyleSheet, Dimensions } from "react-native";
 import colors from "../utils/colors";
 
 const { width } = Dimensions.get("window");
 
 const Button1 = ({ text, onPress, style, textStyle }) => {
   return (
-    <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
+    <Pressable
+      style={({ pressed }) => [styles.button, style, pressed && {opacity: 0.8}]}
+      onPress={onPress}
+    >
       <Text style={[styles.buttonText, textStyle]}>{text}</Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

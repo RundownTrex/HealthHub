@@ -11,6 +11,8 @@ export default function LandingScreen({ navigation }) {
 
   const logInAsDoctor = () => {
     navigation.navigate("Doctor login");
+    console.log("Navigating to patient login screen");
+
   };
 
   return (
