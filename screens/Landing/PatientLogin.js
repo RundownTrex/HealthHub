@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -17,16 +17,14 @@ import { signInWithEmailAndPassword, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "../../firebaseconfig";
 import Toast from "react-native-toast-message";
 import { signInWithCredential } from "firebase/auth";
-// import { GoogleSignin } from "@react-native-google-signin/google-signin";
-
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
+import firebase from "firebase/app";
 const { width } = Dimensions.get("window");
 
 const provider = new GoogleAuthProvider();
 
-// GoogleSignin.configure({
-//   webClientId:
-//     "241519626607-bl6d45ps1pgj89l3fk6e5j45ft67n16e.apps.googleusercontent.com",
-// });
+WebBrowser.maybeCompleteAuthSession();
 
 export default function PatientLogin() {
   const [email, setEmail] = useState("");
@@ -63,29 +61,47 @@ export default function PatientLogin() {
   };
 
   //Google signin
-  const googleSignin = async () => {
-    // try {
-    //   await GoogleSignin.hasPlayServices();
-    //   const userInfo = await GoogleSignin.signIn();
-    //   const googleCredential = auth.GoogleAuthProvider.credential(
-    //     userInfo.idToken
-    //   );
-    //   const user = await auth().signInWithCredential(googleCredential);
+  // const googleSignin = async () => {
+  //   // try {
+  //   //   await GoogleSignin.hasPlayServices();
+  //   //   const userInfo = await GoogleSignin.signIn();
+  //   //   const googleCredential = auth.GoogleAuthProvider.credential(
+  //   //     userInfo.idToken
+  //   //   );
+  //   //   const user = await auth().signInWithCredential(googleCredential);
+  //   //   Toast.show({
+  //   //     type: "success",
+  //   //     text1: "Signed in with google",
+  //   //     text2: "Redirecting to home screen",
+  //   //   });
+  //   // } catch (error) {
+  //   //   console.log(error);
+  //   //   Toast.show({
+  //   //     type: "error",
+  //   //     text1: error,
+  //   //     text2: "Please try again",
+  //   //   });
+  //   // }
+  // };
 
-    //   Toast.show({
-    //     type: "success",
-    //     text1: "Signed in with google",
-    //     text2: "Redirecting to home screen",
-    //   });
-    // } catch (error) {
-    //   console.log(error);
-    //   Toast.show({
-    //     type: "error",
-    //     text1: error,
-    //     text2: "Please try again",
-    //   });
-    // }
-  };
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId:
+      "241519626607-bl6d45ps1pgj89l3fk6e5j45ft67n16e.apps.googleusercontent.com",
+      redirectUri: 'https://healthhub-2cbba.firebaseapp.com/__/auth/handler'
+  });
+
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { id_token } = response.params;
+      const credential = firebase.auth.GoogleAuthProvider.credential(id_token);
+      firebase
+        .auth()
+        .signInWithCredential(credential)
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+  }, [response]);
 
   return (
     <View style={styles.container}>
@@ -139,7 +155,9 @@ export default function PatientLogin() {
           },
           pressed && { opacity: 0.8 },
         ]}
-        onPress={googleSignin}
+        onPress={() => {
+          promptAsync();
+        }}
       >
         <View
           style={{
