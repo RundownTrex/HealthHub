@@ -13,18 +13,20 @@ import TextInput1 from "../../components/TextInput1";
 import Button1 from "../../components/Button1";
 import ContinueGoogle from "../../assets/ContinueGoogle";
 import { useNavigation } from "@react-navigation/native";
-import { signInWithEmailAndPassword, GoogleAuthProvider } from "firebase/auth";
-import { auth } from "../../firebaseconfig";
+
 import Toast from "react-native-toast-message";
-import { signInWithCredential } from "firebase/auth";
-import * as Google from "expo-auth-session/providers/google";
-import * as WebBrowser from "expo-web-browser";
+
 import firebase from "firebase/app";
-const { width } = Dimensions.get("window");
+import firestore from "@react-native-firebase/firestore";
 
-const provider = new GoogleAuthProvider();
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import auth from "@react-native-firebase/auth";
+// const { width } = Dimensions.get("window");
 
-WebBrowser.maybeCompleteAuthSession();
+GoogleSignin.configure({
+  webClientId:
+    "241519626607-bl6d45ps1pgj89l3fk6e5j45ft67n16e.apps.googleusercontent.com",
+});
 
 export default function PatientLogin() {
   const [email, setEmail] = useState("");
@@ -37,71 +39,109 @@ export default function PatientLogin() {
   };
 
   //Email signin
-  const login = () => {
+  const login = async () => {
     //Firebase stuff
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCreds) => {
-        Toast.show({
-          type: "success",
-          text1: "Logged in successfully!",
-          text2: "Redirecting to home screen...",
-        });
-        console.log("Right user!");
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.messsage;
-        console.log("Something went wrong!");
-        Toast.show({
-          type: "error",
-          text1: "Error logging in",
-          text2: "Please recheck your credentials",
-        });
+    if (!email || !password) {
+      Toast.show({
+        type: "error",
+        text1: "Enter credentials",
+        text2: "Email and password should not be empty!",
       });
+      return;
+    }
+    try {
+      const userCredential = await auth().signInWithEmailAndPassword(
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      const userDoc = await firestore().collection("users").doc(user.uid).get();
+      console.log(userDoc);
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        console.log("Here");
+
+        if (userData.accountType === "patient") {
+          Toast.show({
+            type: "success",
+            text1: "Logged in successfully!",
+            text2: "Redirecting to home screen...",
+          });
+          console.log("Right user!");
+          setEmail(() => "");
+          setPassword(() => "");
+        } else {
+          await auth().signOut();
+          Toast.show({
+            type: "info",
+            text1: "Not a patient account",
+            text2: "Kindly login with a patient account",
+          });
+        }
+      }
+    } catch (error) {
+      const errorCode = error.code;
+      const errorMessage = error.messsage;
+      console.log("Something went wrong!");
+      Toast.show({
+        type: "error",
+        text1: "Error logging in",
+        text2: "Please recheck your credentials",
+      });
+      setEmail(() => "");
+      setPassword(() => "");
+    }
   };
 
   //Google signin
-  // const googleSignin = async () => {
-  //   // try {
-  //   //   await GoogleSignin.hasPlayServices();
-  //   //   const userInfo = await GoogleSignin.signIn();
-  //   //   const googleCredential = auth.GoogleAuthProvider.credential(
-  //   //     userInfo.idToken
-  //   //   );
-  //   //   const user = await auth().signInWithCredential(googleCredential);
-  //   //   Toast.show({
-  //   //     type: "success",
-  //   //     text1: "Signed in with google",
-  //   //     text2: "Redirecting to home screen",
-  //   //   });
-  //   // } catch (error) {
-  //   //   console.log(error);
-  //   //   Toast.show({
-  //   //     type: "error",
-  //   //     text1: error,
-  //   //     text2: "Please try again",
-  //   //   });
-  //   // }
-  // };
+  const googleSignin = async () => {
+    try {
+      await GoogleSignin.signOut();
 
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId:
-      "241519626607-bl6d45ps1pgj89l3fk6e5j45ft67n16e.apps.googleusercontent.com",
-      redirectUri: 'https://healthhub-2cbba.firebaseapp.com/__/auth/handler'
-  });
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
 
-  useEffect(() => {
-    if (response?.type === "success") {
-      const { id_token } = response.params;
-      const credential = firebase.auth.GoogleAuthProvider.credential(id_token);
-      firebase
-        .auth()
-        .signInWithCredential(credential)
-        .catch((error) => {
-          console.log(error);
-        });
+      const { idToken } = await GoogleSignin.signIn({
+        prompt: "select_account",
+      });
+
+      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+      const userCredential = await auth().signInWithCredential(
+        googleCredential
+      );
+      const user = userCredential.user;
+
+      const userDoc = await firestore().collection("users").doc(user.uid).get();
+
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        if (userData.accountType === "patient") {
+          Toast.show({
+            type: "success",
+            text1: "Success",
+            text2: "Signed in successfully!",
+          });
+        } else {
+          await auth().signOut();
+          Toast.show({
+            type: "info",
+            text1: "Wrong account",
+            text2: "Doctor account detected, use patient account instead",
+          });
+        }
+      }
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: error,
+        text2: "Please try again",
+      });
+      console.log(error);
     }
-  }, [response]);
+  };
 
   return (
     <View style={styles.container}>
@@ -111,6 +151,8 @@ export default function PatientLogin() {
         placeholder="Email address"
         value={email}
         onChangeText={(text) => setEmail(text)}
+        autoCapitalize="none"
+        style={{ marginBottom: 10 }}
       />
       <TextInput1
         placeholder="Password"
@@ -155,9 +197,7 @@ export default function PatientLogin() {
           },
           pressed && { opacity: 0.8 },
         ]}
-        onPress={() => {
-          promptAsync();
-        }}
+        onPress={googleSignin}
       >
         <View
           style={{
@@ -185,6 +225,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.darkback,
     padding: 16,
+    paddingTop: 0,
   },
 
   textStyle: {
@@ -192,7 +233,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     alignSelf: "center",
     fontWeight: "bold",
-    marginBottom: 16,
+    marginBottom: 20,
   },
 
   registerText: {
