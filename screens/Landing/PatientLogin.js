@@ -16,7 +16,6 @@ import { useNavigation } from "@react-navigation/native";
 
 import Toast from "react-native-toast-message";
 
-import firebase from "firebase/app";
 import firestore from "@react-native-firebase/firestore";
 
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
@@ -71,7 +70,7 @@ export default function PatientLogin() {
           console.log("Right user!");
           setEmail(() => "");
           setPassword(() => "");
-        } else {
+        } else if (userData.accountType === "doctor") {
           await auth().signOut();
           Toast.show({
             type: "info",
@@ -79,6 +78,13 @@ export default function PatientLogin() {
             text2: "Kindly login with a patient account",
           });
         }
+      } else {
+        await auth().signOut();
+        Toast.show({
+          type: "error",
+          text1: "Account not found",
+          text2: "Try registering for a new account",
+        });
       }
     } catch (error) {
       const errorCode = error.code;

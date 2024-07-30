@@ -51,7 +51,15 @@ export default function LandingStack() {
             },
           }}
         />
-        <Stack.Screen name="Doctor login" component={DoctorLogin} />
+        <Stack.Screen
+          name="Doctor login"
+          component={DoctorLogin}
+          options={{
+            headerTitleStyle: {
+              display: "none",
+            },
+          }}
+        />
         <Stack.Screen
           name="Patient signup"
           component={PatientSignup}
@@ -61,7 +69,15 @@ export default function LandingStack() {
             },
           }}
         />
-        <Stack.Screen name="Doctor signup" component={DoctorSignup} />
+        <Stack.Screen
+          name="Doctor signup"
+          component={DoctorSignup}
+          options={{
+            headerTitleStyle: {
+              display: "none",
+            },
+          }}
+        />
       </Stack.Navigator>
     </>
   );
