@@ -1,5 +1,12 @@
 import React from "react";
-import { Image, View, Text, StyleSheet, StatusBar } from "react-native";
+import {
+  Image,
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  Dimensions,
+} from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -8,6 +15,7 @@ import Appointment from "../screens/Patient/Appointment";
 import Messages from "../screens/Patient/Messages";
 import Profile from "../screens/Patient/Profile";
 import colors from "../utils/colors";
+
 const Tab = createBottomTabNavigator();
 
 function LocationIcon(props) {
@@ -28,7 +36,7 @@ function LocationIcon(props) {
   );
 }
 
-
+const { width } = Dimensions.get("screen");
 
 export default function PatientTabs() {
   return (
@@ -154,8 +162,7 @@ export default function PatientTabs() {
         name="Profile"
         component={Profile}
         options={{
-          headerTitleAlign: "center",
-
+          headerShown: false,
           tabBarIcon: ({ focused, color, size }) => (
             <View style={styles.iconContainer}>
               <Image
@@ -203,7 +210,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   label: {
-    fontSize: 14,
+    fontSize: width / 35,
   },
 
   headstyle: {

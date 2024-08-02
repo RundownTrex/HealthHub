@@ -98,6 +98,7 @@ export default function DoctorTabs() {
         component={DoctorProfile}
         options={{
           headerTitleAlign: "center",
+          headerShown: false,
 
           tabBarIcon: ({ focused, color, size }) => (
             <View style={styles.iconContainer}>

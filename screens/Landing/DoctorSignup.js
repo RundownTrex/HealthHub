@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -13,11 +13,11 @@ import TextInput1 from "../../components/TextInput1";
 import Button1 from "../../components/Button1";
 import Toast from "react-native-toast-message";
 import SignupGoogle from "../../assets/SignupGoogle";
-
+import RoleContext from "../../context/RoleContext";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 GoogleSignin.configure({
   webClientId:
     "241519626607-bl6d45ps1pgj89l3fk6e5j45ft67n16e.apps.googleusercontent.com",
@@ -29,6 +29,7 @@ export default function DoctorSignup() {
   const [cpassword, setCpassword] = useState("");
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
+  const { userRole, setUserRole } = useContext(RoleContext);
 
   const registerwemail = async () => {
     if (!email || !password || !cpassword || !firstname || !lastname) {
@@ -92,7 +93,9 @@ export default function DoctorSignup() {
 
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 
-      const userCredential = await auth().signInWithCredential(googleCredential);
+      const userCredential = await auth().signInWithCredential(
+        googleCredential
+      );
 
       const user = userCredential.user;
 
@@ -112,6 +115,9 @@ export default function DoctorSignup() {
           lastname: user.displayName.split(" ")[1],
           accountType: "doctor",
         });
+
+        setUserRole("doctor");
+        await AsyncStorage.setItem("userRole", "doctor");
 
         Toast.show({
           type: "success",

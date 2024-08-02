@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   View,
   Text,
@@ -13,10 +13,10 @@ import TextInput1 from "../../components/TextInput1";
 import Button1 from "../../components/Button1";
 import ContinueGoogle from "../../assets/ContinueGoogle";
 import { useNavigation } from "@react-navigation/native";
-
+import RoleContext from "../../context/RoleContext";
 import Toast from "react-native-toast-message";
-
 import firestore from "@react-native-firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import auth from "@react-native-firebase/auth";
@@ -32,6 +32,7 @@ export default function PatientLogin() {
   const [password, setPassword] = useState("");
 
   const navigation = useNavigation();
+  const { userRole, setUserRole } = useContext(RoleContext);
 
   const registerPatient = () => {
     navigation.navigate("Patient signup");
@@ -59,19 +60,20 @@ export default function PatientLogin() {
       console.log(userDoc);
       if (userDoc.exists) {
         const userData = userDoc.data();
-        console.log("Here");
-
         if (userData.accountType === "patient") {
+          setUserRole("patient");
+          await AsyncStorage.setItem("userRole", userData.accountType);
           Toast.show({
             type: "success",
             text1: "Logged in successfully!",
             text2: "Redirecting to home screen...",
           });
-          console.log("Right user!");
           setEmail(() => "");
           setPassword(() => "");
         } else if (userData.accountType === "doctor") {
           await auth().signOut();
+          setUserRole(null);
+          await AsyncStorage.removeItem("userRole");
           Toast.show({
             type: "info",
             text1: "Not a patient account",
@@ -80,6 +82,8 @@ export default function PatientLogin() {
         }
       } else {
         await auth().signOut();
+        setUserRole(null);
+        await AsyncStorage.removeItem("userRole");
         Toast.show({
           type: "error",
           text1: "Account not found",
@@ -103,7 +107,9 @@ export default function PatientLogin() {
   //Google signin
   const googleSignin = async () => {
     try {
+      console.log("Before signing out in googleSignIN: ", userRole);
       await GoogleSignin.signOut();
+      console.log("After so in googleSignIn: ", userRole);
 
       await GoogleSignin.hasPlayServices({
         showPlayServicesUpdateDialog: true,
@@ -125,19 +131,35 @@ export default function PatientLogin() {
       if (userDoc.exists) {
         const userData = userDoc.data();
         if (userData.accountType === "patient") {
+          setUserRole("patient");
+          await AsyncStorage.setItem("userRole", userData.accountType);
+          console.log("After signing in : ", userRole);
           Toast.show({
             type: "success",
             text1: "Success",
             text2: "Signed in successfully!",
           });
         } else {
+          console.log("Wrong account: ", userRole);
           await auth().signOut();
+          await AsyncStorage.removeItem("userRole");
+          setUserRole(null);
+
           Toast.show({
             type: "info",
             text1: "Wrong account",
             text2: "Doctor account detected, use patient account instead",
           });
         }
+      } else {
+        await auth().signOut();
+        await AsyncStorage.removeItem("userRole");
+        setUserRole(null);
+        Toast.show({
+          type: "error",
+          text1: "No account found",
+          text2: "No user data available in Firestore",
+        });
       }
     } catch (error) {
       Toast.show({

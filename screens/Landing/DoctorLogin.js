@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { View, Text, StyleSheet, StatusBar, Pressable } from "react-native";
 import colors from "../../utils/colors";
 import TextInput1 from "../../components/TextInput1";
 import Button1 from "../../components/Button1";
 import ContinueGoogle from "../../assets/ContinueGoogle";
 import { useNavigation } from "@react-navigation/native";
-
+import RoleContext from "../../context/RoleContext";
 import Toast from "react-native-toast-message";
 
 import firestore from "@react-native-firebase/firestore";
@@ -22,6 +22,7 @@ GoogleSignin.configure({
 export default function DoctorLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { userRole, setUserRole } = useContext(RoleContext);
 
   const navigation = useNavigation();
 
@@ -51,34 +52,41 @@ export default function DoctorLogin() {
       console.log(userDoc);
       if (userDoc.exists) {
         const userData = userDoc.data();
-        console.log("Here");
 
         if (userData.accountType === "doctor") {
+          setUserRole("doctor");
           Toast.show({
             type: "success",
             text1: "Logged in successfully!",
             text2: "Redirecting to home screen...",
           });
-          console.log("Right user!");
           setEmail(() => "");
           setPassword(() => "");
         } else {
           await auth().signOut();
+          setUserRole(null);
           Toast.show({
             type: "info",
             text1: "Patient account detected",
             text2: "Kindly login with a doctor account",
           });
         }
+      } else {
+        await auth().signOut();
+        setUserRole(null);
+        Toast.show({
+          type: "error",
+          text1: "Account not found",
+          text2: "Try registering for a new account",
+        });
       }
     } catch (error) {
       const errorCode = error.code;
       const errorMessage = error.messsage;
-      console.log("Something went wrong!");
       Toast.show({
         type: "error",
         text1: "Error logging in",
-        text2: "Please recheck your credentials",
+        text2: errorMessage,
       });
       setEmail(() => "");
       setPassword(() => "");
@@ -110,6 +118,7 @@ export default function DoctorLogin() {
       if (userDoc.exists) {
         const userData = userDoc.data();
         if (userData.accountType === "doctor") {
+          setUserRole("doctor");
           Toast.show({
             type: "success",
             text1: "Success",
@@ -117,6 +126,7 @@ export default function DoctorLogin() {
           });
         } else if (userData.accountType === "patient") {
           await auth().signOut();
+          setUserRole(null);
           Toast.show({
             type: "info",
             text1: "Patient account detected",
@@ -125,6 +135,7 @@ export default function DoctorLogin() {
         }
       } else {
         await auth().signOut();
+        setUserRole(null);
         Toast.show({
           type: "error",
           text1: "Account not found",
