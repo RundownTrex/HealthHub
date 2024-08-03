@@ -15,7 +15,7 @@ export default function Profile() {
       .signOut()
       .then(() => {
         setUserRole(null);
-        AsyncStorage.removeItem("userRole");
+        AsyncStorage.removeItem("userRole"); 
         Toast.show({
           type: "info",
           text1: "Signing you out",
