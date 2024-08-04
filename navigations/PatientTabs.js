@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   label: {
-    fontSize: width / 35,
+    fontSize: width / 26,
   },
 
   headstyle: {

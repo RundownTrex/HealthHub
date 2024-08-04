@@ -84,6 +84,22 @@ export default function HomeScreen() {
     // },
   ];
 
+  const healthTips = [
+    {
+      image: require("../../assets/tip1.png"),
+      title: "Yoga for beginnners",
+    },
+    {
+      image: require("../../assets/tip1.png"),
+      title: "Healthy recipies for busy people",
+    },
+    {
+      image: require("../../assets/tip1.png"),
+      title:
+        "TESTESTETSTttttttttttttttttttttttttttttttttttsssssssssssssssssssssssssssssssssssssssssssss",
+    },
+  ];
+
   function LocationIcon(props) {
     return (
       <Svg
@@ -145,7 +161,7 @@ export default function HomeScreen() {
             >
               Virtual consultation
             </Text>
-            <RightArrow />
+            <RightArrow style={{ marginTop: 3 }} />
           </View>
           <ScrollView
             horizontal={true}
@@ -201,7 +217,10 @@ export default function HomeScreen() {
 
         <View style={{ marginTop: 10 }}>
           <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
           >
             <Text
               style={{
@@ -212,7 +231,7 @@ export default function HomeScreen() {
             >
               Upcoming appointments
             </Text>
-            <RightArrow />
+            <RightArrow style={{ marginTop: 3 }} />
           </View>
           <ScrollView
             horizontal={false}
@@ -251,9 +270,13 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
 
-        <View style={{ marginTop: 10 }}>
+        <View style={{ marginTop: 10, marginBottom: 10 }}>
           <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 5,
+            }}
           >
             <Text
               style={{
@@ -264,12 +287,34 @@ export default function HomeScreen() {
             >
               Health tips
             </Text>
-            <RightArrow />
+            <RightArrow style={{ marginTop: 3 }} />
           </View>
+          <ScrollView
+            horizontal={true}
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollViewContent}
+          >
+            {healthTips.map((tip, index) => (
+              <Pressable
+                onPress={() => console.log("Health Tip Clicked!")}
+                key={index}
+                style={({ pressed }) => [
+                  styles.tipCard,
+                  pressed && { opacity: 0.8 },
+                ]}
+              >
+                <Image source={tip.image} style={styles.tipimage} />
+                <Text
+                  style={styles.tiptitle}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {tip.title}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
         </View>
-
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
       </ScrollView>
       <Animated.View
         style={{
@@ -485,5 +530,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.darkgraytext,
     textAlign: "center",
+  },
+  tipCard: {
+    backgroundColor: colors.whitetext,
+    borderRadius: 10,
+    marginRight: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+    alignItems: "center",
+    width: 230,
+    height: "auto",
+  },
+  tipimage: {
+    width: 230,
+    height: 130,
+    borderRadius: 10,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  tiptitle: {
+    color: colors.blacktext,
+    fontWeight: "bold",
+    textAlign: "left",
+    alignSelf: "flex-start",
+    padding: 10,
+    fontSize: 18,
   },
 });
