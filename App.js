@@ -5,15 +5,20 @@ import DoctorTabs from "./navigations/DoctorTabs";
 import LandingStack from "./navigations/LandingStack";
 import colors from "./utils/colors";
 import Toast from "react-native-toast-message";
-
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useContext } from "react";
 import RoleContext, { UserProvider } from "./context/RoleContext";
 
 export default function App() {
   return (
-    <UserProvider>
-      <Main />
-    </UserProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
+        <UserProvider>
+          <Main />
+        </UserProvider>
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
   );
 }
 

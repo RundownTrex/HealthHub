@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -13,12 +13,22 @@ import {
 import colors from "../../utils/colors";
 import RightArrow from "../../assets/icons/RightArrow";
 import Svg, { Path } from "react-native-svg";
+import BottomSheet, {
+  BottomSheetView,
+  BottomSheetBackdrop,
+} from "@gorhom/bottom-sheet";
+import Button1 from "../../components/Button1";
+import { SelectList } from "react-native-dropdown-select-list";
 
 const H_MAX_HEIGHT = 80;
 const H_MIN_HEIGHT = 0;
 const H_SCROLL_DISTANCE = H_MAX_HEIGHT - H_MIN_HEIGHT;
 
 export default function HomeScreen() {
+  const snapPoints = useMemo(() => ["25%", "50%", "75%", "86%"], []);
+  const sheetref = useRef();
+  const [location, setLocation] = useState("");
+
   const scrollOffsetY = useRef(new Animated.Value(0)).current;
   const headerScrollHeight = scrollOffsetY.interpolate({
     inputRange: [0, H_SCROLL_DISTANCE],
@@ -100,6 +110,13 @@ export default function HomeScreen() {
     },
   ];
 
+  const data = [
+    { key: "1", value: "Mumbai" },
+    { key: "2", value: "Pune" },
+    { key: "3", value: "Delhi" },
+    { key: "4", value: "Bangalore" },
+  ];
+
   function LocationIcon(props) {
     return (
       <Svg
@@ -125,219 +142,295 @@ export default function HomeScreen() {
           <Text style={styles.greetingText}>Good morning,</Text>
           <Text style={styles.nameText}>John Doe</Text>
         </View>
-        <View style={styles.locationBlock}>
+
+        <Pressable
+          onPress={openLocationSheet}
+          style={({ pressed }) => [
+            styles.locationBlock,
+            pressed && { opacity: 0.8 },
+          ]}
+        >
           <LocationIcon />
-          <Text style={styles.locationText}>Mumbai</Text>
-        </View>
+          <Text style={styles.locationText}>{location === "" ? "Select city" : location}</Text>
+        </Pressable>
       </View>
     );
   };
 
-  return (
-    <View style={styles.container}>
-      <StatusBar backgroundColor={colors.lightaccent} />
-      <ScrollView
-        contentContainerStyle={[styles.scrollable, { paddingTop: 80 }]}
-        horizontal={false}
-        showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={true}
-        // pagingEnabled={true}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollOffsetY } } }],
-          { useNativeDriver: false }
-        )}
-        scrollEventThrottle={16}
-      >
-        <View>
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
-          >
-            <Text
-              style={{
-                color: colors.whitetext,
-                fontSize: 20,
-                fontWeight: "bold",
-              }}
-            >
-              Virtual consultation
-            </Text>
-            <RightArrow style={{ marginTop: 3 }} />
-          </View>
-          <ScrollView
-            horizontal={true}
-            showsHorizontalScrollIndicator={false}
-            style={styles.virtualconsult}
-          >
-            {options.map((option, index) => (
-              <View key={index} style={styles.card}>
-                <Image source={option.image} style={styles.cardimage} />
-                <Text style={styles.cardtitle}>{option.title}</Text>
-                <Text style={styles.pricerange}>{option.pricerange}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
+  const openLocationSheet = () => {
+    sheetref.current?.snapToIndex(1);
+  };
 
-        <Pressable
-          style={({ pressed }) => [
-            styles.cliniccard,
-            pressed && { opacity: 0.8 },
-          ]}
+  const submitLocation = () => {
+    sheetref.current?.close();
+  };
+
+  const renderBackdrop = useCallback(
+    (props) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+      />
+    ),
+    []
+  );
+
+  return (
+    <>
+      <View style={styles.container}>
+        <StatusBar backgroundColor={colors.lightaccent} />
+
+        <ScrollView
+          contentContainerStyle={[styles.scrollable, { paddingTop: 80 }]}
+          horizontal={false}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
+          // pagingEnabled={true}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollOffsetY } } }],
+            { useNativeDriver: false }
+          )}
+          scrollEventThrottle={16}
         >
           <View>
-            <Text
-              style={{
-                color: colors.blacktext,
-                fontSize: 20,
-                fontWeight: "bold",
-              }}
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
             >
-              Clinic visit
-            </Text>
-            <Text
-              style={{
-                color: colors.blacktext,
-                fontSize: 14,
-                marginTop: 5,
-                // paddingRight: 110,
-                width: 220,
-              }}
-            >
-              Make an appointment at the nearest clinic and visit accordingly.
-              Get your diagnosis and other results later on your phone.
-            </Text>
-          </View>
-          <View>
-            <Image
-              source={require("../../assets/clinic.png")}
-              style={{ height: 75, width: 75, alignSelf: "center" }}
-            />
-          </View>
-        </Pressable>
-
-        <View style={{ marginTop: 10 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text
-              style={{
-                color: colors.whitetext,
-                fontSize: 20,
-                fontWeight: "bold",
-              }}
-            >
-              Upcoming appointments
-            </Text>
-            <RightArrow style={{ marginTop: 3 }} />
-          </View>
-          <ScrollView
-            horizontal={false}
-            style={{
-              flexDirection: "column",
-              marginTop: 5,
-              flexGrow: 1,
-            }}
-            contentContainerStyle={{ flexGrow: 1 }}
-          >
-            {appointments.map((appointment, index) => (
-              <Pressable
-                onPress={() => console.log("Hello World!")}
-                key={index}
-                style={styles.upcomingcard}
+              <Text
+                style={{
+                  color: colors.whitetext,
+                  fontSize: 20,
+                  fontWeight: "bold",
+                }}
               >
-                <Image source={appointment.image} style={styles.image} />
-                <View style={styles.infoContainer}>
-                  <View style={styles.infoLeft}>
-                    <Text style={styles.doctorName}>
-                      {appointment.doctorName}
-                    </Text>
-                    <Text style={styles.specialization}>
-                      {appointment.specialization}
-                    </Text>
-                  </View>
-                  <View style={styles.divider} />
-                  <View style={styles.infoRight}>
-                    <Text style={styles.date}>{appointment.date}</Text>
-                    <Text style={styles.time}>{appointment.time}</Text>
-                    <Text style={styles.type}>{appointment.type}</Text>
-                  </View>
+                Virtual consultation
+              </Text>
+              <RightArrow style={{ marginTop: 3 }} />
+            </View>
+            <ScrollView
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}
+              style={styles.virtualconsult}
+            >
+              {options.map((option, index) => (
+                <View key={index} style={styles.card}>
+                  <Image source={option.image} style={styles.cardimage} />
+                  <Text style={styles.cardtitle}>{option.title}</Text>
+                  <Text style={styles.pricerange}>{option.pricerange}</Text>
                 </View>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
+              ))}
+            </ScrollView>
+          </View>
 
-        <View style={{ marginTop: 10, marginBottom: 10 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginBottom: 5,
-            }}
+          <Pressable
+            style={({ pressed }) => [
+              styles.cliniccard,
+              pressed && { opacity: 0.8 },
+            ]}
           >
+            <View>
+              <Text
+                style={{
+                  color: colors.blacktext,
+                  fontSize: 20,
+                  fontWeight: "bold",
+                }}
+              >
+                Clinic visit
+              </Text>
+              <Text
+                style={{
+                  color: colors.blacktext,
+                  fontSize: 14,
+                  marginTop: 5,
+                  // paddingRight: 110,
+                  width: 220,
+                }}
+              >
+                Make an appointment at the nearest clinic and visit accordingly.
+                Get your diagnosis and other results later on your phone.
+              </Text>
+            </View>
+            <View>
+              <Image
+                source={require("../../assets/clinic.png")}
+                style={{ height: 75, width: 75, alignSelf: "center" }}
+              />
+            </View>
+          </Pressable>
+
+          <View style={{ marginTop: 10 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+            >
+              <Text
+                style={{
+                  color: colors.whitetext,
+                  fontSize: 20,
+                  fontWeight: "bold",
+                }}
+              >
+                Upcoming appointments
+              </Text>
+              <RightArrow style={{ marginTop: 3 }} />
+            </View>
+            <ScrollView
+              horizontal={false}
+              style={{
+                flexDirection: "column",
+                marginTop: 5,
+                flexGrow: 1,
+              }}
+              contentContainerStyle={{ flexGrow: 1 }}
+            >
+              {appointments.map((appointment, index) => (
+                <Pressable
+                  onPress={() => console.log("Hello World!")}
+                  key={index}
+                  style={styles.upcomingcard}
+                >
+                  <Image source={appointment.image} style={styles.image} />
+                  <View style={styles.infoContainer}>
+                    <View style={styles.infoLeft}>
+                      <Text style={styles.doctorName}>
+                        {appointment.doctorName}
+                      </Text>
+                      <Text style={styles.specialization}>
+                        {appointment.specialization}
+                      </Text>
+                    </View>
+                    <View style={styles.divider} />
+                    <View style={styles.infoRight}>
+                      <Text style={styles.date}>{appointment.date}</Text>
+                      <Text style={styles.time}>{appointment.time}</Text>
+                      <Text style={styles.type}>{appointment.type}</Text>
+                    </View>
+                  </View>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+
+          <View style={{ marginTop: 10, marginBottom: 10 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginBottom: 5,
+              }}
+            >
+              <Text
+                style={{
+                  color: colors.whitetext,
+                  fontSize: 20,
+                  fontWeight: "bold",
+                }}
+              >
+                Health tips
+              </Text>
+              <RightArrow style={{ marginTop: 3 }} />
+            </View>
+            <ScrollView
+              horizontal={true}
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollViewContent}
+            >
+              {healthTips.map((tip, index) => (
+                <Pressable
+                  onPress={() => console.log("Health Tip Clicked!")}
+                  key={index}
+                  style={({ pressed }) => [
+                    styles.tipCard,
+                    pressed && { opacity: 0.8 },
+                  ]}
+                >
+                  <Image source={tip.image} style={styles.tipimage} />
+                  <Text
+                    style={styles.tiptitle}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {tip.title}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </ScrollView>
+        <Animated.View
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 0,
+            height: headerScrollHeight,
+            width: "auto",
+            overflow: "hidden",
+            zIndex: 1,
+            // STYLE
+            // borderBottomColor: "#EFEFF4",
+            // borderBottomWidth: 1,
+            // padding: 10,
+            backgroundColor: colors.lightaccent,
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
+          }}
+        >
+          <CustomHeader />
+        </Animated.View>
+        <BottomSheet
+          ref={sheetref}
+          style={[{ zIndex: 1000 }]}
+          backgroundStyle={{ backgroundColor: colors.darkback }}
+          index={-1}
+          snapPoints={snapPoints}
+          enablePanDownToClose={true}
+          handleIndicatorStyle={styles.indicatorstyle}
+          backdropComponent={renderBackdrop}
+        >
+          <BottomSheetView style={styles.bottomsheetcontainer}>
             <Text
               style={{
                 color: colors.whitetext,
-                fontSize: 20,
                 fontWeight: "bold",
+                fontSize: 22,
+                alignSelf: "center",
+                marginTop: 16,
+                marginBottom: 20,
               }}
             >
-              Health tips
+              Select your city
             </Text>
-            <RightArrow style={{ marginTop: 3 }} />
-          </View>
-          <ScrollView
-            horizontal={true}
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollViewContent}
-          >
-            {healthTips.map((tip, index) => (
-              <Pressable
-                onPress={() => console.log("Health Tip Clicked!")}
-                key={index}
-                style={({ pressed }) => [
-                  styles.tipCard,
-                  pressed && { opacity: 0.8 },
-                ]}
-              >
-                <Image source={tip.image} style={styles.tipimage} />
-                <Text
-                  style={styles.tiptitle}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {tip.title}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
-      </ScrollView>
-      <Animated.View
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: 0,
-          height: headerScrollHeight,
-          width: "auto",
-          overflow: "hidden",
-          zIndex: 999,
-          // STYLE
-          // borderBottomColor: "#EFEFF4",
-          // borderBottomWidth: 1,
-          // padding: 10,
-          backgroundColor: colors.lightaccent,
-          borderBottomLeftRadius: 20,
-          borderBottomRightRadius: 20,
-        }}
-      >
-        <CustomHeader />
-      </Animated.View>
-    </View>
+
+            <SelectList
+              style={{}}
+              setSelected={(loc) => setLocation(loc)}
+              data={data}
+              save="value"
+              onSelect={submitLocation}
+              searchPlaceholder="Select city"
+              boxStyles={{
+                borderColor: colors.blacktext,
+                backgroundColor: colors.whitetext,
+              }}
+              dropdownStyles={{ backgroundColor: colors.whitetext }}
+              dropdownTextStyles={{ fontSize: 16 }}
+              imputStyles={{ fontWeight: "500" }}
+            />
+            {/* 
+            <Button1
+              text={"Submit"}
+              onPress={submitLocation}
+              style={{ alignSelf: "center" }}
+            /> */}
+          </BottomSheetView>
+        </BottomSheet>
+      </View>
+    </>
   );
 }
 
@@ -377,11 +470,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 6,
     marginRight: 16,
-    // borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
     alignSelf: "center",
-    // borderWidth: 1,
   },
   locationText: {
     color: colors.whitetext,
@@ -390,7 +481,6 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     justifyContent: "center",
-    // borderWidth: 1,
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
@@ -398,7 +488,6 @@ const styles = StyleSheet.create({
   },
 
   titleContainer: {
-    // borderWidth: 1,
     // width: "35%",
     display: "flex",
     alignContent: "center",
@@ -479,7 +568,6 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     marginRight: 10,
-    // borderWidth: 1,
   },
   infoContainer: {
     flex: 1,
@@ -558,5 +646,17 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     padding: 10,
     fontSize: 18,
+  },
+
+  bottomsheetcontainer: {
+    flex: 1,
+    // borderWidth: 1,
+    paddingBottom: 60,
+    backgroundColor: colors.darkback,
+    paddingHorizontal: 16,
+  },
+
+  indicatorstyle: {
+    backgroundColor: colors.whitetext,
   },
 });
