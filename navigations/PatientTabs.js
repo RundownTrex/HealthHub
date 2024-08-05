@@ -1,13 +1,6 @@
 import React from "react";
-import {
-  Image,
-  View,
-  Text,
-  StyleSheet,
-  StatusBar,
-  Dimensions,
-} from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import { Image, View, Text, StyleSheet, Dimensions } from "react-native";
+import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "../screens/Patient/HomeScreen";
@@ -15,6 +8,7 @@ import Appointment from "../screens/Patient/Appointment";
 import Messages from "../screens/Patient/Messages";
 import Profile from "../screens/Patient/Profile";
 import colors from "../utils/colors";
+import AppointmentStack from "./AppointmentStack";
 
 const Tab = createBottomTabNavigator();
 
@@ -39,15 +33,28 @@ function LocationIcon(props) {
 const { width } = Dimensions.get("screen");
 
 export default function PatientTabs() {
+  const getTabBarVisibility = (route) => {
+    const routeName = getFocusedRouteNameFromRoute(route) ?? route.name;
+    console.log(routeName);
+
+    if (routeName === "Providers") {
+      return "none";
+    }
+    return "flex";
+  };
+
   return (
     <Tab.Navigator
       backBehavior="firstRoute"
       initialRouteName="Home"
-      screenOptions={{
-        tabBarStyle: { ...styles.bottomtab },
+      screenOptions={({ route }) => ({
+        tabBarStyle: {
+          ...styles.bottomtab,
+          display: getTabBarVisibility(route),
+        },
         tabBarShowLabel: false,
         headerTintColor: colors.lightaccent,
-      }}
+      })}
     >
       <Tab.Screen
         name="Home"
@@ -88,9 +95,10 @@ export default function PatientTabs() {
       />
       <Tab.Screen
         name="Appointment"
-        component={Appointment}
+        component={AppointmentStack}
         options={{
           headerTitleAlign: "center",
+          headerShown: false,
 
           tabBarIcon: ({ focused, color, size }) => (
             <View style={styles.iconContainer}>

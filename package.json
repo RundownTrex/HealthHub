@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@gorhom/bottom-sheet": "^4.6.4",
     "@react-native-async-storage/async-storage": "^1.24.0",
     "@react-native-firebase/app": "^20.3.0",
@@ -17,7 +18,9 @@
     "@react-native-firebase/firestore": "^20.3.0",
     "@react-native-google-signin/google-signin": "^12.2.1",
     "@react-navigation/bottom-tabs": "^6.6.1",
+    "@react-navigation/native-stack": "^6.11.0",
     "@react-navigation/stack": "^6.4.1",
+    "@shopify/flash-list": "^1.7.0",
     "expo": "~51.0.21",
     "expo-auth-session": "~5.5.2",
     "expo-crypto": "~13.0.2",

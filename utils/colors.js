@@ -10,6 +10,8 @@ const colors = {
   lightaccent: "#E1882A",
   tenpercent: "#B0BEC5",
   somewhatlightback: "#424242",
+  coolback: "#E0E0E0",
+  superlightaccent: "#fef6e6",
 };
 
 export default colors;
