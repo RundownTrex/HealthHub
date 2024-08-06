@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, StatusBar, Pressable } from "react-native";
 import colors from "../../utils/colors";
 import { Searchbar, MD3LightTheme } from "react-native-paper";
@@ -90,6 +90,28 @@ const doctors = [
 ];
 
 export default function Providers({ navigation }) {
+  useEffect(() => {
+    navigation.getParent().setOptions({
+      tabBarStyle: {
+        display: "none",
+      },
+    });
+
+    return () => {
+      navigation.getParent().setOptions({
+        tabBarStyle: {
+          height: 60,
+          backgroundColor: colors.darkback,
+          paddingTop: 0,
+          marginTop: 0,
+          borderTopWidth: 1,
+          borderTopColor: colors.somewhatlightback,
+          display: "flex",
+        },
+      });
+    };
+  }, [navigation]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredDoctors, setFilteredDoctors] = useState(doctors);
 

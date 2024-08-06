@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useCallback } from "react";
 import { Image, View, Text, StyleSheet, Dimensions } from "react-native";
 import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 
@@ -33,15 +33,17 @@ function LocationIcon(props) {
 const { width } = Dimensions.get("screen");
 
 export default function PatientTabs() {
-  const getTabBarVisibility = (route) => {
-    const routeName = getFocusedRouteNameFromRoute(route) ?? route.name;
-    console.log(routeName);
+  // const getTabBarVisibility = useCallback((route) => {
+  //   const routeName = getFocusedRouteNameFromRoute(route) ?? "Appointment";
+  //   if (routeName === "Providers") {
+  //     console.log("\nTo none\n");
+  //     return "none";
+  //   } else {
+  //     console.log("\nTo flex\n");
 
-    if (routeName === "Providers") {
-      return "none";
-    }
-    return "flex";
-  };
+  //     return "flex";
+  //   }
+  // });
 
   return (
     <Tab.Navigator
@@ -50,7 +52,7 @@ export default function PatientTabs() {
       screenOptions={({ route }) => ({
         tabBarStyle: {
           ...styles.bottomtab,
-          display: getTabBarVisibility(route),
+          // display: getTabBarVisibility(route),
         },
         tabBarShowLabel: false,
         headerTintColor: colors.lightaccent,

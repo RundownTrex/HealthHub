@@ -388,7 +388,7 @@ export default function HomeScreen() {
           backgroundStyle={{ backgroundColor: colors.darkback }}
           index={-1}
           snapPoints={snapPoints}
-          enablePanDownToClose={true}
+          enablePanDownToClose
           handleIndicatorStyle={styles.indicatorstyle}
           backdropComponent={renderBackdrop}
         >
@@ -421,12 +421,7 @@ export default function HomeScreen() {
               dropdownTextStyles={{ fontSize: 16 }}
               imputStyles={{ fontWeight: "500" }}
             />
-            {/* 
-            <Button1
-              text={"Submit"}
-              onPress={submitLocation}
-              style={{ alignSelf: "center" }}
-            /> */}
+            
           </BottomSheetView>
         </BottomSheet>
       </View>
