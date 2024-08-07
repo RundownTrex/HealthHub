@@ -5,11 +5,9 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  Easing,
 } from "react-native-reanimated";
 
 import {
-  TapGestureHandler,
   GestureDetector,
   Gesture,
 } from "react-native-gesture-handler";
@@ -53,13 +51,13 @@ const styles = StyleSheet.create({
   iconContainer: {
     backgroundColor: colors.complementary,
     borderRadius: 100,
-    padding: 7,
+    padding: 14,
     justifyContent: "center",
     alignItems: "center",
   },
   icon: {
-    width: 65,
-    height: 65,
+    width: 55,
+    height: 55,
   },
   label: {
     marginTop: 8,

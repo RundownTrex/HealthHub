@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, StatusBar, Pressable } from "react-native";
 import colors from "../../utils/colors";
 import { Searchbar, MD3LightTheme } from "react-native-paper";
 import { FlashList } from "@shopify/flash-list";
 import DoctorProfileCard from "../../components/DoctorProfileCard";
 import BackIcon from "../../assets/icons/BackIcon";
+import { useRoute } from "@react-navigation/native";
 
 const doctors = [
   {
@@ -90,6 +91,21 @@ const doctors = [
 ];
 
 export default function Providers({ navigation }) {
+  const searchBarRef = useRef(null);
+
+  const route = useRoute();
+  const { send } = route.params;
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredDoctors, setFilteredDoctors] = useState(doctors);
+  {
+    console.log(send);
+  }
+  useEffect(() => {
+    if (send) {
+      setSearchQuery(send);
+    }
+  }, [send]);
+
   useEffect(() => {
     navigation.getParent().setOptions({
       tabBarStyle: {
@@ -112,17 +128,24 @@ export default function Providers({ navigation }) {
     };
   }, [navigation]);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filteredDoctors, setFilteredDoctors] = useState(doctors);
+  useEffect(() => {
+    if (route.params?.focus) {
+      searchBarRef.current?.focus();
+      searchBarRef.current?.focus();
+    }
+  }, [route.params?.focus]);
 
-  const onChangeSearch = (query) => {
-    setSearchQuery(query);
+  useEffect(() => {
     setFilteredDoctors(
-      doctors.filter((doctor) =>
-        doctor.name.toLowerCase().includes(query.toLowerCase())
+      doctors.filter(
+        (doctor) =>
+          doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          doctor.specialization
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
       )
     );
-  };
+  }, [searchQuery]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -157,11 +180,12 @@ export default function Providers({ navigation }) {
 
           <Searchbar
             placeholder="Search"
-            onChangeText={onChangeSearch}
+            onChangeText={setSearchQuery}
             value={searchQuery}
             rippleColor={colors.lightaccent}
             theme={MD3LightTheme}
             // loading={true}
+            ref={searchBarRef}
             style={{
               backgroundColor: colors.whitetext,
               width: "100%",
