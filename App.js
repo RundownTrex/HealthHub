@@ -9,15 +9,18 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useContext } from "react";
 import RoleContext, { UserProvider } from "./context/RoleContext";
+import { Provider as PaperProvider } from "react-native-paper";
 
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <BottomSheetModalProvider>
-        <UserProvider>
-          <Main />
-        </UserProvider>
-      </BottomSheetModalProvider>
+      <PaperProvider>
+        <BottomSheetModalProvider>
+          <UserProvider>
+            <Main />
+          </UserProvider>
+        </BottomSheetModalProvider>
+      </PaperProvider>
     </GestureHandlerRootView>
   );
 }

@@ -19,10 +19,12 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import Button1 from "../../components/Button1";
 import { SelectList } from "react-native-dropdown-select-list";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 const H_MAX_HEIGHT = 80;
 const H_MIN_HEIGHT = 0;
 const H_SCROLL_DISTANCE = H_MAX_HEIGHT - H_MIN_HEIGHT;
+const tabheight = 65;
 
 export default function HomeScreen() {
   const snapPoints = useMemo(() => ["25%", "50%", "75%", "86%"], []);
@@ -151,7 +153,9 @@ export default function HomeScreen() {
           ]}
         >
           <LocationIcon />
-          <Text style={styles.locationText}>{location === "" ? "Select city" : location}</Text>
+          <Text style={styles.locationText}>
+            {location === "" ? "Select city" : location}
+          </Text>
         </Pressable>
       </View>
     );
@@ -421,7 +425,6 @@ export default function HomeScreen() {
               dropdownTextStyles={{ fontSize: 16 }}
               imputStyles={{ fontWeight: "500" }}
             />
-            
           </BottomSheetView>
         </BottomSheet>
       </View>
@@ -432,10 +435,11 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    height: "auto",
+    height: "100%",
     backgroundColor: colors.darkback,
     // alignItems: "center",
     justifyContent: "center",
+    marginBottom: tabheight,
   },
 
   scrollable: {
@@ -506,7 +510,8 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    width: Dimensions.get("window").width * 0.45,
+    width: 160,
+    height: 160,
     backgroundColor: colors.whitetext,
     borderRadius: 15,
     padding: 10,
@@ -516,12 +521,12 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cardimage: {
-    width: 70,
-    height: 70,
+    width: 60,
+    height: 60,
     marginBottom: 10,
   },
   cardtitle: {
-    fontSize: 17,
+    fontSize: 16,
     color: colors.blacktext,
     fontWeight: "bold",
     marginBottom: 1,
@@ -529,7 +534,7 @@ const styles = StyleSheet.create({
     // alignSelf: "center",
   },
   pricerange: {
-    fontSize: 15,
+    fontSize: 14,
     color: colors.darkgraytext,
   },
 

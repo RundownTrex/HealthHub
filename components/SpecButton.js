@@ -8,6 +8,7 @@ import Animated, {
 import { useNavigation } from "@react-navigation/native";
 
 import colors from "../utils/colors";
+import { Divider } from "react-native-paper";
 
 export default function SpecButton({ imageUrl, title }) {
   const navigation = useNavigation();
@@ -95,19 +96,22 @@ export default function SpecButton({ imageUrl, title }) {
   };
 
   return (
-    <Pressable
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      onPress={() => handleClick(title)}
-      style={[styles.container]}
-    >
-      <Animated.View style={[animatedStyle, styles.container]}>
-        <View style={styles.imagecontainer}>
-          <Image source={imageUrl} style={styles.imagestyle} />
-        </View>
-        <Text style={styles.title}>{title}</Text>
-      </Animated.View>
-    </Pressable>
+    <>
+      <Pressable
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onPress={() => handleClick(title)}
+        style={[styles.container]}
+      >
+        <Animated.View style={[animatedStyle, styles.container]}>
+          <View style={styles.imagecontainer}>
+            <Image source={imageUrl} style={styles.imagestyle} />
+          </View>
+          <Text style={styles.title}>{title}</Text>
+        </Animated.View>
+      </Pressable>
+      <Divider style={{ marginHorizontal: 5 }} />
+    </>
   );
 }
 

@@ -36,17 +36,7 @@ function LocationIcon(props) {
 const { width } = Dimensions.get("screen");
 
 export default function PatientTabs() {
-  // const getTabBarVisibility = useCallback((route) => {
-  //   const routeName = getFocusedRouteNameFromRoute(route) ?? "Appointment";
-  //   if (routeName === "Providers") {
-  //     console.log("\nTo none\n");
-  //     return "none";
-  //   } else {
-  //     console.log("\nTo flex\n");
 
-  //     return "flex";
-  //   }
-  // });
 
   return (
     <BottomSheetProvider>
@@ -58,7 +48,6 @@ export default function PatientTabs() {
           tabBarHideOnKeyboard: true,
           tabBarStyle: {
             ...styles.bottomtab,
-            // display: getTabBarVisibility(route),
           },
           tabBarShowLabel: false,
           headerTintColor: colors.lightaccent,
@@ -118,8 +107,6 @@ const styles = StyleSheet.create({
   headstyle: {
     backgroundColor: colors.lightaccent,
     height: 100,
-    // overflow: "hidden",
-    // backgroundColor: "transparent",
   },
 
   locationblock: {
@@ -127,7 +114,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 6,
     marginRight: 16,
-    // borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
   },

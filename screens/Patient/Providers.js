@@ -1,11 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, StatusBar, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  Pressable,
+  Image,
+} from "react-native";
 import colors from "../../utils/colors";
-import { Searchbar, MD3LightTheme } from "react-native-paper";
+import { Searchbar, MD3LightTheme, Chip } from "react-native-paper";
 import { FlashList } from "@shopify/flash-list";
 import DoctorProfileCard from "../../components/DoctorProfileCard";
 import BackIcon from "../../assets/icons/BackIcon";
 import { useRoute } from "@react-navigation/native";
+import { useBottomSheet } from "../../context/BottomSheetContext";
 
 const doctors = [
   {
@@ -17,6 +25,7 @@ const doctors = [
     fee: 2500,
     image: require("../../assets/general-practicionor.png"),
     virtualConsultation: true,
+    clinicAvailable: true,
   },
   {
     name: "Dr. Okay",
@@ -27,6 +36,62 @@ const doctors = [
     fee: 2500,
     image: require("../../assets/general-practicionor.png"),
     virtualConsultation: false,
+    clinicAvailable: true,
+  },
+  {
+    name: "Dr. Sure",
+    specialization: "General physician",
+    experience: 10,
+    location: "Dadar",
+    clinic: "Fit clinic",
+    fee: 2500,
+    image: require("../../assets/general-practicionor.png"),
+    virtualConsultation: false,
+    clinicAvailable: true,
+  },
+  {
+    name: "Dr. Yes",
+    specialization: "General physician",
+    experience: 10,
+    location: "Dadar",
+    clinic: "Health clinic",
+    fee: 2500,
+    image: require("../../assets/general-practicionor.png"),
+    virtualConsultation: true,
+    clinicAvailable: false,
+  },
+  {
+    name: "Dr. No",
+    specialization: "General physician",
+    experience: 10,
+    location: "Dadar",
+    clinic: "Wellness clinic",
+    fee: 2500,
+    image: require("../../assets/general-practicionor.png"),
+    virtualConsultation: true,
+    clinicAvailable: false,
+  },
+  {
+    name: "Dr. Maybe",
+    specialization: "General physician",
+    experience: 10,
+    location: "Dadar",
+    clinic: "Care clinic",
+    fee: 2500,
+    image: require("../../assets/general-practicionor.png"),
+    virtualConsultation: false,
+    clinicAvailable: true,
+  },
+  {
+    name: "Dr. WhyNot",
+    specialization: "General physician",
+    experience: 10,
+    location: "Dadar",
+    clinic: "Fit clinic",
+    fee: 2500,
+    image: require("../../assets/general-practicionor.png"),
+    virtualConsultation: false,
+    clinicAvailable: true,
   },
   {
     name: "Dr. Sure",
@@ -37,56 +102,7 @@ const doctors = [
     fee: 2500,
     image: require("../../assets/general-practicionor.png"),
     virtualConsultation: true,
-  },
-  {
-    name: "Dr. Sure",
-    specialization: "General physician",
-    experience: 10,
-    location: "Dadar",
-    clinic: "Fit clinic",
-    fee: 2500,
-    image: require("../../assets/general-practicionor.png"),
-    virtualConsultation: true,
-  },
-  {
-    name: "Dr. Sure",
-    specialization: "General physician",
-    experience: 10,
-    location: "Dadar",
-    clinic: "Fit clinic",
-    fee: 2500,
-    image: require("../../assets/general-practicionor.png"),
-    virtualConsultation: true,
-  },
-  {
-    name: "Dr. Sure",
-    specialization: "General physician",
-    experience: 10,
-    location: "Dadar",
-    clinic: "Fit clinic",
-    fee: 2500,
-    image: require("../../assets/general-practicionor.png"),
-    virtualConsultation: true,
-  },
-  {
-    name: "Dr. Sure",
-    specialization: "General physician",
-    experience: 10,
-    location: "Dadar",
-    clinic: "Fit clinic",
-    fee: 2500,
-    image: require("../../assets/general-practicionor.png"),
-    virtualConsultation: true,
-  },
-  {
-    name: "Dr. Sure",
-    specialization: "General physician",
-    experience: 10,
-    location: "Dadar",
-    clinic: "Fit clinic",
-    fee: 2500,
-    image: require("../../assets/general-practicionor.png"),
-    virtualConsultation: true,
+    clinicAvailable: false,
   },
 ];
 
@@ -97,9 +113,27 @@ export default function Providers({ navigation }) {
   const { send } = route.params;
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredDoctors, setFilteredDoctors] = useState(doctors);
-  {
-    console.log(send);
-  }
+  const [virtualConsultation, setVirtualConsultation] = useState(false);
+  const [clinic, setClinic] = useState(false);
+  const { toggleBottomSheet } = useBottomSheet();
+  const [options, setOptions] = useState(false);
+
+  const toggleVirtualConsultation = () => {
+    setVirtualConsultation((prevState) => !prevState);
+  };
+
+  const toggleClinic = () => {
+    setClinic((prevState) => !prevState);
+  };
+
+  useEffect(() => {
+    toggleBottomSheet(true);
+
+    return () => {
+      toggleBottomSheet(false);
+    };
+  }, [navigation]);
+
   useEffect(() => {
     if (send) {
       setSearchQuery(send);
@@ -107,45 +141,47 @@ export default function Providers({ navigation }) {
   }, [send]);
 
   useEffect(() => {
-    navigation.getParent().setOptions({
-      tabBarStyle: {
-        display: "none",
-      },
-    });
-
-    return () => {
-      navigation.getParent().setOptions({
-        tabBarStyle: {
-          height: 60,
-          backgroundColor: colors.darkback,
-          paddingTop: 0,
-          marginTop: 0,
-          borderTopWidth: 1,
-          borderTopColor: colors.somewhatlightback,
-          display: "flex",
-        },
-      });
-    };
-  }, [navigation]);
-
-  useEffect(() => {
     if (route.params?.focus) {
-      searchBarRef.current?.focus();
       searchBarRef.current?.focus();
     }
   }, [route.params?.focus]);
 
   useEffect(() => {
     setFilteredDoctors(
-      doctors.filter(
-        (doctor) =>
+      doctors.filter((doctor) => {
+        const matchesQuery =
           doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           doctor.specialization
             .toLowerCase()
-            .includes(searchQuery.toLowerCase())
-      )
+            .includes(searchQuery.toLowerCase());
+
+        const matchesVirtualConsultation =
+          !virtualConsultation || doctor.virtualConsultation;
+
+        const matchesClinic = !clinic || doctor.clinicAvailable;
+
+        return matchesQuery && matchesVirtualConsultation && matchesClinic;
+      })
     );
-  }, [searchQuery]);
+  }, [searchQuery, virtualConsultation, clinic]);
+
+  const filters = ["Video consult", "Male", "Female"];
+
+  // const toggleFilter = (filter) => {
+  //   let updatedFilters;
+
+  //   if (selectedFilters.includes(filter)) {
+  //     updatedFilters = selectedFilters.filter((item) => item !== filter);
+  //   } else {
+  //     updatedFilters = [...selectedFilters, filter];
+  //   }
+
+  //   setSelectedFilters(updatedFilters);
+  // };
+
+  const handleOptions = () => {
+    setOptions((prev) => !prev);
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -177,24 +213,73 @@ export default function Providers({ navigation }) {
         </View>
         <View style={styles.container}>
           <StatusBar backgroundColor={colors.lightaccent} />
-
-          <Searchbar
-            placeholder="Search"
-            onChangeText={setSearchQuery}
-            value={searchQuery}
-            rippleColor={colors.lightaccent}
-            theme={MD3LightTheme}
-            // loading={true}
-            ref={searchBarRef}
+          <View
             style={{
-              backgroundColor: colors.whitetext,
-              width: "100%",
+              flexDirection: "row",
+              // borderWidth: 1,
+              alignItems: "center",
+              justifyContent: "space-between",
               marginBottom: 16,
             }}
-            inputStyle={{
-              color: colors.blacktext,
-            }}
-          />
+          >
+            <Searchbar
+              placeholder="Search"
+              onChangeText={setSearchQuery}
+              value={searchQuery}
+              rippleColor={colors.lightaccent}
+              traileringIconColor={colors.lightaccent}
+              selectionHandleColor={colors.lightaccent}
+              theme={MD3LightTheme}
+              // loading={true}
+              ref={searchBarRef}
+              style={{
+                backgroundColor: colors.whitetext,
+                width: "85%",
+                height: 45,
+                alignItems: "center",
+                // marginBottom: 16,
+              }}
+              inputStyle={{
+                color: colors.blacktext,
+                fontSize: 16,
+                alignSelf: "center",
+              }}
+            />
+            <Pressable
+              style={({ pressed }) => [
+                { padding: 10 },
+                pressed && { opacity: 0.8 },
+              ]}
+              onPress={handleOptions}
+            >
+              <Image
+                source={require("../../assets/icons/search-options.png")}
+                style={{ height: 30, width: 30 }}
+              />
+            </Pressable>
+          </View>
+          {options ? (
+            <View style={styles.chipContainer}>
+              {/* {filters.map((filter, index) => (
+          ))} */}
+              <Chip
+                style={styles.chip}
+                mode="outlined"
+                selected={clinic}
+                onPress={toggleClinic}
+              >
+                Clinic
+              </Chip>
+              <Chip
+                style={styles.chip}
+                mode="outlined"
+                selected={virtualConsultation}
+                onPress={toggleVirtualConsultation}
+              >
+                Virtual Consult
+              </Chip>
+            </View>
+          ) : null}
           {filteredDoctors.length === 0 ? (
             <View style={styles.noResultsContainer}>
               <Text style={styles.noResultsText}>No results found!</Text>
@@ -238,5 +323,13 @@ const styles = StyleSheet.create({
     color: colors.whitetext,
     fontSize: 18,
     fontWeight: "bold",
+  },
+  chipContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  chip: {
+    marginRight: 10,
+    marginBottom: 10,
   },
 });

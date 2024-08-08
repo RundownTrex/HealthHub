@@ -6,31 +6,20 @@ import {
   FlatList,
   Pressable,
   Image,
-  LayoutAnimation,
-  UIManager,
-  Platform,
 } from "react-native";
-// import { useNavigation, useIsFocused } from "@react-navigation/native";
+import { useIsFocused } from "@react-navigation/native";
 import { FlashList } from "@shopify/flash-list";
 
 import colors from "../../utils/colors";
 import { Searchbar } from "react-native-paper";
 import IconButton from "../../components/IconButton";
 import SpecButton from "../../components/SpecButton";
-
 import { useBottomSheet } from "../../context/BottomSheetContext";
 
 import BottomSheet, {
   BottomSheetView,
   BottomSheetBackdrop,
 } from "@gorhom/bottom-sheet";
-
-if (
-  Platform.OS === "android" &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 const data = [
   {
@@ -154,30 +143,12 @@ const specs = [
 
 export default function Appointment({ navigation }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const isFocused = useIsFocused();
 
   const { toggleBottomSheet } = useBottomSheet();
 
-  // const navigation = useNavigation();
-  // const [bottomSheetOpened, setBottomSheetOpened] = useState(false);
-
   const bottomsheetref = useRef();
   const snapPoints = useMemo(() => ["89%"], []);
-
-  // useEffect(() => {
-  //   console.log(bottomSheetOpened);
-  //   LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
-  //   navigation.getParent().setOptions({
-  //     tabBarStyle: {
-  //       height: 60,
-  //       backgroundColor: colors.darkback,
-  //       paddingTop: 0,
-  //       marginTop: 0,
-  //       borderTopWidth: 1,
-  //       borderTopColor: colors.somewhatlightback,
-  //       display: bottomSheetOpened ? "none" : "flex",
-  //     },
-  //   });
-  // }, [bottomSheetOpened]);
 
   const renderBackdrop = useCallback(
     (props) => (
@@ -189,6 +160,13 @@ export default function Appointment({ navigation }) {
     ),
     []
   );
+
+  useEffect(() => {
+    if (isFocused) {
+      console.log("Screen is focused or returned to after navigating back");
+      bottomsheetref.current?.close();
+    }
+  }, [isFocused]);
 
   const handleClick = (label) => {
     if (label !== "View all") {
@@ -245,11 +223,16 @@ export default function Appointment({ navigation }) {
         <Searchbar
           onPress={() => navigation.navigate("Providers", { focus: true })}
           style={{
-            alignSelf: "center",
-            backgroundColor: colors.superlightaccent,
-            marginBottom: 16,
+            backgroundColor: colors.whitetext,
+            width: "100%",
             // height: 45,
-            // padding: 0,
+            alignItems: "center",
+            // marginBottom: 16,
+          }}
+          inputStyle={{
+            color: colors.blacktext,
+            // fontSize: 18,
+            alignSelf: "center",
           }}
           onChangeText={setSearchQuery}
           value={searchQuery}
@@ -334,7 +317,6 @@ export default function Appointment({ navigation }) {
           />
         </BottomSheetView>
       </BottomSheet>
-
     </>
   );
 }

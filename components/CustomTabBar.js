@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, Image, Pressable, StyleSheet } from "react-native";
 import colors from "../utils/colors";
 import { useBottomSheet } from "../context/BottomSheetContext";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
@@ -14,7 +14,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
   const tabBarOffset = useSharedValue(0);
 
   tabBarOffset.value = withTiming(isBottomSheetOpen ? 100 : 0, {
-    duration: 50,
+    duration: 500,
   });
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -81,7 +81,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
         }
 
         return (
-          <TouchableOpacity
+          <Pressable
             key={route.key}
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
@@ -104,7 +104,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
                 {label}
               </Text>
             )}
-          </TouchableOpacity>
+          </Pressable>
         );
       })}
     </Animated.View>
@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     borderTopColor: colors.somewhatlightback,
     borderTopWidth: 1,
+    height: 65,
   },
   tabBarButton: {
     flex: 1,
