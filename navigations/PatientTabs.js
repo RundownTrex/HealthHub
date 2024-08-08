@@ -9,6 +9,9 @@ import Messages from "../screens/Patient/Messages";
 import Profile from "../screens/Patient/Profile";
 import colors from "../utils/colors";
 import AppointmentStack from "./AppointmentStack";
+import CustomTabBar from "../components/CustomTabBar";
+
+import { BottomSheetProvider } from "../context/BottomSheetContext";
 
 const Tab = createBottomTabNavigator();
 
@@ -46,164 +49,53 @@ export default function PatientTabs() {
   // });
 
   return (
-    <Tab.Navigator
-      backBehavior="firstRoute"
-      initialRouteName="Home"
-      screenOptions={({ route }) => ({
-        tabBarStyle: {
-          ...styles.bottomtab,
-          // display: getTabBarVisibility(route),
-        },
-        tabBarShowLabel: false,
-        headerTintColor: colors.lightaccent,
-      })}
-    >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          headerShown: false,
-          // headerTitleAlign: "left",
-          headerStyle: { ...styles.headstyle, opacity: 1 },
-          tabBarIcon: ({ focused, color, size }) => (
-            <View style={styles.iconContainer}>
-              <Image
-                source={
-                  focused
-                    ? require("../assets/icons/home-selected.png")
-                    : require("../assets/icons/home.png")
-                }
-                style={{
-                  width: 30,
-                  height: 30,
-                  tintColor: focused ? colors.lightaccent : colors.tenpercent,
-                }}
-              />
-              {focused && (
-                <Text
-                  style={[
-                    styles.label,
-                    {
-                      color: focused ? colors.lightaccent : colors.tenpercent,
-                    },
-                  ]}
-                >
-                  Home
-                </Text>
-              )}
-            </View>
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Appointment"
-        component={AppointmentStack}
-        options={{
-          headerTitleAlign: "center",
-          headerShown: false,
-
-          tabBarIcon: ({ focused, color, size }) => (
-            <View style={styles.iconContainer}>
-              <Image
-                source={
-                  focused
-                    ? require("../assets/icons/appointments-selected.png")
-                    : require("../assets/icons/appointments.png")
-                }
-                style={{
-                  width: 30,
-                  height: 30,
-                  tintColor: focused ? colors.lightaccent : colors.tenpercent,
-                }}
-              />
-              {focused && (
-                <Text
-                  style={[
-                    styles.label,
-                    {
-                      color: focused ? colors.lightaccent : colors.tenpercent,
-                    },
-                  ]}
-                >
-                  Appointments
-                </Text>
-              )}
-            </View>
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Messages"
-        component={Messages}
-        options={{
-          headerTitleAlign: "center",
-
-          tabBarIcon: ({ focused, color, size }) => (
-            <View style={styles.iconContainer}>
-              <Image
-                source={
-                  focused
-                    ? require("../assets/icons/message-selected.png")
-                    : require("../assets/icons/message.png")
-                }
-                style={{
-                  width: 30,
-                  height: 30,
-                  tintColor: focused ? colors.lightaccent : colors.tenpercent,
-                }}
-              />
-              {focused && (
-                <Text
-                  style={[
-                    styles.label,
-                    {
-                      color: focused ? colors.lightaccent : colors.tenpercent,
-                    },
-                  ]}
-                >
-                  Messages
-                </Text>
-              )}
-            </View>
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={Profile}
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ focused, color, size }) => (
-            <View style={styles.iconContainer}>
-              <Image
-                source={
-                  focused
-                    ? require("../assets/icons/profile-selected.png")
-                    : require("../assets/icons/profile.png")
-                }
-                style={{
-                  width: 30,
-                  height: 30,
-                  tintColor: focused ? colors.lightaccent : colors.tenpercent,
-                }}
-              />
-              {focused && (
-                <Text
-                  style={[
-                    styles.label,
-                    {
-                      color: focused ? colors.lightaccent : colors.tenpercent,
-                    },
-                  ]}
-                >
-                  Profile
-                </Text>
-              )}
-            </View>
-          ),
-        }}
-      />
-    </Tab.Navigator>
+    <BottomSheetProvider>
+      <Tab.Navigator
+        backBehavior="firstRoute"
+        initialRouteName="Home"
+        tabBar={(props) => <CustomTabBar {...props} />}
+        screenOptions={({ route }) => ({
+          tabBarHideOnKeyboard: true,
+          tabBarStyle: {
+            ...styles.bottomtab,
+            // display: getTabBarVisibility(route),
+          },
+          tabBarShowLabel: false,
+          headerTintColor: colors.lightaccent,
+        })}
+      >
+        <Tab.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{
+            headerShown: false,
+            headerStyle: { ...styles.headstyle, opacity: 1 },
+          }}
+        />
+        <Tab.Screen
+          name="Appointment"
+          component={AppointmentStack}
+          options={{
+            headerTitleAlign: "center",
+            headerShown: false,
+          }}
+        />
+        <Tab.Screen
+          name="Messages"
+          component={Messages}
+          options={{
+            headerTitleAlign: "center",
+          }}
+        />
+        <Tab.Screen
+          name="Profile"
+          component={Profile}
+          options={{
+            headerShown: false,
+          }}
+        />
+      </Tab.Navigator>
+    </BottomSheetProvider>
   );
 }
 

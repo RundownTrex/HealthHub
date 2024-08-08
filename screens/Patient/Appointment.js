@@ -18,6 +18,8 @@ import { Searchbar } from "react-native-paper";
 import IconButton from "../../components/IconButton";
 import SpecButton from "../../components/SpecButton";
 
+import { useBottomSheet } from "../../context/BottomSheetContext";
+
 import BottomSheet, {
   BottomSheetView,
   BottomSheetBackdrop,
@@ -153,27 +155,29 @@ const specs = [
 export default function Appointment({ navigation }) {
   const [searchQuery, setSearchQuery] = useState("");
 
+  const { toggleBottomSheet } = useBottomSheet();
+
   // const navigation = useNavigation();
-  const [bottomSheetOpened, setBottomSheetOpened] = useState(false);
+  // const [bottomSheetOpened, setBottomSheetOpened] = useState(false);
 
   const bottomsheetref = useRef();
   const snapPoints = useMemo(() => ["89%"], []);
 
-  useEffect(() => {
-    console.log(bottomSheetOpened);
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
-    navigation.getParent().setOptions({
-      tabBarStyle: {
-        height: 60,
-        backgroundColor: colors.darkback,
-        paddingTop: 0,
-        marginTop: 0,
-        borderTopWidth: 1,
-        borderTopColor: colors.somewhatlightback,
-        display: bottomSheetOpened ? "none" : "flex",
-      },
-    });
-  }, [bottomSheetOpened]);
+  // useEffect(() => {
+  //   console.log(bottomSheetOpened);
+  //   LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
+  //   navigation.getParent().setOptions({
+  //     tabBarStyle: {
+  //       height: 60,
+  //       backgroundColor: colors.darkback,
+  //       paddingTop: 0,
+  //       marginTop: 0,
+  //       borderTopWidth: 1,
+  //       borderTopColor: colors.somewhatlightback,
+  //       display: bottomSheetOpened ? "none" : "flex",
+  //     },
+  //   });
+  // }, [bottomSheetOpened]);
 
   const renderBackdrop = useCallback(
     (props) => (
@@ -209,7 +213,7 @@ export default function Appointment({ navigation }) {
       navigation.navigate("Providers", { send });
     } else {
       bottomsheetref.current?.expand();
-      setBottomSheetOpened(true);
+      toggleBottomSheet(true);
     }
   };
 
@@ -281,15 +285,13 @@ export default function Appointment({ navigation }) {
         index={-1}
         handleIndicatorStyle={{
           display: "none",
-          // backgroundColor: colors.whitetext,
         }}
         backgroundStyle={{
           backgroundColor: colors.darkback,
-          // borderWidth: 1,
         }}
         onChange={(index) => {
           if (index !== 0) {
-            setBottomSheetOpened(false);
+            toggleBottomSheet(false);
           }
         }}
         enableHandlePanningGesture={false}
@@ -332,6 +334,7 @@ export default function Appointment({ navigation }) {
           />
         </BottomSheetView>
       </BottomSheet>
+
     </>
   );
 }
