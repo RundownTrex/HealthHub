@@ -6,6 +6,7 @@ import {
   StatusBar,
   Pressable,
   Image,
+  BackHandler,
 } from "react-native";
 import colors from "../../utils/colors";
 import { Searchbar, MD3LightTheme, Chip } from "react-native-paper";
@@ -18,6 +19,7 @@ import { useBottomSheet } from "../../context/BottomSheetContext";
 const doctors = [
   {
     name: "Dr. Bludma",
+    degree: "MBBS",
     specialization: "General physician",
     experience: 10,
     location: "Dadar",
@@ -29,6 +31,7 @@ const doctors = [
   },
   {
     name: "Dr. Okay",
+    degree: "MBBS",
     specialization: "General physician",
     experience: 10,
     location: "Dadar",
@@ -40,50 +43,19 @@ const doctors = [
   },
   {
     name: "Dr. Sure",
+    degree: "MBBS",
     specialization: "General physician",
     experience: 10,
     location: "Dadar",
     clinic: "Fit clinic",
     fee: 2500,
     image: require("../../assets/general-practicionor.png"),
-    virtualConsultation: false,
-    clinicAvailable: true,
-  },
-  {
-    name: "Dr. Yes",
-    specialization: "General physician",
-    experience: 10,
-    location: "Dadar",
-    clinic: "Health clinic",
-    fee: 2500,
-    image: require("../../assets/general-practicionor.png"),
     virtualConsultation: true,
     clinicAvailable: false,
   },
   {
-    name: "Dr. No",
-    specialization: "General physician",
-    experience: 10,
-    location: "Dadar",
-    clinic: "Wellness clinic",
-    fee: 2500,
-    image: require("../../assets/general-practicionor.png"),
-    virtualConsultation: true,
-    clinicAvailable: false,
-  },
-  {
-    name: "Dr. Maybe",
-    specialization: "General physician",
-    experience: 10,
-    location: "Dadar",
-    clinic: "Care clinic",
-    fee: 2500,
-    image: require("../../assets/general-practicionor.png"),
-    virtualConsultation: false,
-    clinicAvailable: true,
-  },
-  {
-    name: "Dr. WhyNot",
+    name: "Dr. Sure",
+    degree: "MBBS",
     specialization: "General physician",
     experience: 10,
     location: "Dadar",
@@ -95,6 +67,7 @@ const doctors = [
   },
   {
     name: "Dr. Sure",
+    degree: "MBBS",
     specialization: "General physician",
     experience: 10,
     location: "Dadar",
@@ -102,7 +75,7 @@ const doctors = [
     fee: 2500,
     image: require("../../assets/general-practicionor.png"),
     virtualConsultation: true,
-    clinicAvailable: false,
+    clinicAvailable: true,
   },
 ];
 
@@ -128,9 +101,17 @@ export default function Providers({ navigation }) {
 
   useEffect(() => {
     toggleBottomSheet(true);
-
+    const backAction = () => {
+      navigation.pop();
+      return true;
+    };
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
     return () => {
       toggleBottomSheet(false);
+      backHandler.remove();
     };
   }, [navigation]);
 

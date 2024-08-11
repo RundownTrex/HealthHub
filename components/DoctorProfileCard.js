@@ -2,8 +2,11 @@ import { useEffect, useRef } from "react";
 import { View, Text, Image, StyleSheet, Animated, Easing } from "react-native";
 import { Avatar, Button } from "react-native-paper";
 import colors from "../utils/colors";
+import { useNavigation } from "@react-navigation/native";
 
 const DoctorProfileCard = ({ doctor }) => {
+  const navigation = useNavigation();
+
   return (
     <View style={styles.card}>
       <View style={styles.profileSection}>
@@ -33,7 +36,7 @@ const DoctorProfileCard = ({ doctor }) => {
       <Button
         mode="contained"
         style={styles.button}
-        onPress={() => console.log("View Profile")}
+        onPress={() => navigation.navigate("BookDoctor", { doctor })}
       >
         View profile
       </Button>
@@ -58,7 +61,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: colors.lightaccent,
+    backgroundColor: colors.complementary,
     borderRadius: 20,
     padding: 7,
   },

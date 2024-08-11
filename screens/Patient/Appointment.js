@@ -6,6 +6,7 @@ import {
   FlatList,
   Pressable,
   Image,
+  BackHandler,
 } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
 import { FlashList } from "@shopify/flash-list";
@@ -198,6 +199,23 @@ export default function Appointment({ navigation }) {
   const handleBottomSheetClose = () => {
     bottomsheetref.current?.close();
   };
+
+  useEffect(() => {
+    const backaction = () => {
+      if (bottomsheetref.current?.close) {
+        bottomsheetref.current.close();
+        return true;
+      }
+      return false;
+    };
+
+    const backhandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backaction
+    );
+
+    return () => backhandler.remove();
+  }, []);
 
   return (
     <>

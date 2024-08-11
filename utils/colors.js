@@ -7,6 +7,7 @@ const colors = {
 
   accent: "#FF5722",
   complementary: "#008597",
+  lightcomp: "#bffbff",
   lightaccent: "#E1882A",
   tenpercent: "#B0BEC5",
   somewhatlightback: "#424242",

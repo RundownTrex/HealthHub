@@ -20,13 +20,14 @@ import BottomSheet, {
 import Button1 from "../../components/Button1";
 import { SelectList } from "react-native-dropdown-select-list";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import Providers from "./Providers";
 
 const H_MAX_HEIGHT = 80;
 const H_MIN_HEIGHT = 0;
 const H_SCROLL_DISTANCE = H_MAX_HEIGHT - H_MIN_HEIGHT;
 const tabheight = 65;
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
   const snapPoints = useMemo(() => ["25%", "50%", "75%", "86%"], []);
   const sheetref = useRef();
   const [location, setLocation] = useState("");
@@ -180,6 +181,8 @@ export default function HomeScreen() {
     []
   );
 
+  const [send, setSend] = useState("General Provider");
+
   return (
     <>
       <View style={styles.container}>
@@ -218,11 +221,17 @@ export default function HomeScreen() {
               style={styles.virtualconsult}
             >
               {options.map((option, index) => (
-                <View key={index} style={styles.card}>
+                <Pressable
+                  onPress={() => {
+                    console.log("KYS");
+                  }}
+                  key={index}
+                  style={styles.card}
+                >
                   <Image source={option.image} style={styles.cardimage} />
                   <Text style={styles.cardtitle}>{option.title}</Text>
                   <Text style={styles.pricerange}>{option.pricerange}</Text>
-                </View>
+                </Pressable>
               ))}
             </ScrollView>
           </View>
