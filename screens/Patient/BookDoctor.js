@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,23 +9,52 @@ import {
   Image,
   BackHandler,
   Linking,
+  LayoutAnimation,
+  UIManager,
 } from "react-native";
 import { Avatar, Divider, SegmentedButtons } from "react-native-paper";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import call from "react-native-phone-call";
+import Toast from "react-native-toast-message";
+import { format } from "date-fns";
+
 import colours from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";
 import Button1 from "../../components/Button1";
 import DropdownMenu from "../../components/DropdownMenu";
+
+if (UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+const generateDate = () => {
+  const date = new Date();
+  date.setDate(date.getDate());
+  return format(date, "EEE, dd MMM"); // Format the date as "Tue, 13 Aug"
+};
 
 export default function BookDoctor({ navigation, route }) {
   const { doctor } = route.params;
   const [value, setValue] = useState(
     doctor.clinicAvailable ? "clinic" : "virtual"
   );
+  const mapRef = useRef(null);
 
   const [expanded, setExpanded] = useState(false);
 
-  const mapRef = useRef(null);
+  //Expanding about text
+  const toggleRead = useCallback(() => {
+    const customAnimation = {
+      duration: 200,
+      update: {
+        type: LayoutAnimation.Types.spring,
+        springDamping: 1,
+      },
+    };
+
+    LayoutAnimation.configureNext(customAnimation);
+    setExpanded((prev) => !prev);
+  }, []);
 
   const clinicLocation = {
     latitude: 18.94024498803612,
@@ -103,6 +132,22 @@ export default function BookDoctor({ navigation, route }) {
       ],
     });
   }
+
+  const dialNumber = (phoneNumber) => {
+    const args = {
+      number: phoneNumber,
+      prompt: true,
+      skipCanOpen: true,
+    };
+
+    call(args).catch((error) => {
+      Toast.show({
+        type: "error",
+        text1: "Can't place a call right now",
+        text2: error,
+      });
+    });
+  };
 
   const text = `Lorem ipsum dolor sit amet, consectetur adipiscing elit.Donec vel quam sit amet leo scelerisque volutpat. Duis dictum orci vitae mi efficitur, et lacinia libero pharetra. Curabitur et odio arcu. Ut ac fringilla lectus, id tempor libero. Quisque ac mi ut tortor pretium elementum.`;
 
@@ -195,7 +240,7 @@ export default function BookDoctor({ navigation, route }) {
                       fontWeight: "bold",
                     }}
                   >
-                    In-clinic Appointment
+                    Clinic Appointment
                   </Text>
                   <Text
                     style={{
@@ -209,12 +254,12 @@ export default function BookDoctor({ navigation, route }) {
                 </View>
 
                 <View style={{ padding: 10, paddingTop: 5 }}>
-                  <Text style={{ fontWeight: "bold", fontSize: 20 }}>
+                  <Text style={{ fontWeight: "bold", fontSize: 16 }}>
                     {doctor.clinic}
                   </Text>
                   <Text
                     style={{
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: "400",
                       color: colours.blacktext,
                     }}
@@ -243,12 +288,30 @@ export default function BookDoctor({ navigation, route }) {
                     "6:15 PM",
                     "6:15 PM",
                   ].map((slot, index) => (
-                    <Pressable key={index} style={styles.slot}>
+                    <Pressable
+                      key={index}
+                      style={styles.slot}
+                      onPress={() =>
+                        navigation.navigate("Booking", {
+                          doctor,
+                          slotno: slot,
+                          selectedDate: generateDate(),
+                          appointmentType: "Clinic",
+                        })
+                      }
+                    >
                       <Text style={styles.slotText}>{slot}</Text>
                     </Pressable>
                   ))}
                 </View>
-                <Pressable onPress={() => console.log("View all slots")}>
+                <Pressable
+                  onPress={() =>
+                    navigation.navigate("Slots", {
+                      doctor,
+                      appointmentType: "Clinic",
+                    })
+                  }
+                >
                   <Text style={styles.viewAllText}>View all slots</Text>
                 </Pressable>
               </>
@@ -285,12 +348,12 @@ export default function BookDoctor({ navigation, route }) {
                   </Text>
                 </View>
                 <View style={{ padding: 10, paddingTop: 5 }}>
-                  <Text style={{ fontWeight: "bold", fontSize: 20 }}>
+                  <Text style={{ fontWeight: "bold", fontSize: 16 }}>
                     {doctor.clinic}
                   </Text>
                   <Text
                     style={{
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: "400",
                       color: colours.blacktext,
                     }}
@@ -319,12 +382,30 @@ export default function BookDoctor({ navigation, route }) {
                     "6:15 PM",
                     "6:15 PM",
                   ].map((slot, index) => (
-                    <Pressable key={index} style={styles.slot}>
+                    <Pressable
+                      key={index}
+                      style={styles.slot}
+                      onPress={() =>
+                        navigation.navigate("Booking", {
+                          doctor,
+                          slotno: slot,
+                          selectedDate: generateDate(),
+                          appointmentType: "Virtual",
+                        })
+                      }
+                    >
                       <Text style={styles.slotText}>{slot}</Text>
                     </Pressable>
                   ))}
                 </View>
-                <Pressable onPress={() => console.log("View all slots")}>
+                <Pressable
+                  onPress={() =>
+                    navigation.navigate("Slots", {
+                      doctor,
+                      appointmentType: "Virtual",
+                    })
+                  }
+                >
                   <Text style={styles.viewAllText}>View all slots</Text>
                 </Pressable>
               </>
@@ -426,7 +507,7 @@ export default function BookDoctor({ navigation, route }) {
               >
                 {expanded ? text : `${text.substring(0, 80)}... `}
                 {!expanded && (
-                  <Pressable onPress={() => setExpanded(true)}>
+                  <Pressable onPress={toggleRead}>
                     <Text style={{ fontSize: 16, color: colours.lightcomp }}>
                       Read more
                     </Text>
@@ -434,7 +515,7 @@ export default function BookDoctor({ navigation, route }) {
                 )}
               </Text>
               {expanded && (
-                <Pressable onPress={() => setExpanded(false)}>
+                <Pressable onPress={toggleRead}>
                   <Text style={{ fontSize: 16, color: colours.lightcomp }}>
                     Read less
                   </Text>
@@ -442,29 +523,17 @@ export default function BookDoctor({ navigation, route }) {
               )}
             </View>
           </View>
-          <DropdownMenu
-            title="Specializations"
-            content="Hello world
-          XD 
-        Bruh 
-        XD"
-          />
+          <DropdownMenu title="Specializations" content="Smol text >.<" />
           <Divider />
           <DropdownMenu
             title="Education"
-            content="Hello world
-          XD 
-        Bruh 
-        XD"
+            content="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
           />
           <Divider />
 
           <DropdownMenu
             title="Experience"
-            content="Hello world
-          XD 
-        Bruh 
-        XD"
+            content="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
           />
           <Divider />
           <Pressable
@@ -500,10 +569,24 @@ export default function BookDoctor({ navigation, route }) {
         </ScrollView>
       </View>
       <View style={styles.bottomPanel}>
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonText}>Book visit</Text>
+        <Pressable
+          style={styles.button}
+          onPress={() =>
+            navigation.navigate("Slots", { doctor, appointmentType: "Clinic" })
+          }
+        >
+          <Text style={styles.buttonText}>
+            {doctor.clinicAvailable
+              ? "Book visit"
+              : doctor.virtualConsultation
+              ? "Book video consult"
+              : ""}
+          </Text>
         </Pressable>
-        <Pressable style={styles.button}>
+        <Pressable
+          style={styles.button}
+          onPress={() => dialNumber("1234567890")}
+        >
           <Text style={styles.buttonText}>Contact clinic</Text>
         </Pressable>
       </View>

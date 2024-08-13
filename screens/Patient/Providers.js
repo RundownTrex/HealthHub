@@ -148,18 +148,6 @@ export default function Providers({ navigation }) {
 
   const filters = ["Video consult", "Male", "Female"];
 
-  // const toggleFilter = (filter) => {
-  //   let updatedFilters;
-
-  //   if (selectedFilters.includes(filter)) {
-  //     updatedFilters = selectedFilters.filter((item) => item !== filter);
-  //   } else {
-  //     updatedFilters = [...selectedFilters, filter];
-  //   }
-
-  //   setSelectedFilters(updatedFilters);
-  // };
-
   const handleOptions = () => {
     setOptions((prev) => !prev);
   };

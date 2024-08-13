@@ -1,6 +1,14 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, Pressable, StyleSheet, LayoutAnimation, UIManager } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  LayoutAnimation,
+  UIManager,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import colors from "../utils/colors";
 
 // Enable LayoutAnimation on Android
 if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -12,7 +20,7 @@ const DropdownMenu = ({ title, content }) => {
 
   const toggleDropdown = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpanded(prev => !prev);
+    setExpanded((prev) => !prev);
   }, []);
 
   return (
@@ -46,14 +54,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#333",
+    backgroundColor: colors.darkback,
   },
   headerText: {
-    color: "white",
+    color: colors.whitetext,
     fontSize: 16,
   },
   content: {
-    backgroundColor: "#444",
+    backgroundColor: colors.darkgraytext,
     padding: 15,
   },
   contentText: {
