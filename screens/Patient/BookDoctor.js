@@ -227,7 +227,7 @@ export default function BookDoctor({ navigation, route }) {
                     backgroundColor: colours.lightcomp,
                     borderTopLeftRadius: 5,
                     borderTopRightRadius: 5,
-                    padding: 10,
+                    padding: 16,
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -322,7 +322,7 @@ export default function BookDoctor({ navigation, route }) {
                     backgroundColor: colours.lightcomp,
                     borderTopLeftRadius: 5,
                     borderTopRightRadius: 5,
-                    padding: 10,
+                    padding: 16,
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -571,9 +571,14 @@ export default function BookDoctor({ navigation, route }) {
       <View style={styles.bottomPanel}>
         <Pressable
           style={styles.button}
-          onPress={() =>
-            navigation.navigate("Slots", { doctor, appointmentType: "Clinic" })
-          }
+          onPress={() => {
+            const appointmentType =
+              doctor.virtualConsultation && !doctor.clinicAvailable
+                ? "Virtual"
+                : "Clinic";
+
+            navigation.navigate("Slots", { doctor, appointmentType });
+          }}
         >
           <Text style={styles.buttonText}>
             {doctor.clinicAvailable
@@ -650,7 +655,7 @@ const styles = StyleSheet.create({
   },
   slot: {
     backgroundColor: colours.complementary,
-    padding: 12,
+    padding: 10,
     borderRadius: 8,
     marginBottom: 10,
     width: "30%",
@@ -666,7 +671,7 @@ const styles = StyleSheet.create({
 
   viewAllText: {
     color: colours.complementary,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
     marginTop: 16,

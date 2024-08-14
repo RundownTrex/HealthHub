@@ -13,6 +13,9 @@ const colors = {
   somewhatlightback: "#424242",
   coolback: "#E0E0E0",
   superlightaccent: "#fef6e6",
+  green: "#4BB543",
+  linkblue: "#99c3ff",
+  alert: "#f7c631"
 };
 
 export default colors;

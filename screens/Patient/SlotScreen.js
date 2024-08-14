@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from "react-native";
 import { Divider } from "react-native-paper";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 
 import colors from "../../utils/colors";
 import SlotButton from "../../components/SlotButton";
@@ -43,14 +43,24 @@ const generateSlots = (days) => {
   for (let i = 0; i < days; i++) {
     const date = new Date();
     date.setDate(date.getDate() + i);
+
+    let inX;
+
+    if (i === 0) {
+        inX = "Today";
+      
+    } else {
+      inX = formatDistanceToNow(date, { addSuffix: true });
+    }
+
     slots.push({
       date: format(date, "EEE, dd MMM"), // Format the date as "Tue, 13 Aug"
       available: "11", // Example available slots count
+      inx: inX,
     });
   }
   return slots;
 };
-
 const slotsData = {
   Morning: ["09:00 AM", "09:30 AM", "10:30 AM", "11:00 AM", "11:30 AM"],
   Afternoon: ["12:00 PM", "12:30 PM", "01:00 PM"],
@@ -203,6 +213,7 @@ export default function SlotScreen({ navigation, route }) {
                         slotno: time,
                         selectedDate,
                         appointmentType,
+                        inx: slots[selectedSlot].inx,
                       })
                     }
                     style={styles.slotButton}

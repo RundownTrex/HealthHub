@@ -24,6 +24,8 @@ const doctors = [
     experience: 10,
     location: "Dadar",
     clinic: "Fit clinic",
+    address:
+      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
     fee: 2500,
     image: require("../../assets/general-practicionor.png"),
     virtualConsultation: true,
@@ -36,6 +38,8 @@ const doctors = [
     experience: 10,
     location: "Dadar",
     clinic: "Fit clinic",
+    address:
+      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
     fee: 2500,
     image: require("../../assets/general-practicionor.png"),
     virtualConsultation: false,
@@ -48,6 +52,8 @@ const doctors = [
     experience: 10,
     location: "Dadar",
     clinic: "Fit clinic",
+    address:
+      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
     fee: 2500,
     image: require("../../assets/general-practicionor.png"),
     virtualConsultation: true,
@@ -60,6 +66,8 @@ const doctors = [
     experience: 10,
     location: "Dadar",
     clinic: "Fit clinic",
+    address:
+      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
     fee: 2500,
     image: require("../../assets/general-practicionor.png"),
     virtualConsultation: false,
@@ -72,6 +80,8 @@ const doctors = [
     experience: 10,
     location: "Dadar",
     clinic: "Fit clinic",
+    address:
+      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
     fee: 2500,
     image: require("../../assets/general-practicionor.png"),
     virtualConsultation: true,
