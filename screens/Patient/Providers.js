@@ -109,6 +109,7 @@ export default function Providers({ navigation }) {
     setClinic((prevState) => !prevState);
   };
 
+  
   useEffect(() => {
     toggleBottomSheet(true);
     const backAction = () => {

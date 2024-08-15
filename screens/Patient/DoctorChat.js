@@ -1,0 +1,251 @@
+import { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  BackHandler,
+  Pressable,
+  Image,
+} from "react-native";
+import {
+  GiftedChat,
+  InputToolbar,
+  Composer,
+  Send,
+  Bubble,
+} from "react-native-gifted-chat";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+
+import colors from "../../utils/colors";
+import BackIcon from "../../assets/icons/BackIcon";
+import { useBottomSheet } from "../../context/BottomSheetContext";
+
+export default function DoctorChat({ navigation, route }) {
+  const { doctorname, pfp } = route.params;
+
+  const [messages, setMessages] = useState([]);
+  const { toggleBottomSheet } = useBottomSheet();
+
+  const user = auth().currentUser;
+
+  // Fetch messages from Firestore
+  useEffect(() => {
+    const unsubscribe = firestore()
+      .collection("chats")
+      .orderBy("createdAt", "desc")
+      .onSnapshot((snapshot) =>
+        setMessages(
+          snapshot.docs.map((doc) => ({
+            _id: doc.id,
+            text: doc.data().text,
+            createdAt: doc.data().createdAt.toDate(),
+            user: doc.data().user,
+          }))
+        )
+      );
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    toggleBottomSheet(true);
+    const backAction = () => {
+      navigation.pop();
+      return true;
+    };
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+    return () => {
+      toggleBottomSheet(false);
+      backHandler.remove();
+    };
+  }, [toggleBottomSheet, navigation]);
+
+  const onSend = useCallback((messages = []) => {
+    setMessages((previousMessages) =>
+      GiftedChat.append(previousMessages, messages)
+    );
+
+    const { _id, createdAt, text, user } = messages[0];
+
+    // Add the new message to Firestore
+    firestore().collection("chats").add({
+      _id,
+      text,
+      createdAt,
+      user,
+    });
+  }, []);
+
+  const renderInputToolbar = (props) => {
+    return (
+      <InputToolbar
+        {...props}
+        containerStyle={{
+          backgroundColor: colors.darkback,
+          marginTop: 0,
+          marginTop: 8,
+          paddingBottom: 5,
+          paddingTop: 5,
+        }}
+        primaryStyle={{ alignItems: "center", justifyContent: "center" }}
+      />
+    );
+  };
+
+  const renderComposer = (props) => {
+    return (
+      <Composer
+        {...props}
+        textInputStyle={{
+          color: colors.whitetext, // Change text color
+          backgroundColor: colors.darkback, // Change background color
+          borderRadius: 20,
+          paddingLeft: 15,
+          paddingRight: 10,
+          lineHeight: 30,
+          //   borderWidth: 1,
+          alignItems: "center",
+          backgroundColor: colors.darkgraytext,
+          marginBottom: 0,
+          marginRight: 5,
+        }}
+        placeholderTextColor={colors.coolback} // Change placeholder color
+      />
+    );
+  };
+
+  // Customize the send button
+  const renderSend = (props) => {
+    return (
+      <Send {...props}>
+        <View
+          style={{
+            marginRight: 10,
+            // marginBottom: 10,
+            borderWidth: 1,
+            padding: 10,
+            borderRadius: 200,
+            backgroundColor: colors.darkgraytext,
+            alignSelf: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Image
+            source={require("../../assets/icons/send.png")} // Your custom send icon
+            style={{ height: 28, width: 28 }}
+          />
+        </View>
+      </Send>
+    );
+  };
+
+  const renderBubble = (props) => {
+    return (
+      <Bubble
+        {...props}
+        wrapperStyle={{
+          left: {
+            // backgroundColor: colors.leftBubbleBackground, // Background color for the received messages
+          },
+          right: {
+            backgroundColor: colors.complementary, // Background color for the sent messages
+          },
+        }}
+        textStyle={{
+          left: {
+            // color: colors.leftBubbleText, // Text color for the received messages
+          },
+          right: {
+            color: colors.whitetext, // Text color for the sent messages
+          },
+        }}
+      />
+    );
+  };
+
+  return (
+    <>
+      <View
+        style={{
+          height: 60,
+          backgroundColor: colors.lightaccent,
+          justifyContent: "",
+          alignItems: "center",
+          flexDirection: "row",
+          paddingVertical: 10,
+          paddingHorizontal: 16,
+        }}
+      >
+        <Pressable style={{ padding: 5 }} onPress={() => navigation.pop()}>
+          <BackIcon style={{ alignItems: "center" }} />
+        </Pressable>
+        <Image
+          source={pfp}
+          style={{ marginRight: 10, height: 45, width: 45, borderRadius: 100 }}
+        />
+        <Text
+          style={{
+            color: colors.whitetext,
+            fontWeight: "bold",
+            fontSize: 18,
+          }}
+        >
+          {doctorname}
+        </Text>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            flex: 1,
+          }}
+        >
+          <Pressable
+            onPress={() => console.log("Call Pressed")}
+            style={{ padding: 10, marginRight: 5 }}
+          >
+            <Image
+              source={require("../../assets/icons/phone.png")}
+              style={{ height: 20, width: 20 }}
+            />
+          </Pressable>
+          <Pressable
+            onPress={() => console.log("Video Call Pressed")}
+            style={{ padding: 10 }}
+          >
+            <Image
+              source={require("../../assets/icons/video-cam.png")}
+              style={{ height: 25, width: 25 }}
+            />
+          </Pressable>
+        </View>
+      </View>
+      <View style={styles.container}>
+        <GiftedChat
+          messages={messages}
+          onSend={(messages) => onSend(messages)}
+          user={{
+            _id: user.uid, // Use the Firebase user's ID
+            name: user.displayName || "Anonymous",
+            avatar: user.photoURL || pfp, // Use Firebase user profile picture or passed prop
+          }}
+          renderInputToolbar={renderInputToolbar}
+          renderComposer={renderComposer}
+          renderSend={renderSend}
+          renderBubble={renderBubble}
+        />
+      </View>
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.darkback,
+  },
+});

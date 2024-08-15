@@ -9,6 +9,7 @@ import Messages from "../screens/Patient/Messages";
 import Profile from "../screens/Patient/Profile";
 import colors from "../utils/colors";
 import AppointmentStack from "./AppointmentStack";
+import MessagesStack from "./MessagesStack";
 import CustomTabBar from "../components/CustomTabBar";
 
 import { BottomSheetProvider } from "../context/BottomSheetContext";
@@ -36,8 +37,6 @@ function LocationIcon(props) {
 const { width } = Dimensions.get("screen");
 
 export default function PatientTabs() {
-
-
   return (
     <BottomSheetProvider>
       <Tab.Navigator
@@ -65,15 +64,14 @@ export default function PatientTabs() {
           name="Appointment"
           component={AppointmentStack}
           options={{
-            headerTitleAlign: "center",
             headerShown: false,
           }}
         />
         <Tab.Screen
-          name="Messages"
-          component={Messages}
+          name="Message"
+          component={MessagesStack}
           options={{
-            headerTitleAlign: "center",
+            headerShown: false,
           }}
         />
         <Tab.Screen

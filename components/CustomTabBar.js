@@ -66,7 +66,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
               : require("../assets/icons/appointments.png");
             label = "Appointments";
             break;
-          case "Messages":
+          case "Message":
             icon = isFocused
               ? require("../assets/icons/message-selected.png")
               : require("../assets/icons/message.png");

@@ -48,7 +48,6 @@ const generateSlots = (days) => {
 
     if (i === 0) {
         inX = "Today";
-      
     } else {
       inX = formatDistanceToNow(date, { addSuffix: true });
     }

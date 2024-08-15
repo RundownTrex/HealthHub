@@ -44,21 +44,24 @@ export default function HomeScreen({ navigation }) {
       title: "General practitioner",
       pricerange: "100₹ - 500₹",
       image: require("../../assets/general-practicionor.png"),
+      to: "General Physician",
     },
-    {
-      title: "Specialist",
-      pricerange: "1000₹ - 5000₹",
-      image: require("../../assets/specialist.png"),
-    },
+    // {
+    //   title: "Specialist",
+    //   pricerange: "1000₹ - 5000₹",
+    //   image: require("../../assets/specialist.png"),
+    // },
     {
       title: "Mental Health",
       pricerange: "2000₹ - 5000₹",
       image: require("../../assets/mental-health.png"),
+      to: "Psychiatrist",
     },
     {
       title: "Nutrition",
       pricerange: "1000₹ - 3000₹",
       image: require("../../assets/nutrition.png"),
+      to: "Nutritionist ",
     },
   ];
 
@@ -181,8 +184,6 @@ export default function HomeScreen({ navigation }) {
     []
   );
 
-  const [send, setSend] = useState("General Provider");
-
   return (
     <>
       <View style={styles.container}>
@@ -223,7 +224,12 @@ export default function HomeScreen({ navigation }) {
               {options.map((option, index) => (
                 <Pressable
                   onPress={() => {
-                    console.log("KYS");
+                    let send = option.to;
+                    navigation.navigate("Appointment");
+                    navigation.navigate("Appointment", {
+                      screen: "Providers",
+                      params: { send },
+                    });
                   }}
                   key={index}
                   style={styles.card}
