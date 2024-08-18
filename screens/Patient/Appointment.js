@@ -258,7 +258,12 @@ export default function Appointment({ navigation }) {
           placeholder="Search for specialities"
         />
         <Text
-          style={{ color: colors.whitetext, fontWeight: "bold", fontSize: 22 }}
+          style={{
+            color: colors.whitetext,
+            fontWeight: "bold",
+            fontSize: 22,
+            marginTop: 10,
+          }}
         >
           Most searched specialities
         </Text>

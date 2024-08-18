@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -21,12 +21,15 @@ import colors from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";
 import { useBottomSheet } from "../../context/BottomSheetContext";
 
+
+const callId = "Fw39EziXX2kB";
+
+
 export default function DoctorChat({ navigation, route }) {
   const { doctorname, pfp } = route.params;
-
-  const [messages, setMessages] = useState([]);
   const { toggleBottomSheet } = useBottomSheet();
 
+  const [messages, setMessages] = useState([]);
   const user = auth().currentUser;
 
   // Fetch messages from Firestore
@@ -149,19 +152,37 @@ export default function DoctorChat({ navigation, route }) {
         {...props}
         wrapperStyle={{
           left: {
-            // backgroundColor: colors.leftBubbleBackground, // Background color for the received messages
+            // backgroundColor: colors.leftBubbleBackground,
           },
           right: {
-            backgroundColor: colors.complementary, // Background color for the sent messages
+            backgroundColor: colors.complementary,
           },
         }}
         textStyle={{
           left: {
-            // color: colors.leftBubbleText, // Text color for the received messages
+            // color: colors.leftBubbleText,
           },
           right: {
-            color: colors.whitetext, // Text color for the sent messages
+            color: colors.whitetext,
           },
+        }}
+      />
+    );
+  };
+
+  const renderAvatar = (props) => {
+    return (
+      <Image
+        source={{ uri: props.currentMessage.user.avatar }}
+        style={{
+          width: 40, // Customize the size
+          height: 40, // Customize the size
+          borderRadius: 100, // Make it round
+          borderWidth: 1, // Add a border
+          borderColor: colors.whitetext, // Border color
+          marginLeft: 5, // Adjust spacing
+          marginBottom: 5, // Adjust spacing
+          overflow: "hidden",
         }}
       />
     );
@@ -185,7 +206,12 @@ export default function DoctorChat({ navigation, route }) {
         </Pressable>
         <Image
           source={pfp}
-          style={{ marginRight: 10, height: 45, width: 45, borderRadius: 100 }}
+          style={{
+            marginRight: 10,
+            height: 45,
+            width: 45,
+            borderRadius: 100,
+          }}
         />
         <Text
           style={{
@@ -214,7 +240,7 @@ export default function DoctorChat({ navigation, route }) {
             />
           </Pressable>
           <Pressable
-            onPress={() => console.log("Video Call Pressed")}
+            onPress={() => navigation.navigate("VideoCall", { callId })}
             style={{ padding: 10 }}
           >
             <Image
@@ -237,6 +263,7 @@ export default function DoctorChat({ navigation, route }) {
           renderComposer={renderComposer}
           renderSend={renderSend}
           renderBubble={renderBubble}
+          renderAvatar={renderAvatar}
         />
       </View>
     </>

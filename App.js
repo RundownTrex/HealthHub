@@ -14,13 +14,13 @@ import { Provider as PaperProvider } from "react-native-paper";
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PaperProvider>
-        <BottomSheetModalProvider>
-          <UserProvider>
-            <Main />
-          </UserProvider>
-        </BottomSheetModalProvider>
-      </PaperProvider>
+        <PaperProvider>
+          <BottomSheetModalProvider>
+            <UserProvider>
+              <Main />
+            </UserProvider>
+          </BottomSheetModalProvider>
+        </PaperProvider>
     </GestureHandlerRootView>
   );
 }
