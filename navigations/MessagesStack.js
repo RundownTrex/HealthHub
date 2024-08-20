@@ -5,11 +5,11 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Messages from "../screens/Patient/Messages";
 import DoctorChat from "../screens/Patient/DoctorChat";
 import VideoCall from "../components/VideoCall";
+import VoiceCall from "../components/VoiceCall";
 
 import {
   StreamVideoClient,
   StreamVideo,
-  
 } from "@stream-io/video-react-native-sdk";
 
 const apiKey = "6a8qhywws3sz";
@@ -42,6 +42,7 @@ export default function MessagesStack() {
         <Stack.Screen name="Messages" component={Messages} />
         <Stack.Screen name="DoctorChat" component={DoctorChat} />
         <Stack.Screen name="VideoCall" component={VideoCall} />
+        <Stack.Screen name="VoiceCall" component={VoiceCall} />
       </Stack.Navigator>
     </StreamVideo>
   );

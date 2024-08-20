@@ -226,10 +226,13 @@ export default function HomeScreen({ navigation }) {
                   onPress={() => {
                     let send = option.to;
                     navigation.navigate("Appointment");
-                    navigation.navigate("Appointment", {
-                      screen: "Providers",
-                      params: { send },
-                    });
+
+                    setTimeout(() => {
+                      navigation.navigate("Appointment", {
+                        screen: "Providers",
+                        params: { send },
+                      });
+                    }, 10);
                   }}
                   key={index}
                   style={styles.card}

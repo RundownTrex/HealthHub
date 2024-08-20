@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
-
+import { View, Text, StyleSheet, BackHandler } from "react-native";
 import {
-  Call,
   StreamCall,
   useStreamVideoClient,
-  useCallStateHooks,
   CallingState,
   CallContent,
 } from "@stream-io/video-react-native-sdk";
+import colors from "../utils/colors";
 
 export default function VideoCall({ navigation, route }) {
   const { callId } = route.params;
@@ -21,8 +19,32 @@ export default function VideoCall({ navigation, route }) {
   }, [client, callId]);
 
   useEffect(() => {
+    const handleBackPress = () => {
+      // Leave the call and navigate back
+      if (call) {
+        call.leave().then(() => {
+          navigation.pop();
+        });
+      } else {
+        navigation.pop(); // Navigate back if no call is active
+      }
+      return true; // Prevent default back action
+    };
+
+    BackHandler.addEventListener("hardwareBackPress", handleBackPress);
+
     return () => {
-      // cleanup the call on unmount if the call was not left already
+      // Cleanup the back handler and leave the call if needed
+      BackHandler.removeEventListener("hardwareBackPress", handleBackPress);
+      if (call?.state.callingState !== CallingState.LEFT) {
+        call?.leave();
+      }
+    };
+  }, [call, navigation]);
+
+  useEffect(() => {
+    return () => {
+      // Cleanup the call on unmount if the call was not left already
       if (call?.state.callingState !== CallingState.LEFT) {
         call?.leave();
       }
@@ -32,27 +54,16 @@ export default function VideoCall({ navigation, route }) {
   if (!call) {
     return (
       <View style={styles.container}>
-        <Text style={styles.text}>Joining call...</Text>
+        <Text style={[styles.text, { alignSelf: "center" }]}>
+          Joining call...
+        </Text>
       </View>
     );
   }
 
-  const ParticipantCountText = () => {
-    const { useParticipantCount } = useCallStateHooks();
-    const participantCount = useParticipantCount();
-    return (
-      <Text style={styles.text}>Call has {participantCount} participants</Text>
-    );
-  };
-
   return (
     <StreamCall call={call}>
       <View style={styles.container}>
-        {/* <Text style={styles.text}>Here we will add Video Calling UI</Text>
-        <ParticipantCountText />
-        <Pressable title="Go back" onPress={() => navigation.pop()}>
-          <Text>Leave call</Text>
-        </Pressable> */}
         <CallContent onHangupCallHandler={() => navigation.pop()} />
       </View>
     </StreamCall>
@@ -62,7 +73,7 @@ export default function VideoCall({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // alignItems: "center",
     justifyContent: "center",
+    backgroundColor: colors.darkback,
   },
 });

@@ -21,9 +21,7 @@ import colors from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";
 import { useBottomSheet } from "../../context/BottomSheetContext";
 
-
 const callId = "Fw39EziXX2kB";
-
 
 export default function DoctorChat({ navigation, route }) {
   const { doctorname, pfp } = route.params;
@@ -231,7 +229,7 @@ export default function DoctorChat({ navigation, route }) {
           }}
         >
           <Pressable
-            onPress={() => console.log("Call Pressed")}
+            onPress={() => navigation.navigate("VoiceCall", { callId })}
             style={{ padding: 10, marginRight: 5 }}
           >
             <Image

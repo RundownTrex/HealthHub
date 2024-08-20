@@ -109,7 +109,6 @@ export default function Providers({ navigation }) {
     setClinic((prevState) => !prevState);
   };
 
-  
   useEffect(() => {
     toggleBottomSheet(true);
     const backAction = () => {
@@ -177,7 +176,10 @@ export default function Providers({ navigation }) {
             paddingHorizontal: 16,
           }}
         >
-          <Pressable style={{ padding: 5 }} onPress={() => navigation.pop()}>
+          <Pressable
+            style={{ padding: 5 }}
+            onPress={() => navigation.pop()}
+          >
             <BackIcon style={{ alignItems: "flex-start" }} />
           </Pressable>
           <Text
