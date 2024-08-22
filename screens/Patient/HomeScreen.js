@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   Image,
   Pressable,
 } from "react-native";
+import auth from "@react-native-firebase/auth";
+
 import colors from "../../utils/colors";
 import RightArrow from "../../assets/icons/RightArrow";
 import Svg, { Path } from "react-native-svg";
@@ -31,6 +33,7 @@ export default function HomeScreen({ navigation }) {
   const snapPoints = useMemo(() => ["25%", "50%", "75%", "86%"], []);
   const sheetref = useRef();
   const [location, setLocation] = useState("");
+  const [userName, setUserName] = useState("");
 
   const scrollOffsetY = useRef(new Animated.Value(0)).current;
   const headerScrollHeight = scrollOffsetY.interpolate({
@@ -38,6 +41,20 @@ export default function HomeScreen({ navigation }) {
     outputRange: [H_MAX_HEIGHT, H_MIN_HEIGHT],
     extrapolate: "clamp",
   });
+
+  useEffect(() => {
+    const fetchUserProfile = () => {
+      const user = auth().currentUser;
+
+      if (user) {
+        setUserName(user.displayName);
+      } else {
+        console.log("No user is logged in");
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const options = [
     {
@@ -146,7 +163,7 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.headerContainer}>
         <View style={styles.titleContainer}>
           <Text style={styles.greetingText}>Good morning,</Text>
-          <Text style={styles.nameText}>John Doe</Text>
+          <Text style={styles.nameText}>{userName}</Text>
         </View>
 
         <Pressable
