@@ -1,5 +1,12 @@
-import React, { useContext } from "react";
-import { View, Text, StyleSheet, StatusBar } from "react-native";
+import React, { useContext, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  Image,
+  Pressable,
+} from "react-native";
 import colors from "../../utils/colors";
 import Button1 from "../../components/Button1";
 import RoleContext from "../../context/RoleContext";
@@ -9,13 +16,30 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Profile() {
   const { userRole, setUserRole } = useContext(RoleContext);
+  const [userPfp, setUserPfp] = useState(null);
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    const fetchUserProfile = () => {
+      const user = auth().currentUser;
+
+      if (user) {
+        setUserPfp(user.photoURL);
+        setUserName(user.displayName);
+      } else {
+        console.log("No user is logged in");
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const signOut = () => {
     auth()
       .signOut()
       .then(() => {
         setUserRole(null);
-        AsyncStorage.removeItem("userRole"); 
+        AsyncStorage.removeItem("userRole");
         Toast.show({
           type: "info",
           text1: "Signing you out",
@@ -28,8 +52,17 @@ export default function Profile() {
     return (
       <View style={styles.headerContainer}>
         <Text style={styles.title}>Profile</Text>
-        {/* <Image source={}/> */}
-        <Text style={{ marginTop: 50 }}>Image here</Text>
+        <View style={styles.avatar}>
+          <Image
+            source={{ uri: userPfp }}
+            style={{
+              width: 100,
+              height: 100,
+              overflow: "hidden",
+              borderRadius: 100,
+            }}
+          />
+        </View>
         <Text style={styles.name}>John Doe</Text>
       </View>
     );
@@ -95,6 +128,13 @@ const styles = StyleSheet.create({
     color: colors.whitetext,
     fontSize: 25,
     alignSelf: "center",
-    marginTop: 275 - 180,
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 100,
+    overflow: "hidden",
+    marginTop: 16,
+    marginBottom: 25,
   },
 });
