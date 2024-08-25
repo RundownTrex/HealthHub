@@ -43,6 +43,8 @@
     "react-native-gesture-handler": "^2.17.1",
     "react-native-gifted-chat": "^2.4.0",
     "react-native-incall-manager": "^4.2.0",
+    "react-native-keyboard-avoiding-scroll-view": "^1.0.1",
+    "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-maps": "^1.17.3",
     "react-native-masked-text": "^1.13.0",
     "react-native-paper": "^5.12.3",

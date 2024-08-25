@@ -20,6 +20,7 @@ import { useBottomSheet } from "../../context/BottomSheetContext";
 import BackIcon from "../../assets/icons/BackIcon";
 import TextInput1 from "../../components/TextInput1";
 import Button1 from "../../components/Button1";
+import LoadingOverlay from "../../components/LoadingOverlay";
 
 const genders = [
   {
@@ -44,6 +45,8 @@ export default function GeneralProfileScreen({ navigation }) {
   const [lastName, setLastName] = useState("");
   const [dob, setDob] = useState("");
   const [gender, setGender] = useState(null);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const pickImage = async () => {
     // Ask for permission to access media library
@@ -298,9 +301,13 @@ export default function GeneralProfileScreen({ navigation }) {
             marginVertical: 20,
           }}
         >
-          <Button1 onPress={() => console.log("Submitted")} text="Save Changes" />
+          <Button1
+            onPress={() => console.log("Submitted")}
+            text="Save Changes"
+          />
         </View>
       </ScrollView>
+      <LoadingOverlay isVisible={isLoading} />
     </>
   );
 }
