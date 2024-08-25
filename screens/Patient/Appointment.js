@@ -246,6 +246,7 @@ export default function Appointment({ navigation }) {
             // height: 45,
             alignItems: "center",
             // marginBottom: 16,
+            borderRadius: 8,
           }}
           inputStyle={{
             color: colors.blacktext,

@@ -57,7 +57,7 @@ const menuitems = [
   },
 ];
 
-export default function Profile() {
+export default function Profile({ navigation }) {
   const { userRole, setUserRole } = useContext(RoleContext);
   const [userPfp, setUserPfp] = useState(null);
   const [userName, setUserName] = useState("");
@@ -96,16 +96,29 @@ export default function Profile() {
       <View style={styles.headerContainer}>
         <Text style={styles.title}>Profile</Text>
         <View style={styles.avatar}>
-          <Image
-            source={{ uri: userPfp }}
-            style={{
-              width: 90,
-              height: 90,
-              overflow: "hidden",
-              borderRadius: 100,
-              alignSelf: "center",
-            }}
-          />
+          {userPfp !== null ? (
+            <Image
+              source={{ uri: userPfp }}
+              style={{
+                width: 90,
+                height: 90,
+                overflow: "hidden",
+                borderRadius: 100,
+                alignSelf: "center",
+              }}
+            />
+          ) : (
+            <Image
+              source={require("../../assets/avatar.png")}
+              style={{
+                width: 90,
+                height: 90,
+                overflow: "hidden",
+                borderRadius: 100,
+                alignSelf: "center",
+              }}
+            />
+          )}
         </View>
         <Text style={styles.name}>{userName}</Text>
       </View>
@@ -130,7 +143,7 @@ export default function Profile() {
       console.log("Logged out!");
     } else {
       console.log(item.screen);
-      // navigation.navigate(item.screen);
+      navigation.navigate(item.screen);
     }
   };
 
@@ -210,8 +223,8 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   avatar: {
-    width: 100,
-    height: 100,
+    width: 90,
+    height: 90,
     borderRadius: 100,
     overflow: "hidden",
     marginTop: 16,

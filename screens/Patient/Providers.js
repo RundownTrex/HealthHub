@@ -176,10 +176,7 @@ export default function Providers({ navigation }) {
             paddingHorizontal: 16,
           }}
         >
-          <Pressable
-            style={{ padding: 5 }}
-            onPress={() => navigation.pop()}
-          >
+          <Pressable style={{ padding: 5 }} onPress={() => navigation.pop()}>
             <BackIcon style={{ alignItems: "flex-start" }} />
           </Pressable>
           <Text
@@ -220,6 +217,7 @@ export default function Providers({ navigation }) {
                 height: 45,
                 alignItems: "center",
                 // marginBottom: 16,
+                borderRadius: 8,
               }}
               inputStyle={{
                 color: colors.blacktext,

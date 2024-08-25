@@ -9,6 +9,8 @@ const TextInput1 = ({
   onChangeText,
   secureTextEntry,
   style,
+  maxlen,
+  kbtype,
 }) => {
   return (
     <View style={[styles.container, style]}>
@@ -19,6 +21,8 @@ const TextInput1 = ({
         secureTextEntry={secureTextEntry}
         style={styles.input}
         placeholderTextColor={colors.lightgraytext}
+        maxLength={maxlen}
+        keyboardType={kbtype}
       />
     </View>
   );

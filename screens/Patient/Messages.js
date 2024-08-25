@@ -9,7 +9,6 @@ import {
   Pressable,
 } from "react-native";
 import { Searchbar, Avatar, MD3LightTheme } from "react-native-paper";
-import { FlashList } from "@shopify/flash-list";
 
 import colors from "../../utils/colors";
 

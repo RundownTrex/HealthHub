@@ -49,6 +49,7 @@ export default function DoctorChat({ navigation, route }) {
     return () => unsubscribe();
   }, []);
 
+  //Toggle bottom tab navigator visibility
   useEffect(() => {
     toggleBottomSheet(true);
     const backAction = () => {

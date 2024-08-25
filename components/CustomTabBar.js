@@ -72,7 +72,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
               : require("../assets/icons/message.png");
             label = "Messages";
             break;
-          case "Profile":
+          case "Profiles":
             icon = isFocused
               ? require("../assets/icons/profile-selected.png")
               : require("../assets/icons/profile.png");

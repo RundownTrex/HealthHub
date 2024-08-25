@@ -10,6 +10,7 @@ import Profile from "../screens/Patient/Profile";
 import colors from "../utils/colors";
 import AppointmentStack from "./AppointmentStack";
 import MessagesStack from "./MessagesStack";
+import PatientProfileStack from "./PatientProfileStack";
 import CustomTabBar from "../components/CustomTabBar";
 
 import { BottomSheetProvider } from "../context/BottomSheetContext";
@@ -75,8 +76,8 @@ export default function PatientTabs() {
           }}
         />
         <Tab.Screen
-          name="Profile"
-          component={Profile}
+          name="Profiles"
+          component={PatientProfileStack}
           options={{
             headerShown: false,
           }}
