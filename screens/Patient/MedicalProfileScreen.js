@@ -18,6 +18,7 @@ import BackIcon from "../../assets/icons/BackIcon";
 import Button1 from "../../components/Button1";
 import TextInput1 from "../../components/TextInput1";
 import LoadingOverlay from "../../components/LoadingOverlay";
+import Toast from "react-native-toast-message";
 
 const mstatus = [
   {
@@ -175,6 +176,10 @@ export default function MedicalProfileScreen({ navigation }) {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
+      Toast.show({
+        type: "success",
+        text1: "Submitted Successfully",
+      });
     }, 3000);
   };
 

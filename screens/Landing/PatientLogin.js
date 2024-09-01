@@ -21,6 +21,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import auth from "@react-native-firebase/auth";
 // const { width } = Dimensions.get("window");
+import LoadingOverlay from "../../components/LoadingOverlay";
 
 GoogleSignin.configure({
   webClientId:
@@ -30,6 +31,8 @@ GoogleSignin.configure({
 export default function PatientLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigation = useNavigation();
   const { userRole, setUserRole } = useContext(RoleContext);
@@ -41,6 +44,7 @@ export default function PatientLogin() {
   //Email signin
   const login = async () => {
     //Firebase stuff
+    setIsLoading(true);
     if (!email || !password) {
       Toast.show({
         type: "error",
@@ -101,11 +105,14 @@ export default function PatientLogin() {
       });
       setEmail(() => "");
       setPassword(() => "");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   //Google signin
   const googleSignin = async () => {
+    setIsLoading(true);
     try {
       console.log("Before signing out in googleSignIN: ", userRole);
       await GoogleSignin.signOut();
@@ -168,83 +175,88 @@ export default function PatientLogin() {
         text2: "Please try again",
       });
       console.log(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar backgroundColor={colors.darkback} />
-      <Text style={styles.textStyle}>Patient login</Text>
-      <TextInput1
-        placeholder="Email address"
-        value={email}
-        onChangeText={(text) => setEmail(text)}
-        autoCapitalize="none"
-        style={{ marginBottom: 10 }}
-      />
-      <TextInput1
-        placeholder="Password"
-        value={password}
-        onChangeText={(text) => setPassword(text)}
-        secureTextEntry={true}
-        style={{ marginBottom: 10 }}
-      />
-      <Text
-        style={{ fontSize: 14, color: colors.darkgraytext, marginBottom: 20 }}
-      >
-        Forgot your password?
-      </Text>
-      <Button1 text="LOGIN" onPress={login} />
-      <View
-        style={{ flexDirection: "row", alignItems: "center", marginTop: 20 }}
-      >
-        <View
-          style={{ flex: 1, height: 1, backgroundColor: colors.darkgraytext }}
+    <>
+      <LoadingOverlay isVisible={isLoading} />
+      <View style={styles.container}>
+        <StatusBar backgroundColor={colors.darkback} />
+        <Text style={styles.textStyle}>Patient login</Text>
+        <TextInput1
+          placeholder="Email address"
+          value={email}
+          onChangeText={(text) => setEmail(text)}
+          autoCapitalize="none"
+          style={{ marginBottom: 10 }}
         />
-        <View>
-          <Text
+        <TextInput1
+          placeholder="Password"
+          value={password}
+          onChangeText={(text) => setPassword(text)}
+          secureTextEntry={true}
+          style={{ marginBottom: 10 }}
+        />
+        <Text
+          style={{ fontSize: 14, color: colors.darkgraytext, marginBottom: 20 }}
+        >
+          Forgot your password?
+        </Text>
+        <Button1 text="LOGIN" onPress={login} />
+        <View
+          style={{ flexDirection: "row", alignItems: "center", marginTop: 20 }}
+        >
+          <View
+            style={{ flex: 1, height: 1, backgroundColor: colors.darkgraytext }}
+          />
+          <View>
+            <Text
+              style={{
+                width: 50,
+                textAlign: "center",
+                color: colors.darkgraytext,
+              }}
+            >
+              OR
+            </Text>
+          </View>
+          <View
+            style={{ flex: 1, height: 1, backgroundColor: colors.darkgraytext }}
+          />
+        </View>
+        <Pressable
+          style={({ pressed }) => [
+            {
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: 20,
+            },
+            pressed && { opacity: 0.8 },
+          ]}
+          onPress={googleSignin}
+        >
+          <View
             style={{
-              width: 50,
-              textAlign: "center",
-              color: colors.darkgraytext,
+              width: "100%",
+              height: 52,
+              justifyContent: "center",
+              alignItems: "center",
             }}
           >
-            OR
+            <ContinueGoogle />
+          </View>
+        </Pressable>
+        <Pressable onPress={registerPatient}>
+          <Text style={styles.registerText}>
+            Don't have an account?
+            <Text style={{ color: colors.lightaccent }}> Register now</Text>
           </Text>
-        </View>
-        <View
-          style={{ flex: 1, height: 1, backgroundColor: colors.darkgraytext }}
-        />
+        </Pressable>
       </View>
-      <Pressable
-        style={({ pressed }) => [
-          {
-            justifyContent: "center",
-            alignItems: "center",
-            marginTop: 20,
-          },
-          pressed && { opacity: 0.8 },
-        ]}
-        onPress={googleSignin}
-      >
-        <View
-          style={{
-            width: "100%",
-            height: 52,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <ContinueGoogle />
-        </View>
-      </Pressable>
-      <Pressable onPress={registerPatient}>
-        <Text style={styles.registerText}>
-          Don't have an account?
-          <Text style={{ color: colors.lightaccent }}> Register now</Text>
-        </Text>
-      </Pressable>
-    </View>
+    </>
   );
 }
 

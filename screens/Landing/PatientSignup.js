@@ -19,6 +19,8 @@ import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
+import LoadingOverlay from "../../components/LoadingOverlay";
+
 GoogleSignin.configure({
   webClientId:
     "241519626607-bl6d45ps1pgj89l3fk6e5j45ft67n16e.apps.googleusercontent.com",
@@ -30,9 +32,11 @@ export default function PatientSignup() {
   const [cpassword, setCpassword] = useState("");
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { userRole, setUserRole } = useContext(RoleContext);
 
   const registerwemail = async () => {
+    setIsLoading(true);
     if (!email || !password || !cpassword || !firstname || !lastname) {
       Toast.show({
         type: "error",
@@ -79,10 +83,13 @@ export default function PatientSignup() {
         text1: "Error signing up!",
         text2: error,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const signupwgoogle = async () => {
+    setIsLoading(true);
     try {
       await GoogleSignin.signOut();
       await GoogleSignin.hasPlayServices({
@@ -133,101 +140,118 @@ export default function PatientSignup() {
         text1: "Error",
         text2: "Could not sign up with google",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView behavior={"height"} style={styles.container}>
-      <ScrollView style={{ flexGrow: 1 }}>
-        <StatusBar backgroundColor={colors.darkback} />
-        <Text style={styles.textStyle}>Patient Sign up</Text>
+    <>
+      <LoadingOverlay isVisible={isLoading} />
+      <KeyboardAvoidingView behavior={"height"} style={styles.container}>
+        <ScrollView style={{ flexGrow: 1 }}>
+          <StatusBar backgroundColor={colors.darkback} />
+          <Text style={styles.textStyle}>Patient Sign up</Text>
 
-        <TextInput1
-          placeholder="First name"
-          value={firstname}
-          onChangeText={(text) => setFirstname(text)}
-          style={{ marginBottom: 10 }}
-        />
-
-        <TextInput1
-          placeholder="Last name"
-          value={lastname}
-          onChangeText={(text) => setLastname(text)}
-          style={{ marginBottom: 10 }}
-        />
-
-        <TextInput1
-          placeholder="Email address"
-          value={email}
-          onChangeText={(text) => setEmail(text)}
-          autoCapitalize="none"
-          style={{ marginBottom: 10 }}
-        />
-        <TextInput1
-          placeholder="Password"
-          value={password}
-          onChangeText={(text) => setPassword(text)}
-          secureTextEntry={true}
-          style={{ marginBottom: 10 }}
-        />
-
-        <TextInput1
-          placeholder="Confirm password"
-          value={cpassword}
-          onChangeText={(text) => setCpassword(text)}
-          secureTextEntry={true}
-          style={{ marginBottom: 20 }}
-        />
-
-        <Button1 text="SIGNUP" onPress={registerwemail} />
-        <View
-          style={{ flexDirection: "row", alignItems: "center", marginTop: 20 }}
-        >
-          <View
-            style={{ flex: 1, height: 1, backgroundColor: colors.darkgraytext }}
+          <TextInput1
+            placeholder="First name"
+            value={firstname}
+            onChangeText={(text) => setFirstname(text)}
+            style={{ marginBottom: 10 }}
           />
-          <View>
-            <Text
-              style={{
-                width: 50,
-                textAlign: "center",
-                color: colors.darkgraytext,
-              }}
-            >
-              OR
-            </Text>
-          </View>
-          <View
-            style={{ flex: 1, height: 1, backgroundColor: colors.darkgraytext }}
-          />
-        </View>
 
-        <Pressable
-          style={({ pressed }) => [
-            {
-              justifyContent: "center",
-              alignItems: "center",
-              marginTop: 20,
-            },
-            pressed && { opacity: 0.8 },
-          ]}
-          onPress={() => {
-            signupwgoogle();
-          }}
-        >
+          <TextInput1
+            placeholder="Last name"
+            value={lastname}
+            onChangeText={(text) => setLastname(text)}
+            style={{ marginBottom: 10 }}
+          />
+
+          <TextInput1
+            placeholder="Email address"
+            value={email}
+            onChangeText={(text) => setEmail(text)}
+            autoCapitalize="none"
+            style={{ marginBottom: 10 }}
+          />
+          <TextInput1
+            placeholder="Password"
+            value={password}
+            onChangeText={(text) => setPassword(text)}
+            secureTextEntry={true}
+            style={{ marginBottom: 10 }}
+          />
+
+          <TextInput1
+            placeholder="Confirm password"
+            value={cpassword}
+            onChangeText={(text) => setCpassword(text)}
+            secureTextEntry={true}
+            style={{ marginBottom: 20 }}
+          />
+
+          <Button1 text="SIGNUP" onPress={registerwemail} />
           <View
             style={{
-              width: "100%",
-              height: 52,
-              justifyContent: "center",
+              flexDirection: "row",
               alignItems: "center",
+              marginTop: 20,
             }}
           >
-            <SignupGoogle />
+            <View
+              style={{
+                flex: 1,
+                height: 1,
+                backgroundColor: colors.darkgraytext,
+              }}
+            />
+            <View>
+              <Text
+                style={{
+                  width: 50,
+                  textAlign: "center",
+                  color: colors.darkgraytext,
+                }}
+              >
+                OR
+              </Text>
+            </View>
+            <View
+              style={{
+                flex: 1,
+                height: 1,
+                backgroundColor: colors.darkgraytext,
+              }}
+            />
           </View>
-        </Pressable>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+          <Pressable
+            style={({ pressed }) => [
+              {
+                justifyContent: "center",
+                alignItems: "center",
+                marginTop: 20,
+              },
+              pressed && { opacity: 0.8 },
+            ]}
+            onPress={() => {
+              signupwgoogle();
+            }}
+          >
+            <View
+              style={{
+                width: "100%",
+                height: 52,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <SignupGoogle />
+            </View>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </>
   );
 }
 
