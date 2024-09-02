@@ -27,7 +27,7 @@ const bgroup = [
 
 export default function MedicalRecordsScreen({ navigation }) {
   const { toggleBottomSheet } = useBottomSheet();
-  const [recordType, setRecordType] = useState("reports");
+  const [recordType, setRecordType] = useState("Reports");
   const [records, setRecords] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
