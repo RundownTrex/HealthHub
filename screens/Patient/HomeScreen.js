@@ -11,6 +11,7 @@ import {
   Pressable,
 } from "react-native";
 import auth from "@react-native-firebase/auth";
+import { useIsFocused } from "@react-navigation/native";
 
 import colors from "../../utils/colors";
 import RightArrow from "../../assets/icons/RightArrow";
@@ -23,6 +24,7 @@ import Button1 from "../../components/Button1";
 import { SelectList } from "react-native-dropdown-select-list";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import Providers from "./Providers";
+import { useBottomSheet } from "../../context/BottomSheetContext";
 
 const H_MAX_HEIGHT = 80;
 const H_MIN_HEIGHT = 0;
@@ -34,6 +36,8 @@ export default function HomeScreen({ navigation }) {
   const sheetref = useRef();
   const [location, setLocation] = useState("");
   const [userName, setUserName] = useState("");
+  const isFocused = useIsFocused();
+  const { toggleBottomSheet } = useBottomSheet();
 
   const scrollOffsetY = useRef(new Animated.Value(0)).current;
   const headerScrollHeight = scrollOffsetY.interpolate({
@@ -55,6 +59,15 @@ export default function HomeScreen({ navigation }) {
 
     fetchUserProfile();
   }, []);
+
+  useEffect(() => {
+    if (isFocused) {
+      console.log(
+        "Home Screen is focused or returned to after navigating back"
+      );
+      toggleBottomSheet(false);
+    }
+  }, [isFocused]);
 
   const options = [
     {

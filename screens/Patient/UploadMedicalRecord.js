@@ -13,11 +13,13 @@ import BackIcon from "../../assets/icons/BackIcon";
 import { Dropdown } from "react-native-element-dropdown";
 import * as DocumentPicker from "expo-document-picker";
 import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import colors from "../../utils/colors";
 import { useBottomSheet } from "../../context/BottomSheetContext";
 import Button1 from "../../components/Button1";
 import LoadingOverlay from "../../components/LoadingOverlay";
+import TextInput1 from "../../components/TextInput1";
 
 const { width } = Dimensions.get("window");
 
@@ -30,10 +32,11 @@ const bgroup = [
 
 export default function UploadMedicalRecord({ navigation }) {
   const { toggleBottomSheet } = useBottomSheet();
-  const [recordType, setRecordType] = useState("");
+  const [recordType, setRecordType] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedFileName, setSelectedFileName] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [rname, setRname] = useState("");
 
   //   useEffect(() => {
   //     toggleBottomSheet(true);
@@ -75,12 +78,49 @@ export default function UploadMedicalRecord({ navigation }) {
     }
   };
 
-  const save = () => {
-    Toast.show({
-      type: "success",
-      text1: "Saved!",
-    });
-    navigation.pop();
+  const save = async () => {
+    if (!rname || !recordType || !selectedFile) {
+      Toast.show({
+        type: "error",
+        text1: "Please complete all fields",
+      });
+      return;
+    }
+
+    const lab = bgroup.find((option) => option.value === recordType);
+    const selectedLabel = lab.label;
+
+    const record = {
+      name: rname,
+      type: selectedLabel,
+      fileUri: selectedFile,
+      fileName: selectedFileName,
+    };
+
+    try {
+      const existingRecords = await AsyncStorage.getItem("medicalRecords");
+      const updatedRecords = existingRecords
+        ? [...JSON.parse(existingRecords), record]
+        : [record];
+
+      await AsyncStorage.setItem(
+        "medicalRecords",
+        JSON.stringify(updatedRecords)
+      );
+
+      Toast.show({
+        type: "success",
+        text1: "Saved!",
+      });
+
+      navigation.pop();
+    } catch (error) {
+      console.error("Error saving record:", error);
+      Toast.show({
+        type: "error",
+        text1: "Failed to save record",
+      });
+    }
   };
 
   return (
@@ -129,7 +169,7 @@ export default function UploadMedicalRecord({ navigation }) {
               source={require("../../assets/upload.png")}
               style={{ height: 30, width: 30 }}
             />
-            <Text style={[styles.buttonText]}>Upload</Text>
+            <Text style={[styles.buttonText]}>Select a file to upload</Text>
             <View style={{ height: 30, width: 30 }} />
           </View>
           {selectedFile && (
@@ -140,10 +180,16 @@ export default function UploadMedicalRecord({ navigation }) {
           )}
         </Pressable>
 
-        <View style={{ marginVertical: 16 }}>
-          <Text style={{ color: colors.whitetext, fontSize: 16 }}>
-            Type of record
-          </Text>
+        <View style={{ marginVertical: 10 }}>
+          <Text style={styles.label}>Record name</Text>
+          <TextInput1
+            placeholder="Ex. Corona Report 2024"
+            value={rname}
+            onChangeText={(p) => setRname(p)}
+          />
+        </View>
+        <View style={{ marginBottom: 16 }}>
+          <Text style={styles.label}>Type of record</Text>
           <Dropdown
             placeholder="Medical Records"
             data={bgroup}
@@ -156,13 +202,12 @@ export default function UploadMedicalRecord({ navigation }) {
               height: 45,
               borderColor: "gray",
               borderWidth: 1,
-              paddingHorizontal: 15,
+              paddingHorizontal: 10,
               paddingVertical: 12,
-              borderRadius: 2,
               backgroundColor: colors.somewhatlightback,
               fontSize: 16,
               marginVertical: 5,
-              borderRadius: 50,
+              borderRadius: 2,
             }}
             placeholderStyle={{
               color: colors.lightgraytext,
@@ -191,7 +236,7 @@ export default function UploadMedicalRecord({ navigation }) {
           />
         </View>
 
-        <Button1 text="Save" onPress={save} />
+        {selectedFile && <Button1 text="Save" onPress={save} />}
       </View>
     </>
   );
@@ -237,5 +282,9 @@ const styles = StyleSheet.create({
   selectedfiletext: {
     color: colors.whitetext,
     paddingTop: 10,
+  },
+  label: {
+    color: colors.lightgraytext,
+    fontSize: 14,
   },
 });
