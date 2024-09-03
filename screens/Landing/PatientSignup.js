@@ -43,6 +43,7 @@ export default function PatientSignup() {
         text1: "Enter credentials",
         text2: "All the fields are mandatory",
       });
+      setIsLoading(false);
       return;
     }
 
