@@ -49,6 +49,7 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     const fetchUserProfile = () => {
       const user = auth().currentUser;
+      console.log(user.displayName);
 
       if (user) {
         setUserName(user.displayName);

@@ -8,13 +8,15 @@ import {
   Pressable,
   Dimensions,
   FlatList,
+  Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import auth from "@react-native-firebase/auth";
+import Toast from "react-native-toast-message";
+
 import colors from "../../utils/colors";
 import Button1 from "../../components/Button1";
 import RoleContext from "../../context/RoleContext";
-import auth from "@react-native-firebase/auth";
-import Toast from "react-native-toast-message";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 
 const windowHeight = Dimensions.get("screen").height;
@@ -77,6 +79,20 @@ export default function Profile({ navigation }) {
     fetchUserProfile();
   }, []);
 
+  const confirmSignout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          onPress: signOut,
+        },
+      ],
+      { cancelable: true }
+    );
+  };
   const signOut = () => {
     auth()
       .signOut()
@@ -139,7 +155,8 @@ export default function Profile({ navigation }) {
 
   const handlePress = (item) => {
     if (item.action === "logout") {
-      signOut();
+      confirmSignout();
+      console.log();
       console.log("Logged out!");
     } else {
       console.log(item.screen);

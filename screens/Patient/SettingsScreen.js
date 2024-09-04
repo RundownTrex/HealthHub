@@ -16,6 +16,7 @@ import NotificationSetting from "react-native-open-notification";
 import Toast from "react-native-toast-message";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import firestore from "@react-native-firebase/firestore";
 
 import colors from "../../utils/colors";
 import { useBottomSheet } from "../../context/BottomSheetContext";
@@ -131,6 +132,8 @@ export default function SettingsScreen({ navigation }) {
     setIsLoading(true);
     try {
       const user = auth().currentUser;
+      const userDoc = firestore().collection("users").doc(user.uid);
+
       if (!user) {
         Toast.show({
           type: "error",
@@ -163,15 +166,19 @@ export default function SettingsScreen({ navigation }) {
       }
 
       // Delete the user account after successful re-authentication
-      await user.delete();
-      setUserRole(null);
-      AsyncStorage.removeItem("userRole");
-      Toast.show({
-        type: "success",
-        text1: "Account deleted successfully!",
+
+      userDoc.delete().then(async () => {
+        await user.delete();
+        setUserRole(null);
+        AsyncStorage.removeItem("userRole");
+
+        Toast.show({
+          type: "success",
+          text1: "Account deleted successfully!",
+        });
+        console.log("User account deleted successfully");
+        setIsLoading(false);
       });
-      console.log("User account deleted successfully");
-      setIsLoading(false);
     } catch (error) {
       console.error(
         "Error during re-authentication or account deletion:",

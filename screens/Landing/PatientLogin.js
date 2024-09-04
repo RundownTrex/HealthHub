@@ -180,6 +180,37 @@ export default function PatientLogin() {
     }
   };
 
+  const resetPassword = (email) => {
+    setIsLoading(true);
+    if (email === "") {
+      Toast.show({
+        type: "error",
+        text1: "Enter an email in the field",
+      });
+      setIsLoading(false);
+    } else {
+      auth()
+        .sendPasswordResetEmail(email)
+        .then(() => {
+          console.log("Password reset email sent successfully");
+          Toast.show({
+            type: "success",
+            text1: "Password reset email sent succesfully! Check your email",
+          });
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error sending password reset email:", error);
+          Toast.show({
+            type: "error",
+            text1: "Error sending password reset mail.",
+            text2: "Ensure the email in the field is right.",
+          });
+          setIsLoading(false);
+        });
+    }
+  };
+
   return (
     <>
       <LoadingOverlay isVisible={isLoading} />
@@ -200,11 +231,21 @@ export default function PatientLogin() {
           secureTextEntry={true}
           style={{ marginBottom: 10 }}
         />
-        <Text
-          style={{ fontSize: 14, color: colors.darkgraytext, marginBottom: 20 }}
-        >
-          Forgot your password?
-        </Text>
+        <View style={{ marginBottom: 20 }}>
+          <Pressable
+            style={styles.forgetpass}
+            onPress={() => resetPassword(email)}
+          >
+            <Text
+              style={{
+                fontSize: 14,
+                color: colors.darkgraytext,
+              }}
+            >
+              Forgot your password?
+            </Text>
+          </Pressable>
+        </View>
         <Button1 text="LOGIN" onPress={login} />
         <View
           style={{ flexDirection: "row", alignItems: "center", marginTop: 20 }}
@@ -280,5 +321,10 @@ const styles = StyleSheet.create({
     color: colors.lightgraytext,
     alignSelf: "center",
     marginTop: 25,
+  },
+
+  forgetpass: {
+    // borderWidth: 1,
+    width: 145,
   },
 });

@@ -20,6 +20,7 @@ import firestore from "@react-native-firebase/firestore";
 import colors from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";
 import { useBottomSheet } from "../../context/BottomSheetContext";
+import LoadingOverlay from "../../components/LoadingOverlay";
 
 const callId = "Fw39EziXX2kB";
 
@@ -28,10 +29,12 @@ export default function DoctorChat({ navigation, route }) {
   const { toggleBottomSheet } = useBottomSheet();
 
   const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const user = auth().currentUser;
 
   // Fetch messages from Firestore
   useEffect(() => {
+    setIsLoading(true);
     const unsubscribe = firestore()
       .collection("chats")
       .orderBy("createdAt", "desc")
@@ -45,6 +48,8 @@ export default function DoctorChat({ navigation, route }) {
           }))
         )
       );
+
+    setIsLoading(false);
 
     return () => unsubscribe();
   }, []);
@@ -170,30 +175,45 @@ export default function DoctorChat({ navigation, route }) {
   };
 
   const renderAvatar = (props) => {
+    const avataruri = props.currentMessage.user.avatar;
+    const placeholderpfp = require("../../assets/avatar.png");
+    console.log(avataruri);
+
     return (
-      <Image
-        source={{ uri: props.currentMessage.user.avatar }}
+      <View
         style={{
-          width: 40, // Customize the size
-          height: 40, // Customize the size
-          borderRadius: 100, // Make it round
-          borderWidth: 1, // Add a border
-          borderColor: colors.whitetext, // Border color
-          marginLeft: 5, // Adjust spacing
-          marginBottom: 5, // Adjust spacing
+          width: 40,
+          height: 40,
           overflow: "hidden",
+          borderRadius: 100,
+          // marginLeft: 5,
+          marginBottom: 5,
         }}
-      />
+      >
+        <Image
+          source={avataruri !== "null" ? { uri: avataruri } : placeholderpfp}
+          style={{
+            width: 40, // Customize the size
+            height: 40, // Customize the size
+            borderRadius: 100, // Make it round
+            // borderWidth: 1, // Add a border
+            // borderColor: colors.whitetext, // Border color
+            // marginLeft: 5, // Adjust spacing
+            // marginBottom: 5, // Adjust spacing
+            // overflow: "hidden",
+          }}
+        />
+      </View>
     );
   };
 
   return (
     <>
+      <LoadingOverlay isVisible={isLoading} />
       <View
         style={{
           height: 60,
           backgroundColor: colors.lightaccent,
-          justifyContent: "",
           alignItems: "center",
           flexDirection: "row",
           paddingVertical: 10,
@@ -251,12 +271,13 @@ export default function DoctorChat({ navigation, route }) {
       </View>
       <View style={styles.container}>
         <GiftedChat
+          key={user.uid}
           messages={messages}
           onSend={(messages) => onSend(messages)}
           user={{
             _id: user.uid, // Use the Firebase user's ID
             name: user.displayName || "Anonymous",
-            avatar: user.photoURL || pfp, // Use Firebase user profile picture or passed prop
+            avatar: user.photoURL || "null", // Use Firebase user profile picture or passed prop
           }}
           renderInputToolbar={renderInputToolbar}
           renderComposer={renderComposer}
