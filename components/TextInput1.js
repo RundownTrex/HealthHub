@@ -22,7 +22,8 @@ const TextInput1 = ({
         style={styles.input}
         placeholderTextColor={colors.lightgraytext}
         maxLength={maxlen}
-        keyboardType={kbtype}
+        // keyboardType={kbtype}
+        keyboardAppearance="dark"
       />
     </View>
   );

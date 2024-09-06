@@ -44,13 +44,14 @@ export default function PatientLogin() {
   //Email signin
   const login = async () => {
     //Firebase stuff
-    setIsLoading(true);
     if (!email || !password) {
+      setIsLoading(true);
       Toast.show({
         type: "error",
         text1: "Enter credentials",
         text2: "Email and password should not be empty!",
       });
+      setIsLoading(false);
       return;
     }
     try {
@@ -181,14 +182,15 @@ export default function PatientLogin() {
   };
 
   const resetPassword = (email) => {
-    setIsLoading(true);
     if (email === "") {
       Toast.show({
         type: "error",
-        text1: "Enter an email in the field",
+        text1: "Enter an email in the email input field",
       });
       setIsLoading(false);
     } else {
+      setIsLoading(true);
+
       auth()
         .sendPasswordResetEmail(email)
         .then(() => {
@@ -207,8 +209,12 @@ export default function PatientLogin() {
             text2: "Ensure the email in the field is right.",
           });
           setIsLoading(false);
+        })
+        .finally(() => {
+          setIsLoading(false);
         });
     }
+    setIsLoading(false);
   };
 
   return (

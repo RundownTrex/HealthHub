@@ -182,8 +182,8 @@ export default function DoctorChat({ navigation, route }) {
     return (
       <View
         style={{
-          width: 40,
-          height: 40,
+          width: 36,
+          height: 36,
           overflow: "hidden",
           borderRadius: 100,
           // marginLeft: 5,
@@ -193,8 +193,8 @@ export default function DoctorChat({ navigation, route }) {
         <Image
           source={avataruri !== "null" ? { uri: avataruri } : placeholderpfp}
           style={{
-            width: 40, // Customize the size
-            height: 40, // Customize the size
+            width: 36, // Customize the size
+            height: 36, // Customize the size
             borderRadius: 100, // Make it round
             // borderWidth: 1, // Add a border
             // borderColor: colors.whitetext, // Border color

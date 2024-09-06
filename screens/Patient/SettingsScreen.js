@@ -38,66 +38,21 @@ export default function SettingsScreen({ navigation }) {
   const [passwordPromise, setPasswordPromise] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // const deleteUserAccount = async () => {
+  const [canChangePassword, setCanChangePassword] = useState(false);
 
-  //   try {
-  //     const user = auth().currentUser;
-  //     const providers = user.providerData.map(
-  //       (provider) => provider.providerId
-  //     );
+  useEffect(() => {
+    setIsLoading(true);
+    const user = auth().currentUser;
 
-  //     if (user) {
-  //       await user.delete();
-  //       setUserRole(null);
-  //       AsyncStorage.removeItem("userRole");
-  //       Toast.show({
-  //         type: "success",
-  //         text1: "Account deleted successfully!",
-  //       });
-  //       console.log("User account deleted successfully");
-  //     } else {
-  //       Toast.show({
-  //         type: "error",
-  //         text1: "Problem deleting user account!",
-  //       });
-  //       console.log("No user is signed in");
-  //     }
-  //   } catch (error) {
-  //     if (error.code === "auth/requires-recent-login") {
-  //       console.log(
-  //         "User needs to re-authenticate before deleting the account."
-  //       );
-
-  //       if (providers.includes("google.com")) {
-  //         const { idToken } = await GoogleSignin.signIn();
-
-  //         const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-  //         await user.reauthenticateWithCredential(googleCredential);
-
-  //         console.log("Re-authenticated with Google");
-  //       } else if (providers.includes("password")) {
-  //         // Re-authenticate with Email/Password
-  //         const email = user.email;
-  //         const password = "user_password_here";
-
-  //         const credential = auth.EmailAuthProvider.credential(email, password);
-  //         await user.reauthenticateWithCredential(credential);
-
-  //         console.log("Re-authenticated with Email/Password");
-  //       }
-  //       await user.delete();
-  //       setUserRole(null);
-  //       AsyncStorage.removeItem("userRole");
-  //       Toast.show({
-  //         type: "success",
-  //         text1: "Account deleted successfully!",
-  //       });
-  //       console.log("User account deleted successfully");
-  //     } else {
-  //       console.error("Error deleting account:", error.message);
-  //     }
-  //   }
-  // };
+    if (user) {
+      const providerData = user.providerData;
+      const isPasswordAuth = providerData.some(
+        (provider) => provider.providerId === "password"
+      );
+      setCanChangePassword(isPasswordAuth);
+      setIsLoading(false);
+    }
+  }, []);
 
   const promptForPassword = async () => {
     return new Promise((resolve) => {
@@ -249,24 +204,36 @@ export default function SettingsScreen({ navigation }) {
             <Text style={styles.menuitemText}>Email</Text>
             <View style={{ flexDirection: "row", gap: 5 }}>
               <Text style={styles.email}>{email}</Text>
-              <Ionicons
+              {/* <Ionicons
                 name="chevron-forward-outline"
                 size={22}
                 color={colors.whitetext}
-              />
+              /> */}
             </View>
           </Pressable>
           <Divider />
-          <Pressable style={styles.menuitem}>
-            <Text style={styles.menuitemText}>Password</Text>
-            <View>
-              <Ionicons
-                name="chevron-forward-outline"
-                size={22}
-                color={colors.whitetext}
-              />
+          {canChangePassword ? (
+            <Pressable
+              style={styles.menuitem}
+              onPress={() => navigation.navigate("PasswordChangeScreen")}
+            >
+              <Text style={styles.menuitemText}>Change password</Text>
+              <View>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={22}
+                  color={colors.whitetext}
+                />
+              </View>
+            </Pressable>
+          ) : (
+            <View style={styles.menuitem}>
+              <Text style={styles.menuitemText}>Change password</Text>
+              <View>
+                <Text style={styles.googleAuth}>Authenticated with Google</Text>
+              </View>
             </View>
-          </Pressable>
+          )}
           <Divider />
           <Pressable style={styles.menuitem} onPress={confirmDeleteAccount}>
             <Text style={[styles.menuitemText, { color: "red" }]}>
@@ -338,5 +305,11 @@ const styles = StyleSheet.create({
   email: {
     color: colors.lightgraytext,
     alignSelf: "center",
+  },
+  googleAuth: {
+    color: colors.whitetext,
+    fontSize: 12,
+    width: "60%",
+    alignSelf: "flex-end",
   },
 });

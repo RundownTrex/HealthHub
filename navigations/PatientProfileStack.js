@@ -7,6 +7,7 @@ import MedicalRecordsScreen from "../screens/Patient/MedicalRecordsScreen";
 import UploadMedicalRecord from "../screens/Patient/UploadMedicalRecord";
 import SupportScreen from "../screens/Patient/SupportScreen";
 import SettingsScreen from "../screens/Patient/SettingsScreen";
+import PasswordChangeScreen from "../screens/Patient/PasswordChangeScreen";
 
 enableScreens();
 const Stack = createNativeStackNavigator();
@@ -40,6 +41,10 @@ export default function PatientProfileStack() {
       />
       <Stack.Screen name="SupportScreen" component={SupportScreen} />
       <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
+      <Stack.Screen
+        name="PasswordChangeScreen"
+        component={PasswordChangeScreen}
+      />
     </Stack.Navigator>
   );
 }

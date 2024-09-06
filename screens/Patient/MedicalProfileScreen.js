@@ -688,7 +688,7 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: "center",
     justifyContent: "center",
-    borderTopColor: colors.tenpercent,
+    borderTopColor: colors.somewhatlightback,
     borderTopWidth: 1,
   },
 
