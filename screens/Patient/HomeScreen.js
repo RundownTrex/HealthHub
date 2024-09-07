@@ -100,7 +100,7 @@ export default function HomeScreen({ navigation }) {
     {
       doctorName: "Dr. Upul",
       specialization: "General Practitioner",
-      image: require("../../assets/general-practicionor.png"), // Update with your image path
+      image: require("../../assets/doctor-pfp.jpg"), // Update with your image path
       date: "Sunday, July 15",
       time: "11:00 am",
       type: "Virtual appointment",
@@ -281,6 +281,7 @@ export default function HomeScreen({ navigation }) {
               styles.cliniccard,
               pressed && { opacity: 0.8 },
             ]}
+            onPress={() => console.log("Clinic visit")}
           >
             <View>
               <Text
@@ -342,7 +343,7 @@ export default function HomeScreen({ navigation }) {
             >
               {appointments.map((appointment, index) => (
                 <Pressable
-                  onPress={() => console.log("Hello World!")}
+                  onPress={() => navigation.navigate("BookedDoctor")}
                   key={index}
                   style={styles.upcomingcard}
                 >
@@ -598,7 +599,7 @@ const styles = StyleSheet.create({
     elevation: 20,
   },
 
-  //Upcoming assignments
+  //Upcoming appointments
 
   upcomingcard: {
     flexDirection: "row",
@@ -617,6 +618,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     marginRight: 10,
+    borderRadius: 5,
   },
   infoContainer: {
     flex: 1,

@@ -1,13 +1,32 @@
 import React from "react";
-import { View, Text, Image, Pressable, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  Pressable,
+  StyleSheet,
+  Dimensions,
+  PixelRatio,
+} from "react-native";
 import colors from "../utils/colors";
 import { useBottomSheet } from "../context/BottomSheetContext";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
+
 import {
   useSharedValue,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const BASE_WIDTH = 375;
+const BASE_FONT_SIZE = 16;
+
+const scaleFontSize = (size) => {
+  const scale = SCREEN_WIDTH / BASE_WIDTH;
+  const newSize = size * scale;
+  return PixelRatio.roundToNearestPixel(newSize);
+};
 
 const CustomTabBar = ({ state, descriptors, navigation }) => {
   const { isBottomSheetOpen } = useBottomSheet();
@@ -129,7 +148,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   label: {
-    fontSize: 12,
+    fontSize: scaleFontSize(15),
     marginTop: 5,
   },
   iconContainer: {

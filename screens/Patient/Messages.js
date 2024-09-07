@@ -40,7 +40,7 @@ const messages = [
   },
   {
     id: "4",
-    name: "Dr. Skibidi",
+    name: "Dr. Test",
     pfp: require("../../assets/doctor-pfp.jpg"),
     message: "Worem consectetur adipiscing elit.",
     time: "12:50",
@@ -48,7 +48,7 @@ const messages = [
   },
   {
     id: "5",
-    name: "Dr. Skibidi",
+    name: "Dr. Test",
     pfp: require("../../assets/doctor-pfp.jpg"),
     message: "Worem consectetur adipiscing elit.",
     time: "12:50",
@@ -56,7 +56,7 @@ const messages = [
   },
   {
     id: "6",
-    name: "Dr. Skibidi",
+    name: "Dr. Test",
     pfp: require("../../assets/doctor-pfp.jpg"),
     message: "Worem consectetur adipiscing elit.",
     time: "12:50",
@@ -64,7 +64,7 @@ const messages = [
   },
   {
     id: "7",
-    name: "Dr. Skibidi",
+    name: "Dr. Test",
     pfp: require("../../assets/doctor-pfp.jpg"),
     message: "Worem consectetur adipiscing elit.",
     time: "12:50",
@@ -72,7 +72,7 @@ const messages = [
   },
   {
     id: "8",
-    name: "Dr. Skibidi",
+    name: "Dr. Test",
     pfp: require("../../assets/doctor-pfp.jpg"),
     message: "Worem consectetur adipiscing elit.",
     time: "12:50",
@@ -80,7 +80,7 @@ const messages = [
   },
   {
     id: "9",
-    name: "Dr. Skibidi",
+    name: "Dr. Test",
     pfp: require("../../assets/doctor-pfp.jpg"),
     message: "Worem consectetur adipiscing elit.",
     time: "12:50",
@@ -88,7 +88,7 @@ const messages = [
   },
   {
     id: "10",
-    name: "Dr. Skibidi",
+    name: "Dr. Test",
     pfp: require("../../assets/doctor-pfp.jpg"),
     message: "Worem consectetur adipiscing elit.",
     time: "12:50",
@@ -96,7 +96,7 @@ const messages = [
   },
   {
     id: "11",
-    name: "Dr. Skibidi",
+    name: "Dr. Test",
     pfp: require("../../assets/doctor-pfp.jpg"),
     message: "Worem consectetur adipiscing elit.",
     time: "12:50",
@@ -104,7 +104,7 @@ const messages = [
   },
   {
     id: "12",
-    name: "Dr. Skibidi",
+    name: "Dr. Test",
     pfp: require("../../assets/doctor-pfp.jpg"),
     message: "Worem consectetur adipiscing elit.",
     time: "12:50",
@@ -112,29 +112,12 @@ const messages = [
   },
   {
     id: "13",
-    name: "Dr. Skibidi",
+    name: "Dr. Test",
     pfp: require("../../assets/doctor-pfp.jpg"),
     message: "Worem consectetur adipiscing elit.",
     time: "12:50",
     unread: 0,
   },
-];
-
-const activeNow = [
-  { id: "1", avatar: require("../../assets/doctor-pfp.jpg") },
-  { id: "2", avatar: require("../../assets/doctor-pfp.jpg") },
-  { id: "3", avatar: require("../../assets/doctor-pfp.jpg") },
-  { id: "4", avatar: require("../../assets/doctor-pfp.jpg") },
-  { id: "5", avatar: require("../../assets/doctor-pfp.jpg") },
-  { id: "6", avatar: require("../../assets/doctor-pfp.jpg") },
-  { id: "7", avatar: require("../../assets/doctor-pfp.jpg") },
-  { id: "8", avatar: require("../../assets/doctor-pfp.jpg") },
-  { id: "9", avatar: require("../../assets/doctor-pfp.jpg") },
-  { id: "10", avatar: require("../../assets/doctor-pfp.jpg") },
-  { id: "11", avatar: require("../../assets/doctor-pfp.jpg") },
-  { id: "12", avatar: require("../../assets/doctor-pfp.jpg") },
-  { id: "13", avatar: require("../../assets/doctor-pfp.jpg") },
-  { id: "14", avatar: require("../../assets/doctor-pfp.jpg") },
 ];
 
 export default function Messages({ navigation }) {

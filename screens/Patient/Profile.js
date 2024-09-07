@@ -104,6 +104,7 @@ export default function Profile({ navigation }) {
           text1: "Signing you out",
           text2: "Redirecting...",
         });
+        console.log("Logged out!");
       });
   };
 
@@ -156,8 +157,6 @@ export default function Profile({ navigation }) {
   const handlePress = (item) => {
     if (item.action === "logout") {
       confirmSignout();
-      console.log();
-      console.log("Logged out!");
     } else {
       console.log(item.screen);
       navigation.navigate(item.screen);

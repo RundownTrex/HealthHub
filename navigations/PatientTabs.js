@@ -4,6 +4,7 @@ import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "../screens/Patient/HomeScreen";
+import HomeStack from "./HomeStack";
 import Appointment from "../screens/Patient/Appointment";
 import Messages from "../screens/Patient/Messages";
 import Profile from "../screens/Patient/Profile";
@@ -55,10 +56,10 @@ export default function PatientTabs() {
       >
         <Tab.Screen
           name="Home"
-          component={HomeScreen}
+          component={HomeStack}
           options={{
             headerShown: false,
-            headerStyle: { ...styles.headstyle, opacity: 1 },
+            // headerStyle: { ...styles.headstyle, opacity: 1 },
           }}
         />
         <Tab.Screen
