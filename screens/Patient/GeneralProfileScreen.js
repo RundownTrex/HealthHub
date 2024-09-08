@@ -14,6 +14,9 @@ import * as ImagePicker from "expo-image-picker";
 import { Divider } from "react-native-paper";
 import { TextInputMask } from "react-native-masked-text";
 import { Dropdown } from "react-native-element-dropdown";
+import firestore from "@react-native-firebase/firestore";
+import storage from "@react-native-firebase/storage";
+import Toast from "react-native-toast-message";
 
 import colors from "../../utils/colors";
 import { useBottomSheet } from "../../context/BottomSheetContext";
@@ -47,6 +50,7 @@ export default function GeneralProfileScreen({ navigation }) {
   const [gender, setGender] = useState(null);
 
   const [isLoading, setIsLoading] = useState(false);
+  const user = auth().currentUser;
 
   const pickImage = async () => {
     // Ask for permission to access media library
@@ -65,19 +69,79 @@ export default function GeneralProfileScreen({ navigation }) {
       quality: 1,
     });
 
-    console.log(result);
+    console.log(result.assets[0].uri);
 
     if (!result.canceled) {
       setUserPfp(result.assets[0].uri);
     }
   };
 
-  useEffect(() => {
-    const fetchUserProfile = () => {
-      const user = auth().currentUser;
+  const uploadImageToFirebase = async () => {
+    let userId = user.uid;
+    console.log("UID: ", userId);
 
+    if (!userPfp) return null;
+
+    const fileName = userPfp.substring(userPfp.lastIndexOf("/") + 1);
+    const storageRef = storage().ref(`userPfps/${userId}/${fileName}`);
+
+    try {
+      console.log("Uploading image to Firebase:", userPfp);
+      await storageRef.putFile(userPfp);
+      const downloadURL = await storageRef.getDownloadURL();
+      console.log("Image uploaded successfully. Download URL:", downloadURL);
+      return downloadURL;
+    } catch (error) {
+      console.log("Image upload error: ", error);
+      return null;
+    }
+  };
+
+  const saveChanges = async () => {
+    setIsLoading(true);
+    try {
+      let newPfpLink = await uploadImageToFirebase();
+      await firestore().collection("users").doc(user.uid).update({
+        pfpUrl: newPfpLink,
+      });
+
+      setIsLoading(false);
+      Toast.show({
+        type: "success",
+        text1: "Profile photo changed successfully",
+      });
+    } catch (error) {
+      console.error("Error updating profile picture: ", error);
+      setIsLoading(false);
+      Toast.show({
+        type: "error",
+        text1: "Failed to change profile photo",
+      });
+    }
+  };
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
       if (user) {
-        setUserPfp(user.photoURL);
+        try {
+          const userDoc = await firestore()
+            .collection("users")
+            .doc(user.uid)
+            .get();
+
+          if (userDoc.exists) {
+            const data = userDoc.data();
+            setUserPfp(data.pfpUrl);
+            setFirstName(data.firstname);
+            setLastName(data.lastname);
+
+            console.log(data);
+          } else {
+            console.log("No such document!");
+          }
+        } catch (error) {
+          console.error("Error fetching document: ", error);
+        }
       } else {
         console.log("No user is logged in");
       }
@@ -172,13 +236,14 @@ export default function GeneralProfileScreen({ navigation }) {
                 />
               )}
             </View>
-
-            <View style={styles.editIcon}>
-              <Image
-                source={require("../../assets/edit.png")}
-                style={{ width: 19, height: 19 }}
-              />
-            </View>
+            {userPfp === null && (
+              <View style={styles.editIcon}>
+                <Image
+                  source={require("../../assets/edit.png")}
+                  style={{ width: 19, height: 19 }}
+                />
+              </View>
+            )}
           </Pressable>
           <View style={{ alignSelf: "center", marginLeft: 20, flex: 1 }}>
             <Text
@@ -301,10 +366,7 @@ export default function GeneralProfileScreen({ navigation }) {
             marginVertical: 20,
           }}
         >
-          <Button1
-            onPress={() => console.log("Submitted")}
-            text="Save Changes"
-          />
+          <Button1 onPress={() => saveChanges()} text="Save Changes" />
         </View>
       </ScrollView>
       <LoadingOverlay isVisible={isLoading} />

@@ -11,6 +11,7 @@ import {
   Pressable,
 } from "react-native";
 import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 import { useIsFocused } from "@react-navigation/native";
 
 import colors from "../../utils/colors";
@@ -47,12 +48,18 @@ export default function HomeScreen({ navigation }) {
   });
 
   useEffect(() => {
-    const fetchUserProfile = () => {
+    const fetchUserProfile = async () => {
       const user = auth().currentUser;
-      console.log(user.displayName);
 
       if (user) {
-        setUserName(user.displayName);
+        const userDoc = await firestore()
+          .collection("users")
+          .doc(user.uid)
+          .get();
+
+        const data = userDoc.data();
+
+        setUserName(data.firstname + " " + data.lastname);
       } else {
         console.log("No user is logged in");
       }

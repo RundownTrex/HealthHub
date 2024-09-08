@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 import Toast from "react-native-toast-message";
 
 import colors from "../../utils/colors";
@@ -67,19 +68,39 @@ const menuitems = [
 
 export default function Profile({ navigation }) {
   const { userRole, setUserRole } = useContext(RoleContext);
+  const [pfp, setPfp] = useState(null);
+  const [fetchedName, setFetchedName] = useState("");
   const [userPfp, setUserPfp] = useState(null);
   const [userName, setUserName] = useState("");
 
   useEffect(() => {
-    const fetchUserProfile = () => {
+    const fetchUserProfile = async () => {
       const user = auth().currentUser;
 
       if (user) {
-        setUserPfp(user.photoURL);
-        setUserName(user.displayName);
+        try {
+          const userDoc = await firestore()
+            .collection("users")
+            .doc(user.uid)
+            .get();
+
+          if (userDoc.exists) {
+            const data = userDoc.data();
+            setPfp(data.pfpUrl);
+            setFetchedName(data.firstname + " " + data.lastname);
+
+            console.log(data);
+          } else {
+            console.log("No such document!");
+          }
+        } catch (error) {
+          console.error("Error fetching document: ", error);
+        }
       } else {
         console.log("No user is logged in");
       }
+      setUserPfp(pfp || user.photoURL);
+      setUserName(fetchedName);
     };
 
     fetchUserProfile();

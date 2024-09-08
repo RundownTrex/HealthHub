@@ -12,6 +12,7 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("Role: ", userRole);
     const fetchData = async () => {
       try {
         const storedRole = await AsyncStorage.getItem("userRole");
