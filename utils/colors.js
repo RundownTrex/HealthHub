@@ -15,7 +15,10 @@ const colors = {
   superlightaccent: "#fef6e6",
   green: "#4BB543",
   linkblue: "#99c3ff",
-  alert: "#f7c631"
+  alert: "#f7c631",
+  completed: "#15bd02",
+  cancelled: "#bd0202",
+  rescheduled: "#f7c631",
 };
 
 export default colors;

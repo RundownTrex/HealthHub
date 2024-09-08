@@ -41,18 +41,24 @@ const menuitems = [
   },
   {
     id: "4",
+    title: "Appointment History",
+    icon: require("../../assets/settingicons/appointment-history.png"),
+    screen: "AppointmentHistory",
+  },
+  {
+    id: "5",
     title: "Support",
     icon: require("../../assets/settingicons/support.png"),
     screen: "SupportScreen",
   },
   {
-    id: "5",
+    id: "6",
     title: "Settings",
     icon: require("../../assets/settingicons/settings.png"),
     screen: "SettingsScreen",
   },
   {
-    id: "6",
+    id: "7",
     title: "Logout",
     icon: require("../../assets/settingicons/logout.png"),
     action: "logout",
@@ -179,17 +185,11 @@ export default function Profile({ navigation }) {
           <CustomHeader />
         </View>
         <FlatList
-          style={{ marginTop: windowHeight / 3.2, marginBottom: 65 }}
+          style={{ marginTop: windowHeight / 3.5, marginBottom: 65 }}
           data={menuitems}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
         />
-
-        {/* <Button1
-          onPress={signOut}
-          text={"Sign out "}
-          style={{ alignSelf: "center" }}
-        /> */}
       </View>
     </>
   );
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
-    height: windowHeight / 3.3,
+    height: windowHeight / 3.6,
     width: "auto",
     overflow: "hidden",
     zIndex: 999,

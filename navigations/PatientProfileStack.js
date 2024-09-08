@@ -8,6 +8,7 @@ import UploadMedicalRecord from "../screens/Patient/UploadMedicalRecord";
 import SupportScreen from "../screens/Patient/SupportScreen";
 import SettingsScreen from "../screens/Patient/SettingsScreen";
 import PasswordChangeScreen from "../screens/Patient/PasswordChangeScreen";
+import AppointmentHistory from "../screens/Patient/AppointmentHistory";
 
 enableScreens();
 const Stack = createNativeStackNavigator();
@@ -39,6 +40,7 @@ export default function PatientProfileStack() {
         name="UploadMedicalRecord"
         component={UploadMedicalRecord}
       />
+      <Stack.Screen name="AppointmentHistory" component={AppointmentHistory} />
       <Stack.Screen name="SupportScreen" component={SupportScreen} />
       <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
       <Stack.Screen

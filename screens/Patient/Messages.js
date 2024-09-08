@@ -199,7 +199,10 @@ export default function Messages({ navigation }) {
             <Pressable
               style={styles.chatItem}
               onPress={() => {
-                navigation.navigate("DoctorChat", { doctorname: item.name, pfp:item.pfp });
+                navigation.navigate("DoctorChat", {
+                  doctorname: item.name,
+                  pfp: item.pfp,
+                });
               }}
             >
               <Avatar.Image

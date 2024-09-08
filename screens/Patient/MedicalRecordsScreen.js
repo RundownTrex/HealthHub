@@ -213,7 +213,7 @@ export default function MedicalRecordsScreen({ navigation }) {
               </View>
 
               <Button1
-                text="Add a record"
+                text="Add record"
                 onPress={() => navigation.navigate("UploadMedicalRecord")}
               />
             </View>
@@ -224,7 +224,7 @@ export default function MedicalRecordsScreen({ navigation }) {
       {records.length > 0 && (
         <View style={styles.addButtonContainer}>
           <Button1
-            text="Add a record"
+            text="Add record"
             onPress={() => navigation.navigate("UploadMedicalRecord")}
           />
         </View>
