@@ -122,20 +122,21 @@ export default function SettingsScreen({ navigation }) {
 
       // Delete the user account after successful re-authentication
 
-      userDoc.delete().then(async () => {
-        await user.delete();
-        setUserRole(null);
-        AsyncStorage.removeItem("userRole");
+      await userDoc.delete();
 
-        Toast.show({
-          type: "success",
-          text1: "Account deleted successfully!",
-        });
-        console.log("User account deleted successfully");
-        setIsLoading(false);
+      await user.delete();
+
+      setUserRole(null);
+      await AsyncStorage.removeItem("userRole");
+
+      Toast.show({
+        type: "success",
+        text1: "Account deleted successfully!",
       });
+      console.log("User account deleted successfully");
+      setIsLoading(false);
     } catch (error) {
-      console.error(
+      console.log(
         "Error during re-authentication or account deletion:",
         error.message
       );

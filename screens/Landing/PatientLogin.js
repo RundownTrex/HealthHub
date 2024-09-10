@@ -55,6 +55,7 @@ export default function PatientLogin() {
       return;
     }
     try {
+      setIsLoading(true);
       const userCredential = await auth().signInWithEmailAndPassword(
         email,
         password
@@ -95,6 +96,7 @@ export default function PatientLogin() {
           text2: "Try registering for a new account",
         });
       }
+      setIsLoading(false);
     } catch (error) {
       const errorCode = error.code;
       const errorMessage = error.messsage;
@@ -106,6 +108,7 @@ export default function PatientLogin() {
       });
       setEmail(() => "");
       setPassword(() => "");
+      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }
@@ -197,7 +200,7 @@ export default function PatientLogin() {
           console.log("Password reset email sent successfully");
           Toast.show({
             type: "success",
-            text1: "Password reset email sent succesfully! Check your email",
+            text1: "Password reset email sent succesfully! Check your inbox",
           });
           setIsLoading(false);
         })
@@ -206,7 +209,7 @@ export default function PatientLogin() {
           Toast.show({
             type: "error",
             text1: "Error sending password reset mail.",
-            text2: "Ensure the email in the field is right.",
+            text2: "Ensure the email in the field is right or try again later",
           });
           setIsLoading(false);
         })

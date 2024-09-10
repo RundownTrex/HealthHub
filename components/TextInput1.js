@@ -11,6 +11,8 @@ const TextInput1 = ({
   style,
   maxlen,
   kbtype,
+  multi,
+  no,
 }) => {
   return (
     <View style={[styles.container, style]}>
@@ -19,11 +21,13 @@ const TextInput1 = ({
         value={value}
         onChangeText={onChangeText}
         secureTextEntry={secureTextEntry}
-        style={styles.input}
+        style={[styles.input, multi && styles.multilineInput]}
         placeholderTextColor={colors.lightgraytext}
         maxLength={maxlen}
-        // keyboardType={kbtype}
+        keyboardType={kbtype}
         keyboardAppearance="dark"
+        multiline={multi}
+        numberOfLines={no}
       />
     </View>
   );
@@ -34,7 +38,7 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   input: {
-    height: 45,
+    maxHeight: 50,
     borderColor: "gray",
     borderWidth: 1,
     paddingHorizontal: 10,
@@ -43,6 +47,10 @@ const styles = StyleSheet.create({
     color: colors.whitetext,
     backgroundColor: colors.somewhatlightback,
     fontSize: 16,
+  },
+  multilineInput: {
+    maxHeight: 200,
+    textAlignVertical: "top", // Ensures text starts at the top
   },
 });
 

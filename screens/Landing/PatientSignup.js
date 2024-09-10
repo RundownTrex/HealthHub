@@ -19,10 +19,7 @@ import RoleContext from "../../context/RoleContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
-import storage, {
-  getDownloadURL,
-  uploadBytes,
-} from "@react-native-firebase/storage";
+import storage from "@react-native-firebase/storage";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import * as ImagePicker from "expo-image-picker";
 
@@ -201,6 +198,7 @@ export default function PatientSignup({ navigation }) {
           firstname: user.displayName.split(" ")[0],
           lastname: user.displayName.split(" ")[1],
           accountType: "patient",
+          pfpUrl: user.photoURL,
         });
 
         setUserRole("patient");

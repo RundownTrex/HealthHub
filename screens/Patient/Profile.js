@@ -71,7 +71,6 @@ export default function Profile({ navigation }) {
   const [pfp, setPfp] = useState(null);
   const [fetchedName, setFetchedName] = useState("");
   const [userPfp, setUserPfp] = useState(null);
-  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -87,6 +86,7 @@ export default function Profile({ navigation }) {
           if (userDoc.exists) {
             const data = userDoc.data();
             setPfp(data.pfpUrl);
+            console.log("Full name: ",data.firstname, " ",data.lastname)
             setFetchedName(data.firstname + " " + data.lastname);
 
             console.log(data);
@@ -100,7 +100,7 @@ export default function Profile({ navigation }) {
         console.log("No user is logged in");
       }
       setUserPfp(pfp || user.photoURL);
-      setUserName(fetchedName);
+
     };
 
     fetchUserProfile();
@@ -164,7 +164,7 @@ export default function Profile({ navigation }) {
             />
           )}
         </View>
-        <Text style={styles.name}>{userName}</Text>
+        <Text style={styles.name}>{fetchedName}</Text>
       </View>
     );
   };
