@@ -17,6 +17,11 @@ import Toast from "react-native-toast-message";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import firestore from "@react-native-firebase/firestore";
+import storage from "@react-native-firebase/storage";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 import colors from "../../utils/colors";
 import { useBottomSheet } from "../../context/BottomSheetContext";
@@ -122,6 +127,8 @@ export default function SettingsScreen({ navigation }) {
 
       // Delete the user account after successful re-authentication
 
+      await deleteAvatarFolder(user.uid);
+
       await userDoc.delete();
 
       await user.delete();
@@ -147,6 +154,23 @@ export default function SettingsScreen({ navigation }) {
       });
       setPasswordModalVisible(false);
       setIsLoading(false);
+    }
+  };
+
+  const deleteAvatarFolder = async (uid) => {
+    const folderRef = storage().ref(`userPfps/${uid}`);
+
+    try {
+      const folderContents = await folderRef.listAll();
+
+      const deletePromises = folderContents.items.map((fileRef) =>
+        fileRef.delete()
+      );
+      await Promise.all(deletePromises);
+
+      console.log("Deleted avatar folder in Firebase Storage");
+    } catch (error) {
+      console.log("Error deleting avatar folder:", error.message);
     }
   };
 
@@ -228,8 +252,12 @@ export default function SettingsScreen({ navigation }) {
               </View>
             </Pressable>
           ) : (
-            <View style={styles.menuitem}>
-              <Text style={styles.menuitemText}>Change password</Text>
+            <View style={[styles.menuitem]}>
+              <Text
+                style={[styles.menuitemText, { color: colors.lightgraytext }]}
+              >
+                Change password
+              </Text>
               <View>
                 <Text style={styles.googleAuth}>Authenticated with Google</Text>
               </View>
@@ -309,8 +337,9 @@ const styles = StyleSheet.create({
   },
   googleAuth: {
     color: colors.whitetext,
-    fontSize: 12,
+    fontSize: wp("2.5%"),
     width: "60%",
     alignSelf: "flex-end",
+    textAlign: "left",
   },
 });

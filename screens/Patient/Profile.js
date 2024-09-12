@@ -14,6 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import Toast from "react-native-toast-message";
+import { useIsFocused } from "@react-navigation/native";
 
 import colors from "../../utils/colors";
 import Button1 from "../../components/Button1";
@@ -71,40 +72,49 @@ export default function Profile({ navigation }) {
   const [pfp, setPfp] = useState(null);
   const [fetchedName, setFetchedName] = useState("");
   const [userPfp, setUserPfp] = useState(null);
+  const isFocused = useIsFocused();
+  const user = auth().currentUser;
+
+  const fetchUserProfile = async () => {
+    if (user) {
+      try {
+        const userDoc = await firestore()
+          .collection("users")
+          .doc(user.uid)
+          .get();
+
+        if (userDoc.exists) {
+          const data = userDoc.data();
+          console.log("Full name: ", data.firstname, " ", data.lastname);
+          setUserPfp(data.pfpUrl);
+          setFetchedName(data.firstname + " " + data.lastname);
+
+          console.log(data);
+        } else {
+          console.log("No such document!");
+          setUserPfp(user.photoURL);
+        }
+      } catch (error) {
+        console.error("Error fetching document: ", error);
+        setUserPfp(user.photoURL);
+      }
+    } else {
+      console.log("No user is logged in");
+    }
+  };
+
+  // useEffect(() => {
+  //   fetchUserProfile();
+  // }, []);
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      const user = auth().currentUser;
-
-      if (user) {
-        try {
-          const userDoc = await firestore()
-            .collection("users")
-            .doc(user.uid)
-            .get();
-
-          if (userDoc.exists) {
-            const data = userDoc.data();
-            setPfp(data.pfpUrl);
-            console.log("Full name: ",data.firstname, " ",data.lastname)
-            setFetchedName(data.firstname + " " + data.lastname);
-
-            console.log(data);
-          } else {
-            console.log("No such document!");
-          }
-        } catch (error) {
-          console.error("Error fetching document: ", error);
-        }
-      } else {
-        console.log("No user is logged in");
-      }
-      setUserPfp(pfp || user.photoURL);
-
-    };
-
-    fetchUserProfile();
-  }, []);
+    if (isFocused) {
+      console.log(
+        "Profile Screen is focused or returned to after navigating back"
+      );
+      fetchUserProfile();
+    }
+  }, [isFocused]);
 
   const confirmSignout = () => {
     Alert.alert(
@@ -120,6 +130,7 @@ export default function Profile({ navigation }) {
       { cancelable: true }
     );
   };
+
   const signOut = () => {
     auth()
       .signOut()
@@ -138,7 +149,6 @@ export default function Profile({ navigation }) {
   const CustomHeader = () => {
     return (
       <View style={styles.headerContainer}>
-        <Text style={styles.title}>Profile</Text>
         <View style={styles.avatar}>
           {userPfp !== null ? (
             <Image
@@ -206,7 +216,7 @@ export default function Profile({ navigation }) {
           <CustomHeader />
         </View>
         <FlatList
-          style={{ marginTop: windowHeight / 3.5, marginBottom: 65 }}
+          style={{ marginTop: windowHeight / 4.4, marginBottom: 65 }}
           data={menuitems}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
@@ -225,10 +235,13 @@ const styles = StyleSheet.create({
   },
 
   headerContainer: {
-    justifyContent: "center",
+    justifyContent: "space-around",
     alignItems: "center",
+    height: "100%",
     // flex: 1,
     // flexDirection: "column",
+    // borderWidth: 1,
+    // borderColor: colors.complementary,
   },
 
   title: {
@@ -245,27 +258,24 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
-    height: windowHeight / 3.6,
+    height: windowHeight / 4.5,
     width: "auto",
     overflow: "hidden",
     zIndex: 999,
     backgroundColor: colors.lightaccent,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
   },
   name: {
     fontWeight: "bold",
     color: colors.whitetext,
     fontSize: 24,
-    alignSelf: "center",
   },
   avatar: {
     width: 90,
     height: 90,
     borderRadius: 100,
     overflow: "hidden",
-    marginTop: 16,
-    marginBottom: 20,
     justifyContent: "center",
     alignItems: "center",
   },

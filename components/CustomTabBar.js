@@ -6,11 +6,14 @@ import {
   Pressable,
   StyleSheet,
   Dimensions,
-  PixelRatio,
 } from "react-native";
 import colors from "../utils/colors";
 import { useBottomSheet } from "../context/BottomSheetContext";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 import {
   useSharedValue,
@@ -21,12 +24,6 @@ import {
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const BASE_WIDTH = 375;
 const BASE_FONT_SIZE = 16;
-
-const scaleFontSize = (size) => {
-  const scale = SCREEN_WIDTH / BASE_WIDTH;
-  const newSize = size * scale;
-  return PixelRatio.roundToNearestPixel(newSize);
-};
 
 const CustomTabBar = ({ state, descriptors, navigation }) => {
   const { isBottomSheetOpen } = useBottomSheet();
@@ -107,7 +104,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
             accessibilityLabel={options.tabBarAccessibilityLabel}
             testID={options.tabBarTestID}
             onPress={onPress}
-            onLongPress={onLongPress}
+            // onLongPress={onLongPress}
             style={styles.tabBarButton}
           >
             <Image
@@ -118,11 +115,11 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
                 tintColor: isFocused ? colors.lightaccent : colors.tenpercent,
               }}
             />
-            {isFocused && (
+            {/* {isFocused && (
               <Text style={[styles.label, { color: colors.lightaccent }]}>
                 {label}
               </Text>
-            )}
+            )} */}
           </Pressable>
         );
       })}
@@ -135,7 +132,7 @@ export default CustomTabBar;
 const styles = StyleSheet.create({
   tabBarContainer: {
     flexDirection: "row",
-    backgroundColor: colors.darkback, // Customize as needed
+    backgroundColor: colors.darkback, 
     paddingBottom: 10,
     paddingTop: 10,
     borderTopColor: colors.somewhatlightback,
@@ -148,7 +145,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   label: {
-    fontSize: scaleFontSize(15),
+    fontSize: wp("2.9%"),
     marginTop: 5,
   },
   iconContainer: {

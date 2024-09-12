@@ -199,7 +199,7 @@ export default function UploadMedicalRecord({ navigation }) {
               setRecordType(item.value);
             }}
             style={{
-              height: 45,
+              height: 50,
               borderColor: "gray",
               borderWidth: 1,
               paddingHorizontal: 10,

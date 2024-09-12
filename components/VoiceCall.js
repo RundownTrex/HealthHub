@@ -26,12 +26,12 @@ export default function VoiceCall({ navigation, route }) {
 
   const calls = useCalls();
 
-//   const { useCameraState } = useCallStateHooks();
-//   const { camera } = useCameraState();
+  //   const { useCameraState } = useCallStateHooks();
+  //   const { camera } = useCameraState();
 
-//   const disablecam = async () => {
-//     await camera.disable();
-//   };
+  //   const disablecam = async () => {
+  //     await camera.disable();
+  //   };
 
   const CustomCallControls = (CallControlProps) => {
     const coll = useCall();
@@ -44,9 +44,9 @@ export default function VoiceCall({ navigation, route }) {
     );
   };
 
-//   useEffect(() => {
-//     disablecam();
-//   }, []);
+  //   useEffect(() => {
+  //     disablecam();
+  //   }, []);
 
   useEffect(() => {
     const _call = client?.call("Voice", callId);
@@ -77,7 +77,6 @@ export default function VoiceCall({ navigation, route }) {
         <CallContent
           onHangupCallHandler={() => navigation.pop()}
           CallControls={CustomCallControls}
-        
         />
       </View>
     </StreamCall>
@@ -103,5 +102,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.darkback,
     borderRadius: 5,
     zIndex: 5,
+  },
+  text: {
+    color: colors.whitetext,
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });

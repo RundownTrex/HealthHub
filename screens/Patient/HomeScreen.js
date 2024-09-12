@@ -13,6 +13,10 @@ import {
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import { useIsFocused } from "@react-navigation/native";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 import colors from "../../utils/colors";
 import RightArrow from "../../assets/icons/RightArrow";
@@ -31,6 +35,8 @@ const H_MAX_HEIGHT = 80;
 const H_MIN_HEIGHT = 0;
 const H_SCROLL_DISTANCE = H_MAX_HEIGHT - H_MIN_HEIGHT;
 const tabheight = 65;
+
+const { width, height } = Dimensions.get("window");
 
 export default function HomeScreen({ navigation }) {
   const snapPoints = useMemo(() => ["25%", "50%", "75%", "86%"], []);
@@ -107,7 +113,7 @@ export default function HomeScreen({ navigation }) {
     {
       doctorName: "Dr. Upul",
       specialization: "General Practitioner",
-      image: require("../../assets/doctor-pfp.jpg"), // Update with your image path
+      image: require("../../assets/doctor-pfp.jpg"), 
       date: "Sunday, July 15",
       time: "11:00 am",
       type: "Virtual appointment",
@@ -115,7 +121,15 @@ export default function HomeScreen({ navigation }) {
     {
       doctorName: "Dr. Upul",
       specialization: "Dentist",
-      image: require("../../assets/general-practicionor.png"), // Update with your image path
+      image: require("../../assets/doctor-pfp.jpg"), 
+      date: "Monday, July 16",
+      time: "1:30 pm",
+      type: "In clinic appointment",
+    },
+    {
+      doctorName: "Dr. Test User with really long name",
+      specialization: "Dentist",
+      image: require("../../assets/general-practicionor.png"), 
       date: "Monday, July 16",
       time: "1:30 pm",
       type: "In clinic appointment",
@@ -123,7 +137,7 @@ export default function HomeScreen({ navigation }) {
     // {
     //   doctorName: "Dr. John Doe",
     //   specialization: "Nutritionist",
-    //   image: require("../../assets/general-practicionor.png"), // Update with your image path
+    //   image: require("../../assets/general-practicionor.png"), 
     //   date: "Monday, July 16",
     //   time: "1:30 pm",
     //   type: "In clinic appointment",
@@ -131,7 +145,7 @@ export default function HomeScreen({ navigation }) {
     // {
     //   doctorName: "Dr. John Doe",
     //   specialization: "Nutritionist",
-    //   image: require("../../assets/general-practicionor.png"), // Update with your image path
+    //   image: require("../../assets/general-practicionor.png"), 
     //   date: "Monday, July 16",
     //   time: "1:30 pm",
     //   type: "In clinic appointment",
@@ -179,11 +193,23 @@ export default function HomeScreen({ navigation }) {
     );
   }
 
+  const getCurrentGreeting = () => {
+    const currentHour = new Date().getHours();
+
+    if (currentHour < 12) {
+      return "Good morning";
+    } else if (currentHour >= 12 && currentHour < 18) {
+      return "Good afternoon";
+    } else {
+      return "Good evening";
+    }
+  };
+
   const CustomHeader = () => {
     return (
       <View style={styles.headerContainer}>
         <View style={styles.titleContainer}>
-          <Text style={styles.greetingText}>Good morning,</Text>
+          <Text style={styles.greetingText}>{getCurrentGreeting()},</Text>
           <Text style={styles.nameText}>{userName}</Text>
         </View>
 
@@ -610,22 +636,18 @@ const styles = StyleSheet.create({
 
   upcomingcard: {
     flexDirection: "row",
-    backgroundColor: "#fff",
+    backgroundColor: colors.whitetext,
     borderRadius: 10,
-    padding: 10,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
+    padding: width * 0.025,
+    marginBottom: height * 0.02,
     alignItems: "center",
+    elevation: 5,
   },
   image: {
-    width: 50,
-    height: 50,
-    marginRight: 10,
-    borderRadius: 5,
+    width: width * 0.13,
+    height: width * 0.13,
+    marginRight: width * 0.03,
+    borderRadius: 2,
   },
   infoContainer: {
     flex: 1,
@@ -634,24 +656,24 @@ const styles = StyleSheet.create({
   },
   infoLeft: {
     flex: 1,
-    marginRight: 0,
-    marginTop: 10,
+    // marginRight: 0,
+    marginTop: height * 0.01,
   },
   doctorName: {
-    fontSize: 18,
+    fontSize: width * 0.045,
     fontWeight: "bold",
     textAlign: "left",
-    width: 80,
+    width: width * 0.3,
   },
   specialization: {
-    fontSize: 14,
+    fontSize: width * 0.035,
     color: colors.darkgraytext,
     textAlign: "left",
-    width: 80,
+    width: width * 0.3,
   },
   divider: {
     width: 1,
-    height: 70,
+    height: height * 0.09,
     backgroundColor: colors.darkgraytext,
     marginHorizontal: 0,
     borderWidth: 1,
@@ -661,22 +683,24 @@ const styles = StyleSheet.create({
   infoRight: {
     flex: 1,
     alignItems: "center",
+    justifyContent: 'center'
   },
   date: {
-    fontSize: 14,
+    fontSize: width * 0.035,
     color: colors.darkgraytext,
     textAlign: "center",
   },
   time: {
-    fontSize: 16,
+    fontSize: width * 0.04, 
     fontWeight: "bold",
     textAlign: "center",
   },
   type: {
-    fontSize: 14,
+    fontSize: width * 0.035, 
     color: colors.darkgraytext,
     textAlign: "center",
   },
+
   tipCard: {
     backgroundColor: colors.whitetext,
     borderRadius: 10,

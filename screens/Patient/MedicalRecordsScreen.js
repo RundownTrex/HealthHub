@@ -240,14 +240,14 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   dropdown: {
-    height: 45,
+    height: 55,
     borderColor: "gray",
     borderWidth: 1,
     paddingHorizontal: 15,
     paddingVertical: 12,
     borderRadius: 50,
     backgroundColor: colors.somewhatlightback,
-    fontSize: 16,
+    fontSize: 10,
     marginVertical: 5,
   },
   placeholderStyle: {

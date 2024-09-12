@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,49 +6,91 @@ import {
   ScrollView,
   Animated,
   StatusBar,
+  Image,
+  Pressable,
+  RefreshControl,
 } from "react-native";
-import colors from "../../utils/colors";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 import Svg, { Path } from "react-native-svg";
+import { Ionicons } from "@expo/vector-icons";
+import { Divider } from "react-native-paper";
 
-function LocationIcon(props) {
-  return (
-    <Svg
-      width={15}
-      height={15}
-      viewBox="0 0 15 15"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
-      <Path
-        d="M13.023.103L.842 5.725c-1.405.656-.937 2.718.562 2.718h5.154v5.153c0 1.5 2.061 1.968 2.717.562l5.622-12.18c.469-1.125-.75-2.344-1.874-1.875z"
-        fill="#fff"
-      />
-    </Svg>
-  );
-}
+import colors from "../../utils/colors";
+import LoadingOverlay from "../../components/LoadingOverlay";
 
-const CustomHeader = () => {
-  return (
-    <View style={styles.headerContainer}>
-      <View style={styles.titleContainer}>
-        <Text style={styles.greetingText}>Good morning,</Text>
-        <Text style={styles.nameText}>John Doe</Text>
-      </View>
-      {/* <View style={styles.locationBlock}>
-        <LocationIcon />
-        <Text style={styles.locationText}>Mumbai</Text>
-      </View> */}
-    </View>
-  );
-};
+const appointments = [
+  {
+    id: 1,
+    time: "10:00 AM",
+    with: "Consultation with John Doe",
+    icon: require("../../assets/icons/video-cam.png"),
+    type: "video",
+  },
+  {
+    id: 2,
+    time: "11:00 AM",
+    with: "Consultation with Jane Smith",
+    icon: require("../../assets/icons/video-cam.png"),
+    type: "video",
+  },
+  {
+    id: 3,
+    time: "12:00 PM",
+    with: "Consultation with Alice Brown",
+    icon: require("../../assets/icons/clinic.png"),
+    type: "clinic",
+  },
+  {
+    id: 4,
+    time: "1:00 PM",
+    with: "Consultation with Bob White",
+    icon: require("../../assets/icons/clinic.png"),
+    type: "clinic",
+  },
+  {
+    id: 5,
+    time: "2:00 PM",
+    with: "Consultation with Bob White",
+    icon: require("../../assets/icons/clinic.png"),
+    type: "clinic",
+  },
+  // {
+  //   id: 6,
+  //   time: "2:00 PM",
+  //   with: "Consultation with Bob White",
+  //   icon: require("../../assets/icons/clinic.png"),
+  //   type: "clinic",
+  // },
+  // {
+  //   id: 7,
+  //   time: "2:00 PM",
+  //   with: "Consultation with Bob White",
+  //   icon: require("../../assets/icons/clinic.png"),
+  //   type: "clinic",
+  // },
+  // {
+  //   id: 8,
+  //   time: "2:00 PM",
+  //   with: "Consultation with Bob White",
+  //   icon: require("../../assets/icons/clinic.png"),
+  //   type: "clinic",
+  // },
+  // {
+  //   id: 9,
+  //   time: "2:00 PM",
+  //   with: "Consultation with Bob White",
+  //   icon: require("../../assets/icons/clinic.png"),
+  //   type: "clinic",
+  // },
+];
 
-const H_MAX_HEIGHT = 80;
+const H_MAX_HEIGHT = 70;
 const H_MIN_HEIGHT = 0;
 const H_SCROLL_DISTANCE = H_MAX_HEIGHT - H_MIN_HEIGHT;
 
-export default function DoctorHome() {
+export default function DoctorHome({ navigation }) {
   const scrollOffsetY = useRef(new Animated.Value(0)).current;
   const headerScrollHeight = scrollOffsetY.interpolate({
     inputRange: [0, H_SCROLL_DISTANCE],
@@ -56,82 +98,161 @@ export default function DoctorHome() {
     extrapolate: "clamp",
   });
 
+  const [userName, setUserName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  };
+
+  const getCurrentGreeting = () => {
+    const currentHour = new Date().getHours();
+
+    if (currentHour < 12) {
+      return "Good morning";
+    } else if (currentHour >= 12 && currentHour < 18) {
+      return "Good afternoon";
+    } else {
+      return "Good evening";
+    }
+  };
+
+  const CustomHeader = () => {
+    return (
+      <View style={styles.headerContainer}>
+        <View style={styles.titleContainer}>
+          <Text style={styles.greetingText}>{getCurrentGreeting()},</Text>
+          <Text style={styles.nameText}>{userName}</Text>
+        </View>
+        {/* <View style={styles.locationBlock}>
+          <LocationIcon />
+          <Text style={styles.locationText}>Mumbai</Text>
+        </View> */}
+      </View>
+    );
+  };
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const user = auth().currentUser;
+
+      if (user) {
+        const userDoc = await firestore()
+          .collection("users")
+          .doc(user.uid)
+          .get();
+
+        const data = userDoc.data();
+
+        setUserName(data.firstname + " " + data.lastname);
+      } else {
+        console.log("No user is logged in");
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <StatusBar backgroundColor={colors.lightaccent} />
-      <ScrollView
-        contentContainerStyle={[styles.scrollable, { paddingTop: 80 }]}
-        horizontal={false}
-        showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={true}
-        // pagingEnabled={true}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollOffsetY } } }],
-          { useNativeDriver: false }
-        )}
-        scrollEventThrottle={16}
-      >
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Home screen</Text>
-        <Text style={styles.text}>Sigma</Text>
-      </ScrollView>
-      <Animated.View
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: 0,
-          height: headerScrollHeight,
-          width: "auto",
-          overflow: "hidden",
-          zIndex: 999,
-          // STYLE
-          // borderBottomColor: "#EFEFF4",
-          // borderBottomWidth: 1,
-          // padding: 10,
-          backgroundColor: colors.lightaccent,
-          borderBottomLeftRadius: 20,
-          borderBottomRightRadius: 20,
-        }}
-      >
-        <CustomHeader />
-      </Animated.View>
-    </View>
+    <>
+      <LoadingOverlay isVisible={isLoading} />
+      <View style={styles.container}>
+        <StatusBar backgroundColor={colors.lightaccent} />
+
+        <ScrollView
+          contentContainerStyle={[styles.scrollable]}
+          horizontal={false}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
+          // pagingEnabled={true}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollOffsetY } } }],
+            { useNativeDriver: false }
+          )}
+          scrollEventThrottle={5}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              style={{ zIndex: 10 }}
+            />
+          }
+        >
+          <Animated.View
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: 0,
+              height: headerScrollHeight,
+              width: "auto",
+              overflow: "hidden",
+              zIndex: 8,
+              // STYLE
+              // borderBottomColor: "#EFEFF4",
+              // borderBottomWidth: 1,
+              // padding: 10,
+              backgroundColor: colors.lightaccent,
+              borderBottomLeftRadius: 20,
+              borderBottomRightRadius: 20,
+            }}
+          >
+            <CustomHeader />
+          </Animated.View>
+          <View style={[styles.topContainer, { marginTop: H_MAX_HEIGHT + 10 }]}>
+            <View style={styles.topcard}>
+              <Text style={styles.topcardHeading}>9</Text>
+              <Text style={styles.topcardSubtitle}>Appointments today</Text>
+            </View>
+            <View style={styles.topcard}>
+              <Text style={styles.topcardHeading}>9</Text>
+              <Text style={styles.topcardSubtitle}>New messages</Text>
+            </View>
+          </View>
+          <View style={styles.topContainer}>
+            <View style={styles.topcard}>
+              <Text style={styles.topcardHeading}>2</Text>
+              <Text style={styles.topcardSubtitle}>Virtual</Text>
+            </View>
+            <View style={styles.topcard}>
+              <Text style={styles.topcardHeading}>3</Text>
+              <Text style={styles.topcardSubtitle}>In-clinic</Text>
+            </View>
+          </View>
+
+          <View style={styles.appointmentContainer}>
+            <Text style={styles.heading}>Today's Schedule</Text>
+            {appointments.map((appointment) => (
+              <View key={appointment.id} style={styles.appointment}>
+                <View style={{ flexDirection: "row" }}>
+                  <View style={styles.iconBackground}>
+                    <Image source={appointment.icon} style={styles.icon} />
+                  </View>
+                  <View style={styles.consulttext}>
+                    <Text style={styles.time}>{appointment.time}</Text>
+                    <Text style={styles.with}>{appointment.with}</Text>
+                  </View>
+                </View>
+                <Ionicons
+                  name={"arrow-forward-outline"}
+                  size={24}
+                  color={colors.whitetext}
+                />
+              </View>
+            ))}
+            <Pressable style={styles.viewallButton}>
+              <Text style={styles.viewalltext}>View all</Text>
+            </Pressable>
+          </View>
+          <Divider style={{ marginBottom: 10 }} />
+
+        </ScrollView>
+      </View>
+    </>
   );
 }
 
@@ -148,7 +269,7 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     paddingRight: 16,
     paddingBottom: 10,
-    marginTop: 10,
+    // marginTop: 10,
   },
 
   text: {
@@ -208,5 +329,86 @@ const styles = StyleSheet.create({
     color: colors.whitetext,
     fontSize: 18,
     fontWeight: "bold",
+  },
+
+  topContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    gap: 10,
+    marginTop: 10,
+  },
+  topcard: {
+    backgroundColor: colors.complementary,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    alignItems: "center",
+    flex: 1,
+  },
+  topcardHeading: {
+    color: colors.whitetext,
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  topcardSubtitle: {
+    color: colors.whitetext,
+    fontSize: 14,
+  },
+
+  heading: {
+    color: colors.whitetext,
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+
+  appointmentContainer: {
+    marginVertical: 16,
+  },
+
+  appointment: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginVertical: 10,
+  },
+
+  icon: {
+    height: 24,
+    width: 24,
+  },
+  iconBackground: {
+    backgroundColor: colors.somewhatlightback,
+    padding: 8,
+    borderRadius: 10,
+  },
+
+  consulttext: {
+    marginLeft: 10,
+    justifyContent: "center",
+  },
+
+  time: {
+    color: colors.whitetext,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  with: {
+    color: colors.whitetext,
+    fontWeight: "400",
+  },
+
+  viewalltext: {
+    color: colors.whitetext,
+    fontSize: 18,
+    alignSelf: "center",
+  },
+
+  viewallButton: {
+    paddingVertical: 8,
+    // alignSelf: "center",
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: colors.somewhatlightback,
+    marginTop: 5,
   },
 });

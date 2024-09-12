@@ -305,7 +305,7 @@ export default function MedicalProfileScreen({ navigation }) {
                 handleInputChange("bloodGroup", item.value);
               }}
               style={{
-                height: 45,
+                height: 50,
                 borderColor: "gray",
                 borderWidth: 1,
                 paddingHorizontal: 10,
@@ -327,7 +327,7 @@ export default function MedicalProfileScreen({ navigation }) {
               selectedTextStyle={{
                 color: colors.whitetext,
               }}
-              mode="modal"
+              mode="default"
               itemTextStyle={{
                 color: colors.whitetext,
               }}
@@ -353,7 +353,7 @@ export default function MedicalProfileScreen({ navigation }) {
                 handleInputChange("martialStatus", item.value);
               }}
               style={{
-                height: 45,
+                height: 50,
                 borderColor: "gray",
                 borderWidth: 1,
                 paddingHorizontal: 10,
@@ -471,7 +471,7 @@ export default function MedicalProfileScreen({ navigation }) {
                 handleInputChange("smokingHabits", item.value);
               }}
               style={{
-                height: 45,
+                height: 50,
                 borderColor: "gray",
                 borderWidth: 1,
                 paddingHorizontal: 10,
@@ -518,7 +518,7 @@ export default function MedicalProfileScreen({ navigation }) {
                 handleInputChange("drinkingHabits", item.value);
               }}
               style={{
-                height: 45,
+                height: 50,
                 borderColor: "gray",
                 borderWidth: 1,
                 paddingHorizontal: 10,
@@ -565,7 +565,7 @@ export default function MedicalProfileScreen({ navigation }) {
                 handleInputChange("activityLevel", item.value);
               }}
               style={{
-                height: 45,
+                height: 50,
                 borderColor: "gray",
                 borderWidth: 1,
                 paddingHorizontal: 10,
@@ -612,7 +612,7 @@ export default function MedicalProfileScreen({ navigation }) {
                 handleInputChange("foodPreference", item.value);
               }}
               style={{
-                height: 45,
+                height: 50,
                 borderColor: "gray",
                 borderWidth: 1,
                 paddingHorizontal: 10,
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
   },
 
   input: {
-    height: 45,
+    height: 50,
     borderColor: "gray",
     borderWidth: 1,
     paddingHorizontal: 10,

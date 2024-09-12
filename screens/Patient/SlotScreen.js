@@ -10,6 +10,10 @@ import {
 } from "react-native";
 import { Divider } from "react-native-paper";
 import { format, formatDistanceToNow } from "date-fns";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 
 import colors from "../../utils/colors";
 import SlotButton from "../../components/SlotButton";
@@ -47,7 +51,7 @@ const generateSlots = (days) => {
     let inX;
 
     if (i === 0) {
-        inX = "Today";
+      inX = "Today";
     } else {
       inX = formatDistanceToNow(date, { addSuffix: true });
     }
@@ -74,7 +78,7 @@ const slotsData = {
   ],
 };
 
-const itemWidth = 140;
+const itemWidth = wp("45%");
 
 export default function SlotScreen({ navigation, route }) {
   const { doctor, appointmentType } = route.params;
@@ -159,6 +163,7 @@ export default function SlotScreen({ navigation, route }) {
               justifyContent: "space-between",
               marginBottom: 20,
             }}
+            indicatorStyle="white"
           >
             {slots.map((slot, index) => (
               <Pressable
@@ -245,7 +250,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     width: itemWidth,
-    height: 60,
+    height: hp("10%"),
     marginBottom: 0,
   },
 

@@ -473,9 +473,10 @@ export default function BookDoctor({ navigation, route }) {
               }}
             >
               <Button1
-                text="Get directions"
+                text="Get Directions"
                 onPress={handleOpenInMaps}
                 style={{ flex: 3, height: 50 }}
+                textStyle={{ fontSize: 14 }}
               />
               <Pressable style={{ padding: 10 }} onPress={handleRecenter}>
                 <Image
@@ -505,18 +506,32 @@ export default function BookDoctor({ navigation, route }) {
                 }}
                 numberOfLines={expanded ? undefined : 3}
               >
-                {expanded ? text : `${text.substring(0, 80)}... `}
-                {!expanded && (
-                  <Pressable onPress={toggleRead}>
-                    <Text style={{ fontSize: 16, color: colours.lightcomp }}>
-                      Read more
-                    </Text>
-                  </Pressable>
-                )}
+                {expanded ? text : `${text.substring(0, 100)}... `}
               </Text>
+
+              {!expanded && (
+                <Pressable onPress={toggleRead}>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      color: colours.lightcomp,
+                      marginTop: 5,
+                    }}
+                  >
+                    Read more
+                  </Text>
+                </Pressable>
+              )}
+
               {expanded && (
                 <Pressable onPress={toggleRead}>
-                  <Text style={{ fontSize: 16, color: colours.lightcomp }}>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      color: colours.lightcomp,
+                      marginTop: 5,
+                    }}
+                  >
                     Read less
                   </Text>
                 </Pressable>

@@ -76,4 +76,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.darkback,
   },
+  text: {
+    color: colors.whitetext,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });

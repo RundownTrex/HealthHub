@@ -98,7 +98,6 @@ export default function BookedDoctor({ navigation }) {
                 style={{
                   color: colors.whitetext,
                   fontSize: 14,
-                  fontWeight: "500",
                 }}
               >
                 Appointment time
@@ -151,7 +150,6 @@ export default function BookedDoctor({ navigation }) {
                 style={{
                   color: colors.whitetext,
                   fontSize: 14,
-                  fontWeight: "500",
                 }}
               >
                 Clinic address
@@ -172,7 +170,6 @@ export default function BookedDoctor({ navigation }) {
               style={{
                 color: colors.whitetext,
                 fontSize: 14,
-                fontWeight: "500",
               }}
             >
               Mode of payment
