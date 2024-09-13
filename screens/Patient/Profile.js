@@ -235,13 +235,14 @@ const styles = StyleSheet.create({
   },
 
   headerContainer: {
-    justifyContent: "space-around",
+    justifyContent: "center",
     alignItems: "center",
     height: "100%",
     // flex: 1,
     // flexDirection: "column",
     // borderWidth: 1,
     // borderColor: colors.complementary,
+    gap: windowHeight / 100,
   },
 
   title: {

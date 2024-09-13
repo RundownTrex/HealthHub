@@ -25,6 +25,9 @@ import TextInput1 from "../../components/TextInput1";
 import Button1 from "../../components/Button1";
 import LoadingOverlay from "../../components/LoadingOverlay";
 
+let data;
+let profileData;
+
 const genders = [
   {
     label: "Male",
@@ -40,20 +43,21 @@ const genders = [
   },
 ];
 
-export default function GeneralProfileScreen({ navigation }) {
+export default function EditDoctorProfile({ navigation }) {
   const { toggleBottomSheet } = useBottomSheet();
 
   const [userPfp, setUserPfp] = useState(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [dob, setDob] = useState("");
-  const [gender, setGender] = useState(null);
+  const [about, setAbout] = useState("");
+  const [specializations, setSpecializations] = useState("");
+  const [workexperience, setWorkExperience] = useState("");
+  const [education, setEducation] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
   const user = auth().currentUser;
 
   const pickImage = async () => {
-    // Ask for permission to access media library
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -76,11 +80,29 @@ export default function GeneralProfileScreen({ navigation }) {
     }
   };
 
+  const clearFolderInFirebase = async (folderPath) => {
+    const storageRef = storage().ref(folderPath);
+    try {
+      const folderContents = await storageRef.listAll();
+      const deletePromises = folderContents.items.map((itemRef) =>
+        itemRef.delete()
+      );
+      await Promise.all(deletePromises);
+      console.log("Folder emptied successfully.");
+    } catch (error) {
+      console.error("Error emptying folder: ", error);
+    }
+  };
+
   const uploadImageToFirebase = async () => {
     let userId = user.uid;
     console.log("UID: ", userId);
 
     if (!userPfp) return null;
+
+    const folderPath = `userPfps/${userId}`;
+
+    await clearFolderInFirebase(folderPath);
 
     const fileName = userPfp.substring(userPfp.lastIndexOf("/") + 1);
     const storageRef = storage().ref(`userPfps/${userId}/${fileName}`);
@@ -100,22 +122,39 @@ export default function GeneralProfileScreen({ navigation }) {
   const saveChanges = async () => {
     setIsLoading(true);
     try {
-      let newPfpLink = await uploadImageToFirebase();
-      await firestore().collection("users").doc(user.uid).update({
-        pfpUrl: newPfpLink,
+      if (userPfp === data.pfpUrl) {
+        await firestore().collection("users").doc(user.uid).update({
+          firstname: firstName,
+          lastname: lastName,
+        });
+      } else {
+        let newPfpLink = await uploadImageToFirebase();
+        await firestore().collection("users").doc(user.uid).update({
+          pfpUrl: newPfpLink,
+          firstname: firstName,
+          lastname: lastName,
+        });
+      }
+
+      await firestore().collection("profile").doc(user.uid).update({
+        about,
+        specializations,
+        workexperience,
+        education,
       });
 
       setIsLoading(false);
       Toast.show({
         type: "success",
-        text1: "Profile photo changed successfully",
+        text1: "Profile edited successfully",
       });
     } catch (error) {
-      console.error("Error updating profile picture: ", error);
+      console.error("Error updating profile : ", error);
       setIsLoading(false);
       Toast.show({
         type: "error",
-        text1: "Failed to change profile photo",
+        text1: "Failed to update profile",
+        text2: "Make sure none of the fields are left empty",
       });
     }
   };
@@ -129,13 +168,24 @@ export default function GeneralProfileScreen({ navigation }) {
             .doc(user.uid)
             .get();
 
+          const profileDoc = await firestore()
+            .collection("profile")
+            .doc(user.uid)
+            .get();
+
           if (userDoc.exists) {
-            const data = userDoc.data();
+            data = userDoc.data();
+            profileData = profileDoc.data();
             setUserPfp(data.pfpUrl);
             setFirstName(data.firstname);
             setLastName(data.lastname);
+            setAbout(profileData.about);
+            setSpecializations(profileData.specializations);
+            setWorkExperience(profileData.workexperience);
+            setEducation(profileData.education);
 
             console.log(data);
+            console.log(profileData);
           } else {
             console.log("No such document!");
           }
@@ -166,26 +216,6 @@ export default function GeneralProfileScreen({ navigation }) {
     };
   }, [toggleBottomSheet, navigation]);
 
-  const handleDobChange = (input) => {
-    const cleaned = input.replace(/[^\d]/g, "");
-
-    let formatted = cleaned;
-    if (cleaned.length >= 2) {
-      formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
-    }
-    if (cleaned.length >= 4) {
-      formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(
-        2,
-        4
-      )}/${cleaned.slice(4)}`;
-    }
-
-    // Limit the input to 10 characters (DD/MM/YYYY)
-    if (formatted.length <= 10) {
-      setDob(formatted);
-    }
-  };
-
   return (
     <>
       <View
@@ -209,7 +239,7 @@ export default function GeneralProfileScreen({ navigation }) {
             fontSize: 18,
           }}
         >
-          General Profile
+          Edit Profile
         </Text>
         <View style={{ height: 20, width: 20 }} />
       </View>
@@ -266,7 +296,7 @@ export default function GeneralProfileScreen({ navigation }) {
           </View>
         </View>
         <Divider />
-        <View style={{ marginVertical: 10 }}>
+        <View style={{ marginTop: 10 }}>
           <Text style={styles.label}>First Name</Text>
           <TextInput1
             placeholder="Ex. John"
@@ -282,81 +312,49 @@ export default function GeneralProfileScreen({ navigation }) {
             onChangeText={(p) => setLastName(p)}
           />
         </View>
-        <View style={{ marginVertical: 10 }}>
-          <Text style={styles.label}>Date of Birth</Text>
+
+        <View style={{ marginBottom: 0 }}>
+          <Text style={styles.label}>About</Text>
           <TextInput1
-            // type={"datetime"}
-            // options={{
-            //   format: "DD/MM/YYYY",
-            // }}
-            placeholder="DD/MM/YYYY"
-            placeholderTextColor={colors.lightgraytext}
-            value={dob}
-            onChangeText={handleDobChange}
-            maxLength={10}
-            // style={{
-            //   height: 45,
-            //   borderColor: "gray",
-            //   borderWidth: 1,
-            //   paddingHorizontal: 10,
-            //   paddingVertical: 12,
-            //   borderRadius: 2,
-            //   color: colors.whitetext,
-            //   backgroundColor: colors.somewhatlightback,
-            //   fontSize: 16,
-            //   marginVertical: 5,
-            // }}
-            kbtype="numeric"
-            maxlen={10}
+            placeholder="About"
+            value={about}
+            onChangeText={(text) => setAbout(text)}
+            style={{ marginBottom: 10 }}
+            multi={true}
+            no={10}
           />
         </View>
-        <View>
-          <Text style={[styles.label, { marginBottom: 5 }]}>
-            Gender at birth
-          </Text>
-          <Dropdown
-            placeholder="Gender"
-            data={genders}
-            maxHeight={500}
-            value={gender}
-            onChange={(item) => {
-              setGender(item.value);
-            }}
-            style={{
-              height: 45,
-              borderColor: "gray",
-              borderWidth: 1,
-              paddingHorizontal: 10,
-              paddingVertical: 12,
-              borderRadius: 2,
-              backgroundColor: colors.somewhatlightback,
-              fontSize: 16,
-              marginVertical: 5,
-            }}
-            placeholderStyle={{
-              color: colors.lightgraytext,
-            }}
-            labelField="label"
-            valueField="value"
-            itemContainerStyle={{
-              backgroundColor: colors.darkback,
-              borderRadius: 8,
-            }}
-            selectedTextStyle={{
-              color: colors.whitetext,
-            }}
-            mode="modal"
-            itemTextStyle={{
-              color: colors.whitetext,
-            }}
-            containerStyle={{
-              backgroundColor: colors.darkback,
-              borderRadius: 8,
-              borderWidth: 1,
-              borderColor: colors.darkback,
-            }}
-            activeColor={colors.somewhatlightback}
-            backgroundColor="#000000b3"
+        <View style={{ marginBottom: 10 }}>
+          <Text style={styles.label}>Specializations</Text>
+          <TextInput1
+            placeholder="Specializations"
+            value={specializations}
+            onChangeText={(text) => setSpecializations(text)}
+            style={{ marginBottom: 10 }}
+            multi={true}
+            no={3}
+          />
+        </View>
+        <View style={{ marginBottom: 10 }}>
+          <Text style={styles.label}>Work Experience</Text>
+          <TextInput1
+            placeholder="Work Experience"
+            value={workexperience}
+            onChangeText={(text) => setWorkExperience(text)}
+            style={{ marginBottom: 10 }}
+            multi={true}
+            no={5}
+          />
+        </View>
+        <View style={{ marginBottom: 10 }}>
+          <Text style={styles.label}>Education/Degree</Text>
+          <TextInput1
+            placeholder="Degrees"
+            value={education}
+            onChangeText={(text) => setEducation(text)}
+            style={{ marginBottom: 10 }}
+            multi={true}
+            no={5}
           />
         </View>
 

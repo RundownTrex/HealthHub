@@ -18,7 +18,7 @@ export default function AppointmentStack() {
       screenOptions={{
         headerShown: false,
         animation: "ios",
-        gestureEnabled: true,
+        gestureEnabled: false,
       }}
     >
       <Stack.Screen name="Appointments" component={Appointment} />

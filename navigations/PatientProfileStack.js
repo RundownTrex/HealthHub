@@ -20,7 +20,7 @@ export default function PatientProfileStack() {
       screenOptions={{
         headerShown: false,
         animation: "ios",
-        gestureEnabled: true,
+        gestureEnabled: false,
       }}
     >
       <Stack.Screen name="Profile" component={Profile} />

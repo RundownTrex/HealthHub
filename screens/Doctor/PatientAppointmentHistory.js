@@ -21,87 +21,77 @@ import Button1 from "../../components/Button1";
 const appointments = [
   {
     id: 1,
-    doctorName: "Dr. Smith",
-    doctorDesignation: "Cardiologist",
+    patientName: "John Smith",
     appointmentSlot: "Tue, 12 Sep 2024, 10:00 AM",
     appointmentType: "Clinic",
     appointmentStatus: "Completed",
   },
   {
     id: 2,
-    doctorName: "Dr. Jane Doe",
-    doctorDesignation: "Dermatologist",
+    patientName: "Jane Doe",
     appointmentSlot: "Wed, 15 Sep 2024, 2:00 PM",
     appointmentType: "Virtual",
     appointmentStatus: "Cancelled",
   },
   {
     id: 3,
-    doctorName: "Dr. John Lee",
-    doctorDesignation: "Pediatrician",
+    patientName: "Alice Lee",
     appointmentSlot: "Fri, 18 Sep 2024, 4:30 PM",
     appointmentType: "Clinic",
     appointmentStatus: "Cancelled",
   },
   {
     id: 4,
-    doctorName: "Dr. Emily Clark",
-    doctorDesignation: "Neurologist",
+    patientName: "Emily Clark",
     appointmentSlot: "Sat, 20 Sep 2024, 11:30 AM",
     appointmentType: "Virtual",
     appointmentStatus: "Completed",
   },
   {
     id: 5,
-    doctorName: "Dr. Robert Brown",
-    doctorDesignation: "Orthopedic Surgeon",
+    patientName: "Robert Brown",
     appointmentSlot: "Mon, 22 Sep 2024, 9:00 AM",
     appointmentType: "Clinic",
     appointmentStatus: "Completed",
   },
   {
     id: 6,
-    doctorName: "Dr. Olivia Green",
-    doctorDesignation: "Ophthalmologist",
+    patientName: "Olivia Green",
     appointmentSlot: "Wed, 24 Sep 2024, 3:00 PM",
     appointmentType: "Virtual",
     appointmentStatus: "Cancelled",
   },
   {
     id: 7,
-    doctorName: "Dr. William Johnson",
-    doctorDesignation: "Endocrinologist",
+    patientName: "William Johnson",
     appointmentSlot: "Thu, 25 Sep 2024, 12:30 PM",
     appointmentType: "Clinic",
     appointmentStatus: "Cancelled",
   },
   {
     id: 8,
-    doctorName: "Dr. Amelia Davis",
-    doctorDesignation: "Psychiatrist",
+    patientName: "Amelia Davis",
     appointmentSlot: "Sat, 27 Sep 2024, 11:00 AM",
     appointmentType: "Virtual",
     appointmentStatus: "Completed",
   },
   {
     id: 9,
-    doctorName: "Dr. Michael Harris",
-    doctorDesignation: "Gastroenterologist",
+    patientName: "Michael Harris",
     appointmentSlot: "Tue, 29 Sep 2024, 10:00 AM",
     appointmentType: "Clinic",
     appointmentStatus: "Completed",
   },
   {
     id: 10,
-    doctorName: "Dr. Sophia Martinez",
-    doctorDesignation: "General Practitioner",
+    patientName: "Sophia Martinez",
     appointmentSlot: "Thu, 1 Oct 2024, 4:00 PM",
     appointmentType: "Virtual",
     appointmentStatus: "Cancelled",
   },
 ];
 
-export default function AppointmentHistory({ navigation }) {
+export default function PatientAppointmentHistory({ navigation }) {
   const [isLoading, setIsLoading] = useState(false);
   const [records, setRecords] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -172,17 +162,11 @@ export default function AppointmentHistory({ navigation }) {
 
     if (query) {
       const filtered = records.filter((appointment) => {
-        const {
-          doctorName,
-          doctorDesignation,
-          appointmentStatus,
-          appointmentType,
-        } = appointment;
+        const { patientName, appointmentType, appointmentStatus } = appointment;
         return (
-          doctorName.toLowerCase().includes(query.toLowerCase()) ||
-          doctorDesignation.toLowerCase().includes(query.toLowerCase()) ||
+          patientName.toLowerCase().includes(query.toLowerCase()) ||
           appointmentStatus.toLowerCase().includes(query.toLowerCase()) ||
-          appointmentTyp.toLowerCase().includes(query.toLowerCase())
+          appointmentType.toLowerCase().includes(query.toLowerCase())
         );
       });
       setFilteredRecords(filtered);
@@ -227,9 +211,9 @@ export default function AppointmentHistory({ navigation }) {
         ]}
       >
         <View style={styles.appointmentInfo}>
-          <Text style={styles.doctorName}>{item.doctorName}</Text>
-          <Text style={styles.designation}>{item.doctorDesignation}</Text>
-
+          <Text style={styles.patientName}>
+            Patient Name: {item.patientName}
+          </Text>
           <Text style={styles.appointmentSlot}>
             Slot: {item.appointmentSlot}
           </Text>
@@ -387,7 +371,7 @@ const styles = StyleSheet.create({
   appointmentInfo: {
     marginBottom: 10,
   },
-  doctorName: {
+  patientName: {
     fontSize: 18,
     fontWeight: "bold",
     color: colors.whitetext,

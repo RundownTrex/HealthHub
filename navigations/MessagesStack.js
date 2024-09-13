@@ -36,7 +36,7 @@ export default function MessagesStack() {
         screenOptions={{
           headerShown: false,
           animation: "ios",
-          gestureEnabled: true,
+          gestureEnabled: false,
         }}
       >
         <Stack.Screen name="Messages" component={Messages} />

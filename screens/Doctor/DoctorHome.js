@@ -86,9 +86,37 @@ const appointments = [
   // },
 ];
 
+const tips = [
+  "Remember to take breaks between consultations.",
+  "Keep your workspace organized for better efficiency.",
+  "Stay updated with the latest medical guidelines.",
+  "Ensure a calm, distraction-free environment during virtual consultations.",
+  "Good lighting enhances virtual consultations with patients.",
+  "Review patient records before each consultation for a personalized experience.",
+  "Encourage your patients to ask questions during consultations.",
+  "Stay hydrated and maintain good posture during long consultation sessions.",
+  "Make sure your internet connection is stable before starting virtual consultations.",
+  "Take a moment to relax and de-stress between back-to-back appointments.",
+  "Document your notes right after consultations for better accuracy.",
+  "Schedule time to follow up with patients on their progress.",
+  "Keep your software and systems up-to-date to avoid technical issues.",
+  "Engage with patients by making eye contact and active listening, even virtually.",
+  "Prepare for the next day by reviewing your appointment schedule ahead of time.",
+  "Balance virtual and in-person consultations to manage your workload effectively.",
+  "Double-check appointment details to avoid any scheduling conflicts.",
+  "Maintain a positive tone in virtual consultations to create a comfortable environment.",
+  "Stay informed about telemedicine laws and regulations in your area.",
+  "Take care of your mental health to provide the best care for your patients.",
+  "Have backup plans for connectivity issues during virtual consultations.",
+  "Remind patients to share their concerns openly during appointments.",
+  "Create follow-up reminders for patients to ensure continuity of care.",
+  "Maintain a healthy work-life balance to avoid burnout.",
+];
+
 const H_MAX_HEIGHT = 70;
 const H_MIN_HEIGHT = 0;
 const H_SCROLL_DISTANCE = H_MAX_HEIGHT - H_MIN_HEIGHT;
+const tabheight = 65;
 
 export default function DoctorHome({ navigation }) {
   const scrollOffsetY = useRef(new Animated.Value(0)).current;
@@ -101,6 +129,7 @@ export default function DoctorHome({ navigation }) {
   const [userName, setUserName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [randomTip, setRandomTip] = useState("");
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -137,6 +166,9 @@ export default function DoctorHome({ navigation }) {
   };
 
   useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * tips.length);
+    setRandomTip(tips[randomIndex]);
+
     const fetchUserProfile = async () => {
       const user = auth().currentUser;
 
@@ -203,7 +235,27 @@ export default function DoctorHome({ navigation }) {
           >
             <CustomHeader />
           </Animated.View>
-          <View style={[styles.topContainer, { marginTop: H_MAX_HEIGHT + 10 }]}>
+          <View
+            style={{
+              marginTop: H_MAX_HEIGHT + 10,
+              flexDirection: "row",
+              paddingVertical: 5,
+              paddingHorizontal: 10,
+              backgroundColor: colors.somewhatlightback,
+              borderRadius: 10,
+            }}
+          >
+            <Image
+              source={require("../../assets/light-bulb.png")}
+              style={{ height: 20, width: 20, marginRight: 3 }}
+            />
+            <Text
+              style={{ fontSize: 16, color: colors.whitetext, width: "94%" }}
+            >
+              {randomTip}
+            </Text>
+          </View>
+          <View style={[styles.topContainer, {}]}>
             <View style={styles.topcard}>
               <Text style={styles.topcardHeading}>9</Text>
               <Text style={styles.topcardSubtitle}>Appointments today</Text>
@@ -249,7 +301,6 @@ export default function DoctorHome({ navigation }) {
             </Pressable>
           </View>
           <Divider style={{ marginBottom: 10 }} />
-
         </ScrollView>
       </View>
     </>
@@ -263,6 +314,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.darkback,
     // alignItems: "center",
     justifyContent: "center",
+    marginBottom: tabheight,
   },
 
   scrollable: {

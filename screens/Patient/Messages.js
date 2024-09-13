@@ -194,7 +194,7 @@ export default function Messages({ navigation }) {
 
         <FlatList
           data={messages}
-          style={{ padding: 16 }}
+          style={{ padding: 16, paddingTop: 0 }}
           renderItem={({ item }) => (
             <Pressable
               style={styles.chatItem}

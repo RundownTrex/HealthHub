@@ -21,7 +21,7 @@ export default function LandingStack() {
       <Stack.Navigator
         initialRouteName="Landing screen"
         screenOptions={{
-          gestureEnabled: true,
+          gestureEnabled: false,
           ...TransitionPresets.SlideFromRightIOS,
           headerTitleAlign: "center",
           headerStyle: {

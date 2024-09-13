@@ -14,7 +14,7 @@ export default function HomeStack() {
       screenOptions={{
         headerShown: false,
         animation: "ios",
-        gestureEnabled: true,
+        gestureEnabled: false,
       }}
     >
       <Stack.Screen name="HomeScreen" component={HomeScreen} />

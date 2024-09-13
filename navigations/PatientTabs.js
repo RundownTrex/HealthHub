@@ -18,24 +18,6 @@ import { BottomSheetProvider } from "../context/BottomSheetContext";
 
 const Tab = createBottomTabNavigator();
 
-function LocationIcon(props) {
-  return (
-    <Svg
-      width={15}
-      height={15}
-      viewBox="0 0 15 15"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
-      <Path
-        d="M13.023.103L.842 5.725c-1.405.656-.937 2.718.562 2.718h5.154v5.153c0 1.5 2.061 1.968 2.717.562l5.622-12.18c.469-1.125-.75-2.344-1.874-1.875z"
-        fill="#fff"
-      />
-    </Svg>
-  );
-}
-
 const { width } = Dimensions.get("screen");
 
 export default function PatientTabs() {
@@ -45,7 +27,7 @@ export default function PatientTabs() {
         backBehavior="firstRoute"
         initialRouteName="Home"
         tabBar={(props) => <CustomTabBar {...props} />}
-        screenOptions={({ route }) => ({
+        screenOptions={() => ({
           tabBarHideOnKeyboard: true,
           tabBarStyle: {
             ...styles.bottomtab,
