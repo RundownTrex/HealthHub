@@ -43,12 +43,96 @@ const genders = [
   },
 ];
 
+const doctorDesignations = [
+  {
+    label: "General physician",
+    value: "General physician",
+  },
+  {
+    label: "Skin & Hair",
+    value: "Dermatologist",
+  },
+  {
+    label: "Women health",
+    value: "Gynecologist",
+  },
+  {
+    label: "Dental care",
+    value: "Dentist",
+  },
+  {
+    label: "Mental wellness",
+    value: "Psychiatrist",
+  },
+  {
+    label: "Pediatrics",
+    value: "Pediatrician",
+  },
+  {
+    label: "Heart specialist",
+    value: "Cardiologist",
+  },
+  {
+    label: "Orthopedics",
+    value: "Orthopedist",
+  },
+  {
+    label: "Neurology",
+    value: "Neurologist",
+  },
+  {
+    label: "ENT",
+    value: "Otolaryngologist",
+  },
+  {
+    label: "Urology",
+    value: "Urologist",
+  },
+  {
+    label: "Oncology",
+    value: "Oncologist",
+  },
+  {
+    label: "Endocrinology",
+    value: "Endocrinologist",
+  },
+  {
+    label: "Ophthalmology",
+    value: "Ophthalmologist",
+  },
+  {
+    label: "Gastroenterology",
+    value: "Gastroenterologist",
+  },
+  {
+    label: "Rheumatology",
+    value: "Rheumatologist",
+  },
+  {
+    label: "Nephrology",
+    value: "Nephrologist",
+  },
+  {
+    label: "Allergy & Immunology",
+    value: "Immunologist",
+  },
+  {
+    label: "Pulmonology",
+    value: "Pulmonologist",
+  },
+  {
+    label: "Hematology",
+    value: "Hematologist",
+  },
+];
+
 export default function EditDoctorProfile({ navigation }) {
   const { toggleBottomSheet } = useBottomSheet();
 
   const [userPfp, setUserPfp] = useState(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [designation, setDesignation] = useState("");
   const [about, setAbout] = useState("");
   const [specializations, setSpecializations] = useState("");
   const [workexperience, setWorkExperience] = useState("");
@@ -137,6 +221,7 @@ export default function EditDoctorProfile({ navigation }) {
       }
 
       await firestore().collection("profile").doc(user.uid).update({
+        designation,
         about,
         specializations,
         workexperience,
@@ -160,6 +245,7 @@ export default function EditDoctorProfile({ navigation }) {
   };
 
   useEffect(() => {
+    setIsLoading(true);
     const fetchUserProfile = async () => {
       if (user) {
         try {
@@ -183,17 +269,23 @@ export default function EditDoctorProfile({ navigation }) {
             setSpecializations(profileData.specializations);
             setWorkExperience(profileData.workexperience);
             setEducation(profileData.education);
+            setDesignation(profileData.designation)
 
             console.log(data);
             console.log(profileData);
           } else {
             console.log("No such document!");
           }
+          setIsLoading(false);
         } catch (error) {
           console.error("Error fetching document: ", error);
+          setIsLoading(false);
+        } finally {
+          setIsLoading(false);
         }
       } else {
         console.log("No user is logged in");
+        setIsLoading(false);
       }
     };
 
@@ -310,6 +402,54 @@ export default function EditDoctorProfile({ navigation }) {
             placeholder="Ex. Doe"
             value={lastName}
             onChangeText={(p) => setLastName(p)}
+          />
+        </View>
+
+        <View style={{ marginBottom: 5 }}>
+          <Text style={[styles.label]}>Designation</Text>
+          <Dropdown
+            placeholder="Designation"
+            data={doctorDesignations}
+            maxHeight={500}
+            value={designation}
+            onChange={(item) => {
+              setDesignation(item.value);
+            }}
+            style={{
+              height: 45,
+              borderColor: "gray",
+              borderWidth: 1,
+              paddingHorizontal: 10,
+              paddingVertical: 12,
+              borderRadius: 2,
+              backgroundColor: colors.somewhatlightback,
+              fontSize: 16,
+              marginVertical: 5,
+            }}
+            placeholderStyle={{
+              color: colors.lightgraytext,
+            }}
+            labelField="label"
+            valueField="value"
+            itemContainerStyle={{
+              backgroundColor: colors.darkback,
+              borderRadius: 8,
+            }}
+            selectedTextStyle={{
+              color: colors.whitetext,
+            }}
+            mode="modal"
+            itemTextStyle={{
+              color: colors.whitetext,
+            }}
+            containerStyle={{
+              backgroundColor: colors.darkback,
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: colors.darkback,
+            }}
+            activeColor={colors.somewhatlightback}
+            backgroundColor="#000000b3"
           />
         </View>
 

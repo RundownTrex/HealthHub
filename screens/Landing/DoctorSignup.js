@@ -35,124 +35,84 @@ GoogleSignin.configure({
 
 const doctorDesignations = [
   {
-    label: "General Physician",
-    value: "general_physician",
+    label: "General physician",
+    value: "General physician",
   },
   {
-    label: "Pediatrician",
-    value: "pediatrician",
+    label: "Skin & Hair",
+    value: "Dermatologist",
   },
   {
-    label: "Cardiologist",
-    value: "cardiologist",
+    label: "Women health",
+    value: "Gynecologist",
   },
   {
-    label: "Dermatologist",
-    value: "dermatologist",
+    label: "Dental care",
+    value: "Dentist",
   },
   {
-    label: "Endocrinologist",
-    value: "endocrinologist",
+    label: "Mental wellness",
+    value: "Psychiatrist",
   },
   {
-    label: "Gastroenterologist",
-    value: "gastroenterologist",
+    label: "Pediatrics",
+    value: "Pediatrician",
   },
   {
-    label: "Neurologist",
-    value: "neurologist",
+    label: "Heart specialist",
+    value: "Cardiologist",
   },
   {
-    label: "Oncologist",
-    value: "oncologist",
+    label: "Orthopedics",
+    value: "Orthopedist",
   },
   {
-    label: "Orthopedic Surgeon",
-    value: "orthopedic_surgeon",
+    label: "Neurology",
+    value: "Neurologist",
   },
   {
-    label: "ENT Specialist",
-    value: "ent_specialist",
+    label: "ENT",
+    value: "Otolaryngologist",
   },
   {
-    label: "Psychiatrist",
-    value: "psychiatrist",
+    label: "Urology",
+    value: "Urologist",
   },
   {
-    label: "Pulmonologist",
-    value: "pulmonologist",
+    label: "Oncology",
+    value: "Oncologist",
   },
   {
-    label: "Urologist",
-    value: "urologist",
+    label: "Endocrinology",
+    value: "Endocrinologist",
   },
   {
-    label: "Nephrologist",
-    value: "nephrologist",
+    label: "Ophthalmology",
+    value: "Ophthalmologist",
   },
   {
-    label: "Rheumatologist",
-    value: "rheumatologist",
+    label: "Gastroenterology",
+    value: "Gastroenterologist",
   },
   {
-    label: "Obstetrician/Gynecologist",
-    value: "obstetrician_gynecologist",
+    label: "Rheumatology",
+    value: "Rheumatologist",
   },
   {
-    label: "Ophthalmologist",
-    value: "ophthalmologist",
+    label: "Nephrology",
+    value: "Nephrologist",
   },
   {
-    label: "Radiologist",
-    value: "radiologist",
+    label: "Allergy & Immunology",
+    value: "Immunologist",
   },
   {
-    label: "Surgeon",
-    value: "surgeon",
+    label: "Pulmonology",
+    value: "Pulmonologist",
   },
   {
-    label: "Infectious Disease Specialist",
-    value: "infectious_disease_specialist",
-  },
-  {
-    label: "Allergist/Immunologist",
-    value: "allergist_immunologist",
-  },
-  {
-    label: "Hematologist",
-    value: "hematologist",
-  },
-  {
-    label: "Plastic Surgeon",
-    value: "plastic_surgeon",
-  },
-  {
-    label: "Anesthesiologist",
-    value: "anesthesiologist",
-  },
-  {
-    label: "Chiropractor",
-    value: "chiropractor",
-  },
-  {
-    label: "Geriatrician",
-    value: "geriatrician",
-  },
-  {
-    label: "Physiotherapist",
-    value: "physiotherapist",
-  },
-  {
-    label: "Clinical Psychologist",
-    value: "clinical_psychologist",
-  },
-  {
-    label: "Sports Medicine Specialist",
-    value: "sports_medicine_specialist",
-  },
-  {
-    label: "Family Medicine Physician",
-    value: "family_medicine_physician",
+    label: "Hematology",
+    value: "Hematologist",
   },
 ];
 
@@ -173,6 +133,7 @@ export default function DoctorSignup({ navigation }) {
     designation: "",
     licenseNumber: "",
     yearsofexperience: "",
+    consultFees: "",
     phone: "",
     clinicConsultation: false,
     virtualConsultation: false,
@@ -199,7 +160,6 @@ export default function DoctorSignup({ navigation }) {
   };
 
   const pickImage = async () => {
-    // Ask for permission to access media library
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -253,7 +213,8 @@ export default function DoctorSignup({ navigation }) {
       !doctorProfile.designation ||
       !doctorProfile.licenseNumber ||
       !doctorProfile.yearsofexperience ||
-      !doctorProfile.phone
+      !doctorProfile.phone ||
+      !doctorProfile.consultFees
     ) {
       Toast.show({
         type: "error",
@@ -335,6 +296,7 @@ export default function DoctorSignup({ navigation }) {
         licenseNumber: doctorProfile.licenseNumber,
         yearsofexperience: doctorProfile.yearsofexperience,
         phone: doctorProfile.phone,
+        consultFees: doctorProfile.consultFees,
         clinicConsultation: doctorProfile.clinicConsultation,
         virtualConsultation: doctorProfile.virtualConsultation,
       };
@@ -568,6 +530,18 @@ export default function DoctorSignup({ navigation }) {
           </View>
 
           <View>
+            <Text style={styles.label}>Consultation Fees (in ₹)</Text>
+            <TextInput1
+              placeholder="Consultation Fees"
+              value={doctorProfile.consultFees}
+              onChangeText={(text) => handleInputChange("consultFees", text)}
+              style={{ marginBottom: 10 }}
+              kbtype="numeric"
+              maxlen={10}
+            />
+          </View>
+
+          <View>
             <Text style={styles.label}>Medical License Number</Text>
             <TextInput1
               placeholder="Medical License Number"
@@ -624,6 +598,7 @@ export default function DoctorSignup({ navigation }) {
                   doctorProfile.clinicConsultation ? "checked" : "unchecked"
                 }
                 onPress={() => {
+                  handleInputChange("clinicCity", null);
                   handleInputChange("clinicName", null);
                   handleInputChange("clinicAddress", null);
                   handleInputChange(

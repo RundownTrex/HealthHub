@@ -239,6 +239,7 @@ export default function DoctorHome({ navigation }) {
             style={{
               marginTop: H_MAX_HEIGHT + 10,
               flexDirection: "row",
+              alignItems: "center",
               paddingVertical: 5,
               paddingHorizontal: 10,
               backgroundColor: colors.somewhatlightback,
@@ -247,14 +248,25 @@ export default function DoctorHome({ navigation }) {
           >
             <Image
               source={require("../../assets/light-bulb.png")}
-              style={{ height: 20, width: 20, marginRight: 3 }}
+              style={{
+                height: 20,
+                width: 20,
+                marginRight: 8,
+                alignSelf: "flex-start",
+                marginTop: 5,
+              }}
             />
             <Text
-              style={{ fontSize: 16, color: colors.whitetext, width: "94%" }}
+              style={{
+                fontSize: 16,
+                color: colors.whitetext,
+                flexShrink: 1,
+              }}
             >
               {randomTip}
             </Text>
           </View>
+
           <View style={[styles.topContainer, {}]}>
             <View style={styles.topcard}>
               <Text style={styles.topcardHeading}>9</Text>
@@ -324,37 +336,10 @@ const styles = StyleSheet.create({
     // marginTop: 10,
   },
 
-  text: {
-    color: colors.whitetext,
-    fontSize: 20,
-  },
   label: {
     fontSize: 14,
   },
 
-  headstyle: {
-    backgroundColor: colors.lightaccent,
-    // height: ,
-    // overflow: "hidden",
-    // backgroundColor: "transparent",
-  },
-
-  locationBlock: {
-    display: "flex",
-    flexDirection: "row",
-    gap: 6,
-    marginRight: 16,
-    // borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    alignSelf: "center",
-    // borderWidth: 1,
-  },
-  locationText: {
-    color: colors.whitetext,
-    fontSize: 14,
-    fontWeight: "600",
-  },
   headerContainer: {
     justifyContent: "center",
     // borderWidth: 1,
@@ -405,6 +390,7 @@ const styles = StyleSheet.create({
   topcardSubtitle: {
     color: colors.whitetext,
     fontSize: 14,
+    textAlign: "center",
   },
 
   heading: {

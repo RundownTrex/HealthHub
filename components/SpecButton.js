@@ -55,7 +55,7 @@ export default function SpecButton({ imageUrl, title }) {
         var send = "Orthopedist";
         break;
       case "Neurology":
-        var send = "Neurologists";
+        var send = "Neurologist";
         break;
       case "ENT":
         var send = "Otolaryngologist";
@@ -64,13 +64,13 @@ export default function SpecButton({ imageUrl, title }) {
         var send = "Urologist";
         break;
       case "Oncology":
-        var send = "General physician";
+        var send = "Oncologist";
         break;
       case "Endocrinology":
-        var send = "General physician";
+        var send = "Endocrinologist";
         break;
       case "Ophthalmology":
-        var send = "Oncologist";
+        var send = "Ophthalmologist";
         break;
       case "Gastroenterology":
         var send = "Gastroenterologist";
@@ -90,7 +90,7 @@ export default function SpecButton({ imageUrl, title }) {
       case "Hematology":
         var send = "Hematologist";
         break;
-    }
+    }    
 
     navigation.navigate("Providers", { send });
   };
