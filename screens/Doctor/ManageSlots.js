@@ -1,12 +1,77 @@
-import { useEffect } from "react";
-import { View, Text, Pressable, StyleSheet, BackHandler } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  BackHandler,
+  FlatList,
+  Image,
+  ScrollView,
+  SectionList,
+} from "react-native";
 import { useBottomSheet } from "../../context/BottomSheetContext";
+import { SegmentedButtons, Switch } from "react-native-paper";
+import auth from "@react-native-firebase/auth";
+import DatePicker from "react-native-date-picker";
+import { format, parseISO, parse, compareAsc, isValid } from "date-fns";
+import { Calendar } from "react-native-calendars";
+import firestore from "@react-native-firebase/firestore";
+import Toast from "react-native-toast-message";
 
 import colors from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";
+import LoadingOverlay from "../../components/LoadingOverlay";
+import Button1 from "../../components/Button1";
 
 export default function ManageSlots({ navigation }) {
   const { toggleBottomSheet } = useBottomSheet();
+  const [value, setValue] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [noSlot, setNoSlot] = useState(false);
+  const [doctorData, setDoctorData] = useState({});
+  const user = auth().currentUser;
+
+  const [selectedDate, setSelectedDate] = useState(
+    format(new Date(), "yyyy-MM-dd")
+  ); // For the calendar
+  const [time, setTime] = useState(new Date()); // For the date picker
+  const [open, setOpen] = useState(false); // Controls opening of date picker
+  const [slotsByDate, setSlotsByDate] = useState({});
+
+  const addClinicSlot = (selectedTime) => {
+    const newSlot = {
+      time: selectedTime,
+      status: "not booked",
+    };
+
+    setSlotsByDate((prev) => ({
+      ...prev,
+      [selectedDate]: [...(prev[selectedDate] || []), newSlot],
+    }));
+  };
+
+  useEffect(() => {
+    console.log(slotsByDate);
+  }, [slotsByDate]);
+  const removeSlot = (index) => {
+    setSlotsByDate((prev) => ({
+      ...prev,
+      [selectedDate]: prev[selectedDate].filter((_, i) => i !== index),
+    }));
+  };
+
+  const parseTime = (timeString) => {
+    return parse(timeString, "hh:mm a", new Date());
+  };
+
+  const slotsForSelectedDate = (slotsByDate[selectedDate] || []).sort(
+    (a, b) => {
+      const timeA = parseTime(a.time);
+      const timeB = parseTime(b.time);
+      return compareAsc(timeA, timeB);
+    }
+  );
 
   useEffect(() => {
     toggleBottomSheet(true);
@@ -24,8 +89,201 @@ export default function ManageSlots({ navigation }) {
     };
   }, [toggleBottomSheet, navigation]);
 
+  const fetchSlots = async (selectedDate) => {
+    try {
+      const clinicSlotsRef = firestore()
+        .collection("profile")
+        .doc(user.uid)
+        .collection("clinicSlots");
+      const slotsSnapshot = await clinicSlotsRef.get();
+
+      if (slotsSnapshot.empty) {
+        setNoSlot(true);
+        setSlotsByDate((prev) => ({
+          ...prev,
+          [selectedDate]: [],
+        }));
+      } else {
+        setNoSlot(false);
+        const slotsRef = clinicSlotsRef.doc(selectedDate);
+        const doc = await slotsRef.get();
+
+        if (doc.exists) {
+          const data = doc.data();
+          const slots = (data.slots || []).map((slot) => ({
+            time: slot.time,
+            status: slot.status || "not booked",
+          }));
+          setSlotsByDate((prev) => ({
+            ...prev,
+            [selectedDate]: slots,
+          }));
+        } else {
+          console.log("No slots found for this date.");
+          setSlotsByDate((prev) => ({
+            ...prev,
+            [selectedDate]: [],
+          }));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching slots: ", error);
+      Toast.show({
+        type: "error",
+        text1: "Failed to fetch slots",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (selectedDate) {
+      fetchSlots(selectedDate);
+    }
+  }, [selectedDate]);
+
+  useEffect(() => {
+    setIsLoading(true);
+    const fetchUserProfile = async () => {
+      if (user) {
+        try {
+          const profileDoc = await firestore()
+            .collection("profile")
+            .doc(user.uid)
+            .get();
+
+          if (profileDoc.exists) {
+            data = profileDoc.data();
+            setDoctorData(data);
+
+            if (data.clinicConsultation) {
+              setValue("clinic");
+            } else {
+              setValue("virtual");
+            }
+
+            // console.log("Profile data: ", doctorData);
+          } else {
+            console.log("No such document!");
+          }
+          setIsLoading(false);
+        } catch (error) {
+          console.error("Error fetching document: ", error);
+          setIsLoading(false);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        console.log("No user is logged in");
+        setIsLoading(false);
+      }
+    };
+    fetchUserProfile();
+  }, []);
+
+  const saveSlots = async () => {
+    setIsLoading(true);
+
+    const batch = firestore().batch();
+
+    const clinicSlots = Object.keys(slotsByDate).reduce((acc, date) => {
+      acc[date] = slotsByDate[date].map((slot) => ({
+        time: slot.time,
+        status: slot.status,
+      }));
+      return acc;
+    }, {});
+
+    console.log(clinicSlots);
+
+    Object.keys(clinicSlots).forEach((date) => {
+      const slotsRef = firestore()
+        .collection("profile")
+        .doc(user.uid)
+        .collection("clinicSlots")
+        .doc(date);
+
+      batch.set(slotsRef, { slots: clinicSlots[date] }, { merge: true });
+    });
+
+    await batch.commit();
+
+    Toast.show({
+      type: "success",
+      text1: "Slots saved successfully",
+    });
+    setIsLoading(false);
+  };
+
+  const noSlotMode = async () => {
+    setIsLoading(true);
+    const batch = firestore().batch();
+
+    const noSlotRef = firestore()
+      .collection("profile")
+      .doc(user.uid)
+      .collection("clinicSlots");
+
+    const snapshot = await noSlotRef.get().catch((error) => console.log(error));
+
+    snapshot.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+
+    setIsLoading(false);
+    Toast.show({
+      type: "success",
+      text1: "Dynamic Slots turned on",
+      text2:
+        "The patients will call on the submitted mobile number for appointments",
+    });
+  };
+
+  const buttons = [];
+  if (doctorData.clinicConsultation) {
+    buttons.push({
+      value: "clinic",
+      label: "Clinic",
+      checkedColor: colors.whitetext,
+      uncheckedColor: colors.whitetext,
+      labelStyle: {
+        color: colors.whitetext,
+        fontSize: 16,
+      },
+      style: [
+        { borderRadius: 5 },
+        {
+          backgroundColor:
+            value === "clinic" ? colors.complementary : colors.darkback,
+        },
+      ],
+    });
+  }
+
+  if (doctorData.virtualConsultation) {
+    buttons.push({
+      value: "virtual",
+      label: "Virtual",
+      checkedColor: colors.whitetext,
+      uncheckedColor: colors.whitetext,
+      labelStyle: {
+        color: colors.whitetext,
+        fontSize: 16,
+      },
+      style: [
+        { borderRadius: 5 },
+        {
+          backgroundColor:
+            value === "virtual" ? colors.complementary : colors.darkback,
+        },
+      ],
+    });
+  }
+
   return (
     <>
+      <LoadingOverlay isVisible={isLoading} />
       <View
         style={{
           height: 60,
@@ -51,17 +309,235 @@ export default function ManageSlots({ navigation }) {
         </Text>
         <View style={{ height: 20, width: 20 }} />
       </View>
-      <View>
-        <Text>Manage Slots here</Text>
-      </View>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
+      >
+        <SegmentedButtons
+          value={value}
+          onValueChange={setValue}
+          style={{ marginBottom: 5 }}
+          buttons={buttons}
+          density="regular"
+        />
+
+        {value === "clinic" ? (
+          <>
+            <View style={styles.switchItemContainer}>
+              <View style={styles.textContainer}>
+                <Text style={styles.switchItemText}>Dynamic Slots</Text>
+                <Text style={styles.switchItemDescription}>
+                  The patients will call the clinic for appointments
+                </Text>
+              </View>
+
+              <Switch
+                value={noSlot}
+                onValueChange={() => setNoSlot(!noSlot)}
+                color={colors.complementary}
+              />
+            </View>
+            {noSlot ? (
+              <>
+                <Button1 onPress={noSlotMode} text="Submit" />
+              </>
+            ) : (
+              <>
+                <Calendar
+                  onDayPress={(day) => setSelectedDate(day.dateString)}
+                  markedDates={{
+                    [selectedDate]: {
+                      selected: true,
+                      selectedColor: colors.complementary,
+                    },
+                  }}
+                  minDate={format(new Date(), "yyyy-MM-dd")}
+                  enableSwipeMonths={true}
+                />
+                <Button1
+                  text="Add Slot"
+                  onPress={() => setOpen(true)}
+                  style={{ marginVertical: 10 }}
+                />
+                <DatePicker
+                  modal
+                  open={open}
+                  date={time}
+                  mode="time"
+                  onConfirm={(time) => {
+                    setOpen(false);
+                    addClinicSlot(format(time, "hh:mm a"));
+                  }}
+                  onCancel={() => setOpen(false)}
+                />
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.label}>
+                    Slots for:{" "}
+                    <Text style={{ fontWeight: "bold" }}>
+                      {format(parseISO(selectedDate), "EEEE, MMMM d, yyyy")}
+                    </Text>
+                  </Text>
+                  <ScrollView>
+                    {slotsForSelectedDate.map((slot, index) => (
+                      <View
+                        key={index}
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          padding: 15,
+                          backgroundColor: colors.somewhatlightback,
+                          borderRadius: 8,
+                          marginVertical: 5,
+                        }}
+                      >
+                        <Text style={styles.slotTime}>{slot.time}</Text>
+                        {slot.status !== "booked" ? (
+                          <Pressable onPress={() => removeSlot(index)}>
+                            <Image
+                              source={require("../../assets/red-cross.png")}
+                              style={styles.removeIcon}
+                            />
+                          </Pressable>
+                        ) : (
+                          <Text style={{ color: colors.whitetext }}>
+                            Booked
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </ScrollView>
+
+                  <Button1
+                    text="Save Slots"
+                    onPress={saveSlots}
+                    style={{ marginVertical: 10 }}
+                  />
+                </View>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <Calendar
+              onDayPress={(day) => setSelectedDate(day.dateString)}
+              markedDates={{
+                [selectedDate]: {
+                  selected: true,
+                  selectedColor: colors.complementary,
+                },
+              }}
+              minDate={format(new Date(), "yyyy-MM-dd")}
+              enableSwipeMonths={true}
+            />
+            <Button1
+              text="Add Slot"
+              onPress={() => setOpen(true)}
+              style={{ marginVertical: 10 }}
+            />
+            <DatePicker
+              modal
+              open={open}
+              date={time}
+              mode="time"
+              onConfirm={(time) => {
+                setOpen(false);
+                addClinicSlot(format(time, "hh:mm a"));
+              }}
+              onCancel={() => setOpen(false)}
+            />
+
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>
+                Slots for:{" "}
+                <Text style={{ fontWeight: "bold" }}>
+                  {format(parseISO(selectedDate), "EEEE, MMMM d, yyyy")}
+                </Text>
+              </Text>
+              <ScrollView>
+                {slotsForSelectedDate.map((slot, index) => (
+                  <View
+                    key={index}
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      padding: 15,
+                      backgroundColor: colors.somewhatlightback,
+                      borderRadius: 8,
+                      marginVertical: 5,
+                    }}
+                  >
+                    <Text style={styles.slotTime}>{slot.time}</Text>
+                    {slot.status !== "booked" ? (
+                      <Pressable onPress={() => removeSlot(index)}>
+                        <Image
+                          source={require("../../assets/red-cross.png")}
+                          style={styles.removeIcon}
+                        />
+                      </Pressable>
+                    ) : (
+                      <Text style={{ color: colors.whitetext }}>Booked</Text>
+                    )}
+                  </View>
+                ))}
+              </ScrollView>
+
+              <Button1
+                text="Save Slots"
+                onPress={saveSlots}
+                style={{ marginVertical: 10 }}
+              />
+            </View>
+          </>
+        )}
+      </ScrollView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     backgroundColor: colors.darkback,
     padding: 16,
+  },
+
+  switchItemContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginVertical: 10,
+  },
+  textContainer: {
+    flex: 1,
+    marginRight: 10,
+  },
+  switchItemText: {
+    color: colors.whitetext,
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  switchItemDescription: {
+    color: colors.whitetext,
+    fontSize: 14,
+    flexShrink: 1,
+  },
+
+  slotTime: {
+    color: colors.whitetext,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+
+  removeIcon: {
+    height: 25,
+    width: 25,
+  },
+
+  label: {
+    fontSize: 16,
+    color: colors.lightgraytext,
   },
 });

@@ -22,7 +22,6 @@ import LoadingOverlay from "../../components/LoadingOverlay";
 import Button1 from "../../components/Button1";
 
 let profileData;
-const user = auth().currentUser;
 
 export default function ConsultationSettings({ navigation }) {
   const { toggleBottomSheet } = useBottomSheet();
@@ -40,6 +39,7 @@ export default function ConsultationSettings({ navigation }) {
     latitude: 18.94024498803612,
     longitude: 72.83573143063485,
   });
+  const user = auth().currentUser;
 
   const [region, setRegion] = useState({
     latitude: 18.94024498803612,
@@ -88,6 +88,8 @@ export default function ConsultationSettings({ navigation }) {
 
             setClinicConsultation(profileData.clinicConsultation);
             setVirtualConsultation(profileData.virtualConsultation);
+            setConsultFees(profileData.consultFees);
+            setPhone(profileData.phone);
 
             console.log("Profile data: ", profileData);
           } else {
@@ -98,8 +100,7 @@ export default function ConsultationSettings({ navigation }) {
             setClinicName(profileData.clinicName);
             setClinicCity(profileData.clinicCity);
             setClinicAddress(profileData.clinicAddress);
-            setConsultFees(profileData.consultFees);
-            setPhone(profileData.phone);
+
             const geoPoint = profileData.cliniclocation;
             console.log(geoPoint.latitude);
             updateRegion(geoPoint.latitude, geoPoint.longitude);
@@ -137,7 +138,6 @@ export default function ConsultationSettings({ navigation }) {
     }
     setVirtualConsultation(!virtualConsultation);
   };
-
 
   const saveChanges = async () => {
     setIsLoading(true);
