@@ -39,7 +39,7 @@ const menuitems = [
     id: "3",
     title: "Manage Slots",
     icon: require("../../assets/settingicons/slots.png"),
-    screen: "ManageSlots",
+    screen: "SlotType",
   },
   {
     id: "4",
