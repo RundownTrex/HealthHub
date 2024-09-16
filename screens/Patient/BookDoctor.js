@@ -16,7 +16,9 @@ import { Avatar, Divider, SegmentedButtons } from "react-native-paper";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import call from "react-native-phone-call";
 import Toast from "react-native-toast-message";
-import { format } from "date-fns";
+import firestore from "@react-native-firebase/firestore";
+
+import { format, isAfter, parse, set } from "date-fns";
 
 import colors from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";
@@ -41,6 +43,8 @@ export default function BookDoctor({ navigation, route }) {
   const mapRef = useRef(null);
 
   const [clinicLocation, setClinicLocation] = useState({});
+  const [clinicSlots, setClinicSlots] = useState([]);
+  const [virtualSlots, setVirtualSlots] = useState([]);
 
   const [expanded, setExpanded] = useState(false);
 
@@ -89,6 +93,50 @@ export default function BookDoctor({ navigation, route }) {
     return () => backHandler.remove();
   }, [navigation]);
 
+  const fetchClinicSlots = async (userId, date) => {
+    try {
+      const clinicSlotsDoc = await firestore()
+        .collection("profile")
+        .doc(userId)
+        .collection("clinicSlots")
+        .doc(date)
+        .get();
+
+      if (clinicSlotsDoc.exists) {
+        const clinicData = clinicSlotsDoc.data();
+        return clinicData.slots;
+      } else {
+        console.log("No clinic slots found for this date");
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching clinic slots: ", error);
+      return [];
+    }
+  };
+
+  const fetchVirtualSlots = async (userId, date) => {
+    try {
+      const clinicSlotsDoc = await firestore()
+        .collection("profile")
+        .doc(userId)
+        .collection("virtualSlots")
+        .doc(date)
+        .get();
+
+      if (clinicSlotsDoc.exists) {
+        const clinicData = clinicSlotsDoc.data();
+        return clinicData.slots;
+      } else {
+        console.log("No clinic slots found for this date");
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching clinic slots: ", error);
+      return [];
+    }
+  };
+
   useEffect(() => {
     if (doctor.profileData.clinicConsultation === true) {
       setClinicLocation(
@@ -96,20 +144,35 @@ export default function BookDoctor({ navigation, route }) {
           ? JSON.parse(doctor.profileData.cliniclocation)
           : null
       );
-      // setClinicLocation({
-      //   latitude:
-      //     doctor.profileData.cliniclocation.latitude || 18.94024498803612,
-      //   longitude:
-      //     doctor.profileData.cliniclocation.longitude || 72.83573143063485,
-      // });
+      const loadClinicSlots = async () => {
+        const fetchedSlots = await fetchClinicSlots(
+          doctor.id,
+          format(new Date(), "yyyy-MM-dd")
+        );
+        setClinicSlots(fetchedSlots);
+      };
+
+      loadClinicSlots();
     }
 
-    // console.log(doctor);
+    if (doctor.profileData.virtualConsultation === true) {
+      const loadVirtualSlots = async () => {
+        const fetchedSlots = await fetchVirtualSlots(
+          doctor.id,
+          format(new Date(), "yyyy-MM-dd")
+        );
+        setVirtualSlots(fetchedSlots);
+      };
+
+      loadVirtualSlots();
+    }
+
+    console.log(format(new Date(), "yyyy-MM-dd"));
   }, []);
 
   useEffect(() => {
-    console.log(clinicLocation.latitude);
-  }, [clinicLocation]);
+    console.log(virtualSlots);
+  }, [virtualSlots]);
 
   const buttons = [];
   if (doctor.profileData.clinicConsultation) {
@@ -169,6 +232,81 @@ export default function BookDoctor({ navigation, route }) {
   };
 
   const about = doctor.profileData.about || "Not set by the doctor";
+
+  const SlotComponent = ({ slots }) => {
+    const currentTime = new Date();
+
+    const filteredSlots = slots
+      .filter((slot) => {
+        if (slot.status !== "not booked") return false;
+
+        let slotTime = parse(slot.time, "hh:mm a", new Date());
+
+        // Set the same year, month, and day as the current date to make the comparison
+        slotTime = set(new Date(), {
+          hours: slotTime.getHours(),
+          minutes: slotTime.getMinutes(),
+        });
+
+        return isAfter(slotTime, currentTime);
+      })
+      .slice(0, 6);
+
+    return (
+      <View style={styles.slots}>
+        {filteredSlots.length > 0 ? (
+          filteredSlots.map((slot, index) => (
+            <Pressable key={index} style={styles.slot}>
+              <Text style={styles.slotText}>{slot.time}</Text>
+            </Pressable>
+          ))
+        ) : (
+          <View style={{ width: "100%" }}>
+            <View
+              style={{
+                alignSelf: "center",
+                width: "100%",
+                marginTop: 5,
+                marginBottom: 10,
+              }}
+            >
+              <Text style={styles.noSlots}>No available slots for today</Text>
+              <Text style={styles.noSlotsDesc}>
+                Contact the clinic/doctor for further enquiry
+              </Text>
+            </View>
+
+            <Pressable
+              style={[
+                styles.button,
+                {
+                  width: "50%",
+                  alignSelf: "center",
+                  flexDirection: "row",
+                  justifyContent: "space-around",
+                  alignItems: "center",
+                },
+              ]}
+              onPress={dialNumber}
+            >
+              <Image
+                source={require("../../assets/icons/phone.png")}
+                style={{
+                  height: 20,
+                  width: 20,
+                  alignSelf: "flex-end",
+                  marginLeft: 5,
+                }}
+              />
+              <Text style={[styles.buttonText, { marginRight: 5 }]}>
+                Contact clinic
+              </Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <>
@@ -300,7 +438,7 @@ export default function BookDoctor({ navigation, route }) {
                     Today
                   </Text>
                 </View>
-                <View style={styles.slots}>
+                {/* <View style={styles.slots}>
                   {[
                     "6:15 PM",
                     "6:15 PM",
@@ -324,7 +462,10 @@ export default function BookDoctor({ navigation, route }) {
                       <Text style={styles.slotText}>{slot}</Text>
                     </Pressable>
                   ))}
-                </View>
+                </View> */}
+
+                <SlotComponent slots={clinicSlots} />
+
                 <Pressable
                   onPress={() =>
                     navigation.navigate("Slots", {
@@ -398,31 +539,7 @@ export default function BookDoctor({ navigation, route }) {
                     Today
                   </Text>
                 </View>
-                <View style={styles.slots}>
-                  {[
-                    "6:15 PM",
-                    "6:15 PM",
-                    "6:15 PM",
-                    "6:15 PM",
-                    "6:15 PM",
-                    "6:15 PM",
-                  ].map((slot, index) => (
-                    <Pressable
-                      key={index}
-                      style={styles.slot}
-                      onPress={() =>
-                        navigation.navigate("Booking", {
-                          doctor,
-                          slotno: slot,
-                          selectedDate: generateDate(),
-                          appointmentType: "Virtual",
-                        })
-                      }
-                    >
-                      <Text style={styles.slotText}>{slot}</Text>
-                    </Pressable>
-                  ))}
-                </View>
+                <SlotComponent slots={virtualSlots} />
                 <Pressable
                   onPress={() =>
                     navigation.navigate("Slots", {
@@ -478,32 +595,41 @@ export default function BookDoctor({ navigation, route }) {
                   Location
                 </Text>
 
-                <MapView
-                  ref={mapRef}
-                  style={{ width: "100%", height: 250, marginBottom: 16 }}
-                  provider={PROVIDER_GOOGLE}
-                  region={
-                    clinicLocation
-                      ? {
-                          latitude: clinicLocation.latitude,
-                          longitude: clinicLocation.longitude,
-                          latitudeDelta: 0.01,
-                          longitudeDelta: 0.01,
-                        }
-                      : {
-                          latitude: 18.94024498803612, // Default latitude
-                          longitude: 72.83573143063485, // Default longitude
-                          latitudeDelta: 0.01,
-                          longitudeDelta: 0.01,
-                        }
-                  }
+                <View
+                  style={{
+                    borderRadius: 10,
+                    overflow: "hidden",
+                    marginBottom: 16,
+                  }}
                 >
-                  <Marker
-                    coordinate={clinicLocation}
-                    title="Clinic Location"
-                    description={doctor.clinic + ", " + doctor.location}
-                  />
-                </MapView>
+                  <MapView
+                    ref={mapRef}
+                    style={{ width: "100%", height: 250 }}
+                    provider={PROVIDER_GOOGLE}
+                    region={
+                      clinicLocation
+                        ? {
+                            latitude: clinicLocation.latitude,
+                            longitude: clinicLocation.longitude,
+                            latitudeDelta: 0.01,
+                            longitudeDelta: 0.01,
+                          }
+                        : {
+                            latitude: 18.94024498803612, // Default latitude
+                            longitude: 72.83573143063485, // Default longitude
+                            latitudeDelta: 0.01,
+                            longitudeDelta: 0.01,
+                          }
+                    }
+                  >
+                    <Marker
+                      coordinate={clinicLocation}
+                      title="Clinic Location"
+                      description={doctor.clinic + ", " + doctor.location}
+                    />
+                  </MapView>
+                </View>
+
                 <View
                   style={{
                     flexDirection: "row",
@@ -713,8 +839,8 @@ const styles = StyleSheet.create({
   slots: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-around",
-    marginTop: 16,
+    justifyContent: "space-between",
+    padding: 10,
   },
   slot: {
     backgroundColor: colors.complementary,
@@ -784,5 +910,21 @@ const styles = StyleSheet.create({
   clinicAddress: {
     color: colors.blacktext,
     fontSize: 15,
+  },
+
+  noSlots: {
+    color: colors.blacktext,
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+    width: "100%",
+  },
+
+  noSlotsDesc: {
+    alignSelf: "center",
+    width: "100%",
+    textAlign: "center",
+    fontWeight: "600",
+    color: colors.darkgraytext,
   },
 });
