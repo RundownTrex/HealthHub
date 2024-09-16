@@ -11,8 +11,8 @@ const DoctorProfileCard = ({ doctor }) => {
     <View style={styles.card}>
       <View style={styles.profileSection}>
         <View style={styles.avatarwrap}>
-          <Avatar.Image source={doctor.image} size={90} />
-          {doctor.virtualConsultation && (
+          <Avatar.Image source={{ uri: doctor.pfpUrl }} size={90} />
+          {doctor.profileData.virtualConsultation && (
             <View style={styles.cameraIcon}>
               <Image
                 source={require("../assets/icons/video-cam.png")}
@@ -22,15 +22,21 @@ const DoctorProfileCard = ({ doctor }) => {
           )}
         </View>
         <View style={styles.infoSection}>
-          <Text style={styles.name}>{doctor.name}</Text>
-          <Text style={styles.specialization}>{doctor.specialization}</Text>
+          <Text
+            style={styles.name}
+          >{`${doctor.firstname} ${doctor.lastname}`}</Text>
+          <Text style={styles.specialization}>
+            {doctor.profileData.designation}
+          </Text>
           <Text style={styles.experience}>
-            {doctor.experience} years of experience
+            {doctor.profileData.yearsofexperience} years of experience
           </Text>
-          <Text style={styles.location}>
-            {doctor.location} | {doctor.clinic}
-          </Text>
-          <Text style={styles.fee}>~₹{doctor.fee} consultation fees</Text>
+          {doctor.profileData.clinicConsultation && (
+            <Text style={styles.location}>
+              {doctor.profileData.clinicName} | {doctor.profileData.clinicCity}
+            </Text>
+          )}
+          <Text style={styles.fee}>~₹{doctor.profileData.consultFees} consultation fees</Text>
         </View>
       </View>
       <Button

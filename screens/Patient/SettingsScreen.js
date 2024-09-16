@@ -93,6 +93,7 @@ export default function SettingsScreen({ navigation }) {
     try {
       const user = auth().currentUser;
       const userDoc = firestore().collection("users").doc(user.uid);
+      const profileDoc = firestore().collection("profile").doc(user.uid);
 
       if (!user) {
         Toast.show({
@@ -130,6 +131,18 @@ export default function SettingsScreen({ navigation }) {
       await deleteAvatarFolder(user.uid);
 
       await userDoc.delete();
+
+      const profileDocSnapshot = await profileDoc.get();
+      if (profileDocSnapshot.exists) {
+        await deleteSubcollections(profileDoc);
+
+        await profileDoc.delete();
+        console.log(
+          "Profile document and its subcollections deleted successfully"
+        );
+      } else {
+        console.log("Profile document not found, no deletion needed");
+      }
 
       await user.delete();
 

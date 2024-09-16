@@ -8,86 +8,89 @@ import {
   Image,
   BackHandler,
 } from "react-native";
-import colors from "../../utils/colors";
-import { Searchbar, MD3LightTheme, Chip } from "react-native-paper";
+import { Searchbar, MD3LightTheme, Chip, Avatar } from "react-native-paper";
 import { FlashList } from "@shopify/flash-list";
-import DoctorProfileCard from "../../components/DoctorProfileCard";
-import BackIcon from "../../assets/icons/BackIcon";
 import { useRoute } from "@react-navigation/native";
 import { useBottomSheet } from "../../context/BottomSheetContext";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 
-const doctors = [
-  {
-    name: "Dr. Bludma",
-    degree: "MBBS",
-    specialization: "General physician",
-    experience: 10,
-    location: "Dadar",
-    clinic: "Fit clinic",
-    address:
-      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
-    fee: 2500,
-    image: require("../../assets/general-practicionor.png"),
-    virtualConsultation: true,
-    clinicAvailable: true,
-  },
-  {
-    name: "Dr. Okay",
-    degree: "MBBS",
-    specialization: "General physician",
-    experience: 10,
-    location: "Dadar",
-    clinic: "Fit clinic",
-    address:
-      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
-    fee: 2500,
-    image: require("../../assets/general-practicionor.png"),
-    virtualConsultation: false,
-    clinicAvailable: true,
-  },
-  {
-    name: "Dr. Sure",
-    degree: "MBBS",
-    specialization: "General physician",
-    experience: 10,
-    location: "Dadar",
-    clinic: "Fit clinic",
-    address:
-      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
-    fee: 2500,
-    image: require("../../assets/general-practicionor.png"),
-    virtualConsultation: true,
-    clinicAvailable: false,
-  },
-  {
-    name: "Dr. Sure",
-    degree: "MBBS",
-    specialization: "General physician",
-    experience: 10,
-    location: "Dadar",
-    clinic: "Fit clinic",
-    address:
-      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
-    fee: 2500,
-    image: require("../../assets/general-practicionor.png"),
-    virtualConsultation: false,
-    clinicAvailable: true,
-  },
-  {
-    name: "Dr. Sure",
-    degree: "MBBS",
-    specialization: "General physician",
-    experience: 10,
-    location: "Dadar",
-    clinic: "Fit clinic",
-    address:
-      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
-    fee: 2500,
-    image: require("../../assets/general-practicionor.png"),
-    virtualConsultation: true,
-    clinicAvailable: true,
-  },
-];
+import BackIcon from "../../assets/icons/BackIcon";
+import colors from "../../utils/colors";
+import DoctorProfileCard from "../../components/DoctorProfileCard";
+
+// const doctors = [
+//   // {
+//   //   name: "Dr. Bludma",
+//   //   degree: "MBBS",
+//   //   specialization: "General physician",
+//   //   experience: 10,
+//   //   location: "Dadar",
+//   //   clinic: "Fit clinic",
+//   //   address:
+//   //     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
+//   //   fee: 2500,
+//   //   image: require("../../assets/general-practicionor.png"),
+//   //   virtualConsultation: true,
+//   //   clinicAvailable: true,
+//   // },
+//   // {
+//   //   name: "Dr. Okay",
+//   //   degree: "MBBS",
+//   //   specialization: "General physician",
+//   //   experience: 10,
+//   //   location: "Dadar",
+//   //   clinic: "Fit clinic",
+//   //   address:
+//   //     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
+//   //   fee: 2500,
+//   //   image: require("../../assets/general-practicionor.png"),
+//   //   virtualConsultation: false,
+//   //   clinicAvailable: true,
+//   // },
+//   // {
+//   //   name: "Dr. Sure",
+//   //   degree: "MBBS",
+//   //   specialization: "General physician",
+//   //   experience: 10,
+//   //   location: "Dadar",
+//   //   clinic: "Fit clinic",
+//   //   address:
+//   //     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
+//   //   fee: 2500,
+//   //   image: require("../../assets/general-practicionor.png"),
+//   //   virtualConsultation: true,
+//   //   clinicAvailable: false,
+//   // },
+//   // {
+//   //   name: "Dr. Sure",
+//   //   degree: "MBBS",
+//   //   specialization: "General physician",
+//   //   experience: 10,
+//   //   location: "Dadar",
+//   //   clinic: "Fit clinic",
+//   //   address:
+//   //     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
+//   //   fee: 2500,
+//   //   image: require("../../assets/general-practicionor.png"),
+//   //   virtualConsultation: false,
+//   //   clinicAvailable: true,
+//   // },
+//   // {
+//   //   name: "Dr. Sure",
+//   //   degree: "MBBS",
+//   //   specialization: "General physician",
+//   //   experience: 10,
+//   //   location: "Dadar",
+//   //   clinic: "Fit clinic",
+//   //   address:
+//   //     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
+//   //   fee: 2500,
+//   //   image: require("../../assets/general-practicionor.png"),
+//   //   virtualConsultation: true,
+//   //   clinicAvailable: true,
+//   // },
+// ];
 
 export default function Providers({ navigation }) {
   const searchBarRef = useRef(null);
@@ -95,11 +98,14 @@ export default function Providers({ navigation }) {
   const route = useRoute();
   const { send } = route.params;
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredDoctors, setFilteredDoctors] = useState(doctors);
+  const [doctors, setDoctors] = useState([]);
+  const [filteredDoctors, setFilteredDoctors] = useState([]);
   const [virtualConsultation, setVirtualConsultation] = useState(false);
   const [clinic, setClinic] = useState(false);
   const { toggleBottomSheet } = useBottomSheet();
   const [options, setOptions] = useState(false);
+
+  const user = auth().currentUser;
 
   const toggleVirtualConsultation = () => {
     setVirtualConsultation((prevState) => !prevState);
@@ -108,6 +114,50 @@ export default function Providers({ navigation }) {
   const toggleClinic = () => {
     setClinic((prevState) => !prevState);
   };
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const doctorsSnapshot = await firestore()
+          .collection("users")
+          .where("accountType", "==", "doctor")
+          .get();
+
+        const doctorsList = await Promise.all(
+          doctorsSnapshot.docs.map(async (doc) => {
+            const data = doc.data();
+
+            let profileData = {};
+            // Check if profileRef is a Firestore reference
+            if (data.profileRef && typeof data.profileRef.get === "function") {
+              try {
+                // Fetch the profile document using the reference
+                const profileDoc = await data.profileRef.get();
+                if (profileDoc.exists) {
+                  profileData = profileDoc.data();
+                }
+              } catch (profileError) {
+                console.error("Error fetching profile data: ", profileError);
+              }
+            }
+
+            return {
+              id: doc.id,
+              ...data,
+              profileData,
+            };
+          })
+        );
+
+        setDoctors(doctorsList);
+        setFilteredDoctors(doctorsList);
+      } catch (error) {
+        console.error("Error fetching doctors: ", error);
+      }
+    };
+
+    fetchDoctors();
+  }, []);
 
   useEffect(() => {
     toggleBottomSheet(true);
@@ -126,35 +176,43 @@ export default function Providers({ navigation }) {
   }, [navigation]);
 
   useEffect(() => {
-    if (send) {
-      setSearchQuery(send);
-    }
-  }, [send]);
-
-  useEffect(() => {
     if (route.params?.focus) {
       searchBarRef.current?.focus();
     }
   }, [route.params?.focus]);
 
   useEffect(() => {
+    if (send) {
+      setSearchQuery(send);
+    }
+  }, [send]);
+
+  useEffect(() => {
+    console.log(doctors);
+  }, [doctors]);
+
+  useEffect(() => {
     setFilteredDoctors(
       doctors.filter((doctor) => {
+        const doctorName = `${doctor.firstname || ""} ${
+          doctor.lastname || ""
+        }`.toLowerCase();
+        const doctorDesignation =
+          doctor.profileData?.designation?.toLowerCase() || "";
+
         const matchesQuery =
-          doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          doctor.specialization
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase());
+          doctorName.includes(searchQuery.toLowerCase()) ||
+          doctorDesignation.includes(searchQuery.toLowerCase());
 
         const matchesVirtualConsultation =
-          !virtualConsultation || doctor.virtualConsultation;
+          !virtualConsultation || doctor.profileData.virtualConsultation;
 
-        const matchesClinic = !clinic || doctor.clinicAvailable;
+        const matchesClinic = !clinic || doctor.profileData.clinicConsultation;
 
         return matchesQuery && matchesVirtualConsultation && matchesClinic;
       })
     );
-  }, [searchQuery, virtualConsultation, clinic]);
+  }, [searchQuery, virtualConsultation, clinic, doctors]);
 
   const filters = ["Video consult", "Male", "Female"];
 

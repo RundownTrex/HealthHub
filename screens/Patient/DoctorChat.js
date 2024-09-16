@@ -27,6 +27,8 @@ const callId = "Fw39EziXX2kB";
 export default function DoctorChat({ navigation, route }) {
   const { doctorname, pfp } = route.params;
   const { toggleBottomSheet } = useBottomSheet();
+  const [userData, setUserData] = useState({});
+  const [fullName, setFullName] = useState("");
 
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,6 +55,26 @@ export default function DoctorChat({ navigation, route }) {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const profileDoc = await firestore()
+        .collection("users")
+        .doc(user.uid)
+        .get();
+
+      if (profileDoc.exists) {
+        profileData = profileDoc.data();
+        setUserData(profileData);
+        setFullName(profileData.firstname + " " + profileData.lastname);
+      }
+    };
+    fetchUserData();
+  }, []);
+
+  useEffect(() => {
+    console.log(fullName);
+  }, [fullName]);
 
   //Toggle bottom tab navigator visibility
   useEffect(() => {
@@ -207,6 +229,10 @@ export default function DoctorChat({ navigation, route }) {
     );
   };
 
+  if (!userData || !fullName) {
+    return <LoadingOverlay isVisible={true} />; 
+  }
+
   return (
     <>
       <LoadingOverlay isVisible={isLoading} />
@@ -276,8 +302,8 @@ export default function DoctorChat({ navigation, route }) {
           onSend={(messages) => onSend(messages)}
           user={{
             _id: user.uid, // Use the Firebase user's ID
-            name: user.displayName || "Anonymous",
-            avatar: user.photoURL || "null", // Use Firebase user profile picture or passed prop
+            name: fullName || user.displayName || "Anonymous",
+            avatar: userData.pfpUrl || user.photoURL || "null", // Use Firebase user profile picture or passed prop
           }}
           renderInputToolbar={renderInputToolbar}
           renderComposer={renderComposer}

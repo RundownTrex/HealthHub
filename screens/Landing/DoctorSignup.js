@@ -283,14 +283,6 @@ export default function DoctorSignup({ navigation }) {
 
       const profileImageUrl = await uploadImageToFirebase(user.uid);
 
-      await firestore().collection("users").doc(user.uid).set({
-        email: user.email,
-        firstname: doctorProfile.firstname,
-        lastname: doctorProfile.lastname,
-        pfpUrl: profileImageUrl,
-        accountType: "doctor",
-      });
-
       const profileData = {
         designation: doctorProfile.designation,
         licenseNumber: doctorProfile.licenseNumber,
@@ -308,6 +300,17 @@ export default function DoctorSignup({ navigation }) {
       }
 
       await firestore().collection("profile").doc(user.uid).set(profileData);
+
+      const profileDocRef = firestore().collection("profile").doc(user.uid);
+
+      await firestore().collection("users").doc(user.uid).set({
+        email: user.email,
+        firstname: doctorProfile.firstname,
+        lastname: doctorProfile.lastname,
+        pfpUrl: profileImageUrl,
+        accountType: "doctor",
+        profileRef: profileDocRef,
+      });
 
       Toast.show({
         type: "info",
@@ -336,63 +339,6 @@ export default function DoctorSignup({ navigation }) {
       setIsLoading(false);
     }
   };
-
-  // const signupwgoogle = async () => {
-  //   setIsLoading(true);
-  //   try {
-  //     await GoogleSignin.signOut();
-  //     await GoogleSignin.hasPlayServices({
-  //       showPlayServicesUpdateDialog: true,
-  //     });
-  //     const { idToken } = await GoogleSignin.signIn({
-  //       prompt: "select_account",
-  //     });
-
-  //     const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-
-  //     const userCredential = await auth().signInWithCredential(
-  //       googleCredential
-  //     );
-
-  //     const user = userCredential.user;
-
-  //     const userDoc = firestore().collection("users").doc(user.uid);
-  //     const docSnap = await userDoc.get();
-
-  //     if (docSnap.exists) {
-  //       Toast.show({
-  //         type: "info",
-  //         text1: "User already present",
-  //         text2: "Try signing in instead",
-  //       });
-  //     } else {
-  //       await userDoc.set({
-  //         email: user.email,
-  //         firstname: user.displayName.split(" ")[0],
-  //         lastname: user.displayName.split(" ")[1],
-  //         accountType: "patient",
-  //       });
-
-  //       setUserRole("patient");
-  //       await AsyncStorage.setItem("userRole", "patient");
-
-  //       Toast.show({
-  //         type: "success",
-  //         text1: "Signed up with google!",
-  //         text2: "Redirecting...",
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //     Toast.show({
-  //       type: "error",
-  //       text1: "Error",
-  //       text2: "Could not sign up with google",
-  //     });
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
 
   return (
     <>
@@ -687,64 +633,6 @@ export default function DoctorSignup({ navigation }) {
             </Text>
           </View>
           <Button1 text="SIGNUP" onPress={registerwemail} />
-          {/* <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginTop: 20,
-            }}
-          >
-            <View
-              style={{
-                flex: 1,
-                height: 1,
-                backgroundColor: colors.darkgraytext,
-              }}
-            />
-            <View>
-              <Text
-                style={{
-                  width: 50,
-                  textAlign: "center",
-                  color: colors.darkgraytext,
-                }}
-              >
-                OR
-              </Text>
-            </View>
-            <View
-              style={{
-                flex: 1,
-                height: 1,
-                backgroundColor: colors.darkgraytext,
-              }}
-            />
-          </View> */}
-          {/* 
-          <Pressable
-            style={({ pressed }) => [
-              {
-                justifyContent: "center",
-                alignItems: "center",
-                marginTop: 20,
-              },
-              pressed && { opacity: 0.8 },
-            ]}
-            onPress={() => {
-              signupwgoogle();
-            }}
-          >
-            <View
-              style={{
-                width: "100%",
-                height: 52,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <SignupGoogle />
-            </View>
-          </Pressable> */}
         </ScrollView>
       </KeyboardAvoidingView>
     </>
@@ -804,33 +692,5 @@ const styles = StyleSheet.create({
     color: colors.lightgraytext,
     fontSize: 16,
     fontWeight: "500",
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 5,
-    justifyContent: "space-around",
-  },
-  text: {
-    fontSize: 16,
-    color: colors.whitetext,
-    fontWeight: "500",
-  },
-  timeButton: {
-    backgroundColor: colors.somewhatlightback,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  timeText: {
-    fontSize: 16,
-    color: colors.lightgraytext,
-  },
-
-  tofromcontainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    marginHorizontal: 10,
   },
 });
