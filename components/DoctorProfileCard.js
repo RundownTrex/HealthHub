@@ -7,6 +7,29 @@ import { useNavigation } from "@react-navigation/native";
 const DoctorProfileCard = ({ doctor }) => {
   const navigation = useNavigation();
 
+  const handleNavigate = () => {
+    const { profileRef, ...rest } = doctor;
+
+    // Convert cliniclocation to a JSON string if it's an object or array
+    const cliniclocation = doctor.profileData.cliniclocation
+      ? JSON.stringify(doctor.profileData.cliniclocation)
+      : null;
+
+    const { cliniclocation: _, ...serializableProfileData } =
+      doctor.profileData;
+
+    // Include cliniclocation in the serialized data
+    navigation.navigate("BookDoctor", {
+      doctor: {
+        ...rest, // Other doctor fields like name, email, etc.
+        profileData: {
+          ...serializableProfileData,
+          cliniclocation: cliniclocation, // Include cliniclocation as a JSON string
+        },
+      },
+    });
+  };
+
   return (
     <View style={styles.card}>
       <View style={styles.profileSection}>
@@ -36,14 +59,12 @@ const DoctorProfileCard = ({ doctor }) => {
               {doctor.profileData.clinicName} | {doctor.profileData.clinicCity}
             </Text>
           )}
-          <Text style={styles.fee}>~₹{doctor.profileData.consultFees} consultation fees</Text>
+          <Text style={styles.fee}>
+            ~₹{doctor.profileData.consultFees} consultation fees
+          </Text>
         </View>
       </View>
-      <Button
-        mode="contained"
-        style={styles.button}
-        onPress={() => navigation.navigate("BookDoctor", { doctor })}
-      >
+      <Button mode="contained" style={styles.button} onPress={handleNavigate}>
         View profile
       </Button>
     </View>

@@ -18,7 +18,7 @@ import call from "react-native-phone-call";
 import Toast from "react-native-toast-message";
 import { format } from "date-fns";
 
-import colours from "../../utils/colors";
+import colors from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";
 import Button1 from "../../components/Button1";
 import DropdownMenu from "../../components/DropdownMenu";
@@ -36,9 +36,11 @@ const generateDate = () => {
 export default function BookDoctor({ navigation, route }) {
   const { doctor } = route.params;
   const [value, setValue] = useState(
-    doctor.clinicAvailable ? "clinic" : "virtual"
+    doctor.profileData.clinicConsultation ? "clinic" : "virtual"
   );
   const mapRef = useRef(null);
+
+  const [clinicLocation, setClinicLocation] = useState({});
 
   const [expanded, setExpanded] = useState(false);
 
@@ -55,11 +57,6 @@ export default function BookDoctor({ navigation, route }) {
     LayoutAnimation.configureNext(customAnimation);
     setExpanded((prev) => !prev);
   }, []);
-
-  const clinicLocation = {
-    latitude: 18.94024498803612,
-    longitude: 72.83573143063485,
-  };
 
   const handleOpenInMaps = () => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${clinicLocation.latitude},${clinicLocation.longitude}`;
@@ -92,50 +89,72 @@ export default function BookDoctor({ navigation, route }) {
     return () => backHandler.remove();
   }, [navigation]);
 
+  useEffect(() => {
+    if (doctor.profileData.clinicConsultation === true) {
+      setClinicLocation(
+        doctor.profileData.cliniclocation
+          ? JSON.parse(doctor.profileData.cliniclocation)
+          : null
+      );
+      // setClinicLocation({
+      //   latitude:
+      //     doctor.profileData.cliniclocation.latitude || 18.94024498803612,
+      //   longitude:
+      //     doctor.profileData.cliniclocation.longitude || 72.83573143063485,
+      // });
+    }
+
+    // console.log(doctor);
+  }, []);
+
+  useEffect(() => {
+    console.log(clinicLocation.latitude);
+  }, [clinicLocation]);
+
   const buttons = [];
-  if (doctor.clinicAvailable) {
+  if (doctor.profileData.clinicConsultation) {
     buttons.push({
       value: "clinic",
       label: "Clinic",
-      checkedColor: colours.whitetext,
-      uncheckedColor: colours.whitetext,
+      checkedColor: colors.whitetext,
+      uncheckedColor: colors.whitetext,
       labelStyle: {
-        color: colours.whitetext,
+        color: colors.whitetext,
         fontSize: 16,
       },
       style: [
         { borderRadius: 5 },
         {
           backgroundColor:
-            value === "clinic" ? colours.complementary : colours.darkback,
+            value === "clinic" ? colors.complementary : colors.darkback,
         },
       ],
     });
   }
 
-  if (doctor.virtualConsultation) {
+  if (doctor.profileData.virtualConsultation) {
     buttons.push({
       value: "virtual",
       label: "Virtual",
-      checkedColor: colours.whitetext,
-      uncheckedColor: colours.whitetext,
+      checkedColor: colors.whitetext,
+      uncheckedColor: colors.whitetext,
       labelStyle: {
-        color: colours.whitetext,
+        color: colors.whitetext,
         fontSize: 16,
       },
       style: [
         { borderRadius: 5 },
         {
           backgroundColor:
-            value === "virtual" ? colours.complementary : colours.darkback,
+            value === "virtual" ? colors.complementary : colors.darkback,
         },
       ],
     });
   }
 
-  const dialNumber = (phoneNumber) => {
+  const dialNumber = () => {
     const args = {
-      number: phoneNumber,
+      number: doctor.profileData.phone,
       prompt: true,
       skipCanOpen: true,
     };
@@ -149,14 +168,14 @@ export default function BookDoctor({ navigation, route }) {
     });
   };
 
-  const text = `Lorem ipsum dolor sit amet, consectetur adipiscing elit.Donec vel quam sit amet leo scelerisque volutpat. Duis dictum orci vitae mi efficitur, et lacinia libero pharetra. Curabitur et odio arcu. Ut ac fringilla lectus, id tempor libero. Quisque ac mi ut tortor pretium elementum.`;
+  const about = doctor.profileData.about || "Not set by the doctor";
 
   return (
     <>
       <View
         style={{
           height: 60,
-          backgroundColor: colours.lightaccent,
+          backgroundColor: colors.lightaccent,
           justifyContent: "space-between",
           alignItems: "center",
           flexDirection: "row",
@@ -169,26 +188,26 @@ export default function BookDoctor({ navigation, route }) {
         </Pressable>
         <Text
           style={{
-            color: colours.whitetext,
+            color: colors.whitetext,
             fontWeight: "bold",
             fontSize: 18,
           }}
         >
-          {doctor.name}
+          {`${doctor.firstname} ${doctor.lastname}`}
         </Text>
         <View style={{ height: 20, width: 20 }} />
       </View>
       <View style={styles.container}>
-        <StatusBar backgroundColor={colours.lightaccent} />
+        <StatusBar backgroundColor={colors.lightaccent} />
         <ScrollView
-          endFillColor={colours.darkback}
+          endFillColor={colors.darkback}
           stickyHeaderHiddenOnScroll={true}
           style={{ flex: 1, marginBottom: 70 }}
         >
           <View style={styles.profileSection}>
             <View style={styles.avatarwrap}>
-              <Avatar.Image source={doctor.image} size={100} />
-              {doctor.virtualConsultation && (
+              <Avatar.Image source={{ uri: doctor.pfpUrl }} size={100} />
+              {doctor.profileData.virtualConsultation && (
                 <View style={styles.cameraIcon}>
                   <Image
                     source={require("../../assets/icons/video-cam.png")}
@@ -198,15 +217,17 @@ export default function BookDoctor({ navigation, route }) {
               )}
             </View>
             <View style={styles.textwrap}>
-              <Text style={styles.name}>{doctor.name}</Text>
-              <Text style={{ fontSize: 15, color: colours.whitetext }}>
-                {doctor.specialization}
+              <Text
+                style={styles.name}
+              >{`${doctor.firstname} ${doctor.lastname}`}</Text>
+              <Text style={{ fontSize: 15, color: colors.whitetext }}>
+                {doctor.profileData.designation}
               </Text>
-              <Text style={{ color: colours.whitetext, fontSize: 14 }}>
-                {doctor.degree}
+              <Text style={{ color: colors.whitetext, fontSize: 14 }}>
+                {doctor.profileData.education}
               </Text>
-              <Text style={{ color: colours.whitetext, fontSize: 14 }}>
-                {doctor.experience} year(s) of experience
+              <Text style={{ color: colors.whitetext, fontSize: 14 }}>
+                {doctor.profileData.yearsofexperience} year(s) of experience
               </Text>
             </View>
           </View>
@@ -224,7 +245,7 @@ export default function BookDoctor({ navigation, route }) {
               <>
                 <View
                   style={{
-                    backgroundColor: colours.lightcomp,
+                    backgroundColor: colors.lightcomp,
                     borderTopLeftRadius: 5,
                     borderTopRightRadius: 5,
                     padding: 16,
@@ -235,7 +256,7 @@ export default function BookDoctor({ navigation, route }) {
                 >
                   <Text
                     style={{
-                      color: colours.blacktext,
+                      color: colors.blacktext,
                       fontSize: 18,
                       fontWeight: "bold",
                     }}
@@ -244,34 +265,34 @@ export default function BookDoctor({ navigation, route }) {
                   </Text>
                   <Text
                     style={{
-                      color: colours.blacktext,
+                      color: colors.blacktext,
                       fontSize: 18,
                       fontWeight: "bold",
                     }}
                   >
-                    ₹{doctor.fee}
+                    ₹{doctor.profileData.consultFees}
                   </Text>
                 </View>
 
                 <View style={{ padding: 10, paddingTop: 5 }}>
                   <Text style={{ fontWeight: "bold", fontSize: 16 }}>
-                    {doctor.clinic}
+                    {doctor.profileData.clinicName}
                   </Text>
                   <Text
                     style={{
                       fontSize: 14,
                       fontWeight: "400",
-                      color: colours.blacktext,
+                      color: colors.blacktext,
                     }}
                   >
-                    {doctor.location}
+                    {doctor.profileData.clinicCity}
                   </Text>
                   <Divider style={{ marginVertical: 10, marginBottom: 0 }} />
                 </View>
                 <View style={{ alignSelf: "center" }}>
                   <Text
                     style={{
-                      color: colours.blacktext,
+                      color: colors.blacktext,
                       fontWeight: "bold",
                       fontSize: 18,
                     }}
@@ -319,7 +340,7 @@ export default function BookDoctor({ navigation, route }) {
               <>
                 <View
                   style={{
-                    backgroundColor: colours.lightcomp,
+                    backgroundColor: colors.lightcomp,
                     borderTopLeftRadius: 5,
                     borderTopRightRadius: 5,
                     padding: 16,
@@ -330,7 +351,7 @@ export default function BookDoctor({ navigation, route }) {
                 >
                   <Text
                     style={{
-                      color: colours.blacktext,
+                      color: colors.blacktext,
                       fontSize: 18,
                       fontWeight: "bold",
                     }}
@@ -339,33 +360,37 @@ export default function BookDoctor({ navigation, route }) {
                   </Text>
                   <Text
                     style={{
-                      color: colours.blacktext,
+                      color: colors.blacktext,
                       fontSize: 18,
                       fontWeight: "bold",
                     }}
                   >
-                    ₹{doctor.fee}
+                    ₹{doctor.profileData.consultFees}
                   </Text>
                 </View>
                 <View style={{ padding: 10, paddingTop: 5 }}>
-                  <Text style={{ fontWeight: "bold", fontSize: 16 }}>
-                    {doctor.clinic}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "400",
-                      color: colours.blacktext,
-                    }}
-                  >
-                    {doctor.location}
-                  </Text>
+                  {doctor.profileData.clinicConsultation && (
+                    <>
+                      <Text style={{ fontWeight: "bold", fontSize: 16 }}>
+                        {doctor.profileData.clinicName}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "400",
+                          color: colors.blacktext,
+                        }}
+                      >
+                        {doctor.profileData.clinicCity}
+                      </Text>
+                    </>
+                  )}
                   <Divider style={{ marginVertical: 10, marginBottom: 0 }} />
                 </View>
                 <View style={{ alignSelf: "center" }}>
                   <Text
                     style={{
-                      color: colours.blacktext,
+                      color: colors.blacktext,
                       fontWeight: "bold",
                       fontSize: 18,
                     }}
@@ -411,86 +436,104 @@ export default function BookDoctor({ navigation, route }) {
               </>
             )}
           </View>
-          <View style={{ marginTop: 16 }}>
-            <Text
-              style={{
-                color: colours.whitetext,
-                fontWeight: "bold",
-                fontSize: 22,
-              }}
-            >
-              Clinic details
-            </Text>
-            <View
-              style={{
-                padding: 10,
-                backgroundColor: colours.whitetext,
-                borderRadius: 5,
-              }}
-            >
-              <Text>Fit Clinic</Text>
-              <Text>Dadar</Text>
-            </View>
-          </View>
-          <View style={{ marginTop: 16 }}>
-            <Text
-              style={{
-                fontSize: 22,
-                color: colours.whitetext,
-                fontWeight: "bold",
-                marginBottom: 5,
-              }}
-            >
-              Location
-            </Text>
-            <MapView
-              ref={mapRef}
-              style={{ width: "100%", height: 250, marginBottom: 16 }}
-              provider={PROVIDER_GOOGLE}
-              // scrollEnabled={false}
-              // zoomEnabled={false}
-              // rotateEnabled={false}
-              // pitchEnabled={false}
-              initialRegion={{
-                latitude: clinicLocation.latitude,
-                longitude: clinicLocation.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              }}
-            >
-              <Marker
-                coordinate={clinicLocation}
-                title="Clinic Location"
-                description={doctor.clinic + ", " + doctor.location}
-              />
-            </MapView>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 5,
-              }}
-            >
-              <Button1
-                text="Get Directions"
-                onPress={handleOpenInMaps}
-                style={{ flex: 3, height: 50 }}
-                textStyle={{ fontSize: 14 }}
-              />
-              <Pressable style={{ padding: 10 }} onPress={handleRecenter}>
-                <Image
-                  source={require("../../assets/icons/recenter.png")}
-                  style={{ width: 30, height: 30 }}
-                />
-              </Pressable>
-            </View>
-          </View>
+          {doctor.profileData.clinicConsultation && (
+            <>
+              <View style={{ marginTop: 16 }}>
+                <Text
+                  style={{
+                    color: colors.whitetext,
+                    fontWeight: "bold",
+                    fontSize: 22,
+                  }}
+                >
+                  Clinic details
+                </Text>
+                <View
+                  style={{
+                    padding: 10,
+                    backgroundColor: colors.whitetext,
+                    borderRadius: 5,
+                  }}
+                >
+                  <Text style={styles.clinicName}>
+                    {doctor.profileData.clinicName}
+                  </Text>
+                  <Text style={styles.clinicCity}>
+                    {doctor.profileData.clinicCity}
+                  </Text>
+                  <Text style={styles.clinicAddress}>
+                    {doctor.profileData.clinicAddress}
+                  </Text>
+                </View>
+              </View>
+              <View style={{ marginTop: 16 }}>
+                <Text
+                  style={{
+                    fontSize: 22,
+                    color: colors.whitetext,
+                    fontWeight: "bold",
+                    marginBottom: 5,
+                  }}
+                >
+                  Location
+                </Text>
+
+                <MapView
+                  ref={mapRef}
+                  style={{ width: "100%", height: 250, marginBottom: 16 }}
+                  provider={PROVIDER_GOOGLE}
+                  region={
+                    clinicLocation
+                      ? {
+                          latitude: clinicLocation.latitude,
+                          longitude: clinicLocation.longitude,
+                          latitudeDelta: 0.01,
+                          longitudeDelta: 0.01,
+                        }
+                      : {
+                          latitude: 18.94024498803612, // Default latitude
+                          longitude: 72.83573143063485, // Default longitude
+                          latitudeDelta: 0.01,
+                          longitudeDelta: 0.01,
+                        }
+                  }
+                >
+                  <Marker
+                    coordinate={clinicLocation}
+                    title="Clinic Location"
+                    description={doctor.clinic + ", " + doctor.location}
+                  />
+                </MapView>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 5,
+                  }}
+                >
+                  <Button1
+                    text="Get Directions"
+                    onPress={handleOpenInMaps}
+                    style={{ flex: 3, height: 50 }}
+                    textStyle={{ fontSize: 14 }}
+                  />
+                  <Pressable style={{ padding: 10 }} onPress={handleRecenter}>
+                    <Image
+                      source={require("../../assets/icons/recenter.png")}
+                      style={{ width: 30, height: 30 }}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+            </>
+          )}
+
           <Divider style={{ marginVertical: 16 }} />
           <View style={{}}>
             <Text
               style={{
-                color: colours.whitetext,
+                color: colors.whitetext,
                 fontSize: 22,
                 fontWeight: "bold",
               }}
@@ -501,12 +544,12 @@ export default function BookDoctor({ navigation, route }) {
               <Text
                 style={{
                   fontSize: 16,
-                  color: colours.whitetext,
+                  color: colors.whitetext,
                   fontWeight: "400",
                 }}
                 numberOfLines={expanded ? undefined : 3}
               >
-                {expanded ? text : `${text.substring(0, 100)}... `}
+                {expanded ? about : `${about.substring(0, 100)}... `}
               </Text>
 
               {!expanded && (
@@ -514,7 +557,7 @@ export default function BookDoctor({ navigation, route }) {
                   <Text
                     style={{
                       fontSize: 16,
-                      color: colours.lightcomp,
+                      color: colors.lightcomp,
                       marginTop: 5,
                     }}
                   >
@@ -528,7 +571,7 @@ export default function BookDoctor({ navigation, route }) {
                   <Text
                     style={{
                       fontSize: 16,
-                      color: colours.lightcomp,
+                      color: colors.lightcomp,
                       marginTop: 5,
                     }}
                   >
@@ -538,17 +581,24 @@ export default function BookDoctor({ navigation, route }) {
               )}
             </View>
           </View>
-          <DropdownMenu title="Specializations" content="Smol text >.<" />
+          <DropdownMenu
+            title="Specializations"
+            content={
+              doctor.profileData.specializations || "Not set by the doctor"
+            }
+          />
           <Divider />
           <DropdownMenu
             title="Education"
-            content="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+            content={doctor.profileData.education || "Not set by the doctor"}
           />
           <Divider />
 
           <DropdownMenu
             title="Experience"
-            content="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+            content={
+              doctor.profileData.workexperience || "Not set by the doctor"
+            }
           />
           <Divider />
           <Pressable
@@ -567,7 +617,7 @@ export default function BookDoctor({ navigation, route }) {
           >
             <Text
               style={{
-                color: colours.whitetext,
+                color: colors.whitetext,
                 fontSize: 18,
                 fontWeight: "bold",
                 paddingLeft: 10,
@@ -588,7 +638,8 @@ export default function BookDoctor({ navigation, route }) {
           style={styles.button}
           onPress={() => {
             const appointmentType =
-              doctor.virtualConsultation && !doctor.clinicAvailable
+              doctor.profileData.virtualConsultation &&
+              !doctor.profileData.clinicConsultation
                 ? "Virtual"
                 : "Clinic";
 
@@ -596,17 +647,14 @@ export default function BookDoctor({ navigation, route }) {
           }}
         >
           <Text style={styles.buttonText}>
-            {doctor.clinicAvailable
+            {doctor.profileData.clinicConsultation
               ? "Book visit"
-              : doctor.virtualConsultation
+              : doctor.profileData.virtualConsultation
               ? "Book video consult"
               : ""}
           </Text>
         </Pressable>
-        <Pressable
-          style={styles.button}
-          onPress={() => dialNumber("1234567890")}
-        >
+        <Pressable style={styles.button} onPress={dialNumber}>
           <Text style={styles.buttonText}>Contact clinic</Text>
         </Pressable>
       </View>
@@ -617,7 +665,7 @@ export default function BookDoctor({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colours.darkback,
+    backgroundColor: colors.darkback,
     padding: 16,
   },
 
@@ -633,7 +681,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: colours.complementary,
+    backgroundColor: colors.complementary,
     borderRadius: 20,
     padding: 7,
   },
@@ -650,12 +698,12 @@ const styles = StyleSheet.create({
 
   name: {
     fontSize: 20,
-    color: colours.whitetext,
+    color: colors.whitetext,
     fontWeight: "bold",
   },
 
   slotcontainer: {
-    backgroundColor: colours.whitetext,
+    backgroundColor: colors.whitetext,
     width: "100%",
     height: "auto",
     borderRadius: 5,
@@ -669,7 +717,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   slot: {
-    backgroundColor: colours.complementary,
+    backgroundColor: colors.complementary,
     padding: 10,
     borderRadius: 8,
     marginBottom: 10,
@@ -678,14 +726,14 @@ const styles = StyleSheet.create({
   },
 
   slotText: {
-    color: colours.whitetext,
+    color: colors.whitetext,
     fontWeight: "600",
     textAlign: "center",
     fontSize: 15,
   },
 
   viewAllText: {
-    color: colours.complementary,
+    color: colors.complementary,
     fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
@@ -696,7 +744,7 @@ const styles = StyleSheet.create({
   bottomPanel: {
     flexDirection: "row",
     padding: 16,
-    backgroundColor: colours.darkback,
+    backgroundColor: colors.darkback,
     position: "absolute",
     bottom: 0,
     left: 0,
@@ -704,21 +752,37 @@ const styles = StyleSheet.create({
     gap: 8,
     alignItems: "center",
     justifyContent: "space-between",
-    borderTopColor: colours.tenpercent,
+    borderTopColor: colors.tenpercent,
     borderTopWidth: 1,
   },
 
   button: {
-    backgroundColor: colours.lightaccent,
+    backgroundColor: colors.lightaccent,
     paddingVertical: 12,
     borderRadius: 5,
     flex: 1,
   },
 
   buttonText: {
-    color: colours.whitetext,
+    color: colors.whitetext,
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
+  },
+
+  clinicName: {
+    color: colors.blacktext,
+    fontWeight: "bold",
+    fontSize: 18,
+  },
+
+  clinicCity: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+
+  clinicAddress: {
+    color: colors.blacktext,
+    fontSize: 15,
   },
 });
