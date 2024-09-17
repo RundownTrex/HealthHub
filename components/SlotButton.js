@@ -5,7 +5,7 @@ import colors from "../utils/colors";
 const SlotButton = ({ time, onPress, style }) => {
   return (
     <Pressable style={[styles.slotButton, style]} onPress={onPress}>
-      <Text>{time}</Text>
+      <Text style={styles.slottext}>{time}</Text>
     </Pressable>
   );
 };
@@ -19,6 +19,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     width: "30%",
+  },
+
+  slottext: {
+    color: colors.blacktext,
+    fontWeight: "500",
   },
 });
 

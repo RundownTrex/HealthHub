@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,99 +7,283 @@ import {
   Pressable,
   ScrollView,
   Dimensions,
+  Image,
+  FlatList,
 } from "react-native";
 import { Divider } from "react-native-paper";
-import { format, formatDistanceToNow } from "date-fns";
+import {
+  format,
+  formatDistanceToNow,
+  parse,
+  set,
+  isBefore,
+  isAfter,
+  parseISO,
+} from "date-fns";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import firestore from "@react-native-firebase/firestore";
+import call from "react-native-phone-call";
 
 import colors from "../../utils/colors";
 import SlotButton from "../../components/SlotButton";
 import BackIcon from "../../assets/icons/BackIcon";
 
-// const slots = [
-//   {
-//     date: "Tue, 13 Aug",
-//     available: "11",
-//   },
-//   {
-//     date: "Wed, 14 Aug",
-//     available: "11",
-//   },
-//   {
-//     date: "Thu, 15 Aug",
-//     available: "11",
-//   },
-//   {
-//     date: "Fri, 16 Aug",
-//     available: "11",
-//   },
-//   {
-//     date: "Sat, 17 Aug",
-//     available: "11",
-//   },
-// ];
-
-const generateSlots = (days) => {
-  const slots = [];
-  for (let i = 0; i < days; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() + i);
-
-    let inX;
-
-    if (i === 0) {
-      inX = "Today";
-    } else {
-      inX = formatDistanceToNow(date, { addSuffix: true });
-    }
-
-    slots.push({
-      date: format(date, "EEE, dd MMM"), // Format the date as "Tue, 13 Aug"
-      available: "11", // Example available slots count
-      inx: inX,
-    });
-  }
-  return slots;
-};
-const slotsData = {
-  Morning: ["09:00 AM", "09:30 AM", "10:30 AM", "11:00 AM", "11:30 AM"],
-  Afternoon: ["12:00 PM", "12:30 PM", "01:00 PM"],
-  Evening: ["06:30 PM", "07:00 PM", "07:30 PM"],
-  Night: [
-    "08:00 PM",
-    "08:30 PM",
-    "08:00 PM",
-    "08:30 PM",
-    "08:00 PM",
-    "08:30 PM",
-  ],
-};
-
-const itemWidth = wp("45%");
-
 export default function SlotScreen({ navigation, route }) {
   const { doctor, appointmentType } = route.params;
-  const scrollViewRef = useRef(null);
+
+  const flatListRef = useRef(null);
+
+  const generateSlots = (days) => {
+    const slots = [];
+    for (let i = 0; i < days; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+
+      let inX;
+
+      if (i === 0) {
+        inX = "Today";
+      } else {
+        inX = formatDistanceToNow(date, { addSuffix: true });
+      }
+
+      slots.push({
+        date: format(date, "yyyy-MM-dd"),
+        displayDate: format(date, "EEE, dd MMM"),
+        inx: inX,
+      });
+    }
+    return slots;
+  };
+
+  const slots = generateSlots(30);
+
   const [selectedSlot, setSelectedSlot] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(slots[0].date);
 
-  const slots = generateSlots(10);
-  const [selectedDate, setSelectedDate] = useState(slots[selectedSlot].date);
+  const [clinicSlots, setClinicSlots] = useState([]);
+  const [virtualSlots, setVirtualSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
-  const screenWidth = Dimensions.get("window").width;
+  const [categorizedSlots, setCategorizedSlots] = useState({
+    Morning: [],
+    Afternoon: [],
+    Evening: [],
+  });
+
+  const categorizeSlotsByTimeOfDay = (slots, selectedDate) => {
+    const morningSlots = [];
+    const afternoonSlots = [];
+    const eveningSlots = [];
+
+    const currentTime = new Date(); 
+
+    const selectedDateObj = parseISO(selectedDate);
+
+    slots
+      .filter((slot) => {
+        if (
+          !slot.time ||
+          typeof slot.time !== "string" ||
+          slot.status !== "not booked"
+        ) {
+          return false;
+        }
+
+        let slotTime;
+        try {
+          slotTime = parse(slot.time.trim(), "hh:mm a", new Date()); 
+        } catch (error) {
+          console.error("Error parsing slot time:", slot.time, error);
+          return false;
+        }
+
+        const slotDateTime = set(selectedDateObj, {
+          hours: slotTime.getHours(),
+          minutes: slotTime.getMinutes(),
+        });
+
+
+        return (
+          isAfter(slotDateTime, currentTime) ||
+          isAfter(selectedDateObj, currentTime)
+        );
+      })
+      .forEach((slot) => {
+        let slotTime;
+        try {
+          slotTime = parse(slot.time.trim(), "hh:mm a", new Date());
+        } catch (error) {
+          console.error("Error parsing slot time:", slot.time, error);
+          return; 
+        }
+
+        const slotDateTime = set(selectedDateObj, {
+          hours: slotTime.getHours(),
+          minutes: slotTime.getMinutes(),
+        });
+
+        const morningEnd = set(selectedDateObj, { hours: 11, minutes: 59 });
+        const afternoonEnd = set(selectedDateObj, { hours: 16, minutes: 59 });
+        const eveningEnd = set(selectedDateObj, { hours: 23, minutes: 59 });
+
+        if (isBefore(slotDateTime, morningEnd)) {
+          morningSlots.push(slot);
+        } else if (isBefore(slotDateTime, afternoonEnd)) {
+          afternoonSlots.push(slot);
+        } else if (isBefore(slotDateTime, eveningEnd)) {
+          eveningSlots.push(slot);
+        }
+      });
+
+    return {
+      Morning: morningSlots,
+      Afternoon: afternoonSlots,
+      Evening: eveningSlots,
+    };
+  };
+
+  useEffect(() => {
+    if (appointmentType === "Clinic") {
+      setCategorizedSlots(
+        categorizeSlotsByTimeOfDay(clinicSlots, selectedDate)
+      );
+    }
+
+    if (appointmentType === "Virtual") {
+      setCategorizedSlots(
+        categorizeSlotsByTimeOfDay(virtualSlots, selectedDate)
+      );
+    }
+  }, [clinicSlots, virtualSlots]);
 
   const handleSlotPress = (index) => {
     setSelectedSlot(index);
-    console.log(selectedSlot);
     setSelectedDate(slots[index].date);
-    console.log(selectedDate);
 
-    // Width of each Pressable
-    const offset = index * itemWidth - (screenWidth - itemWidth) / 3.5;
-    scrollViewRef.current?.scrollTo({ x: offset, animated: true });
+    flatListRef.current?.scrollToIndex({
+      index,
+      viewPosition: 0.5,
+      animated: true,
+    });
   };
+
+  const fetchClinicSlots = async (userId, date) => {
+    try {
+      const clinicSlotsDoc = await firestore()
+        .collection("profile")
+        .doc(userId)
+        .collection("clinicSlots")
+        .doc(date)
+        .get();
+
+      if (clinicSlotsDoc.exists) {
+        const clinicData = clinicSlotsDoc.data();
+        return clinicData.slots;
+      } else {
+        console.log("No clinic slots found for this date");
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching clinic slots: ", error);
+      return [];
+    }
+  };
+
+  const fetchVirtualSlots = async (userId, date) => {
+    try {
+      const virtualSlotsDoc = await firestore()
+        .collection("profile")
+        .doc(userId)
+        .collection("virtualSlots")
+        .doc(date)
+        .get();
+
+      if (virtualSlotsDoc.exists) {
+        const virtualData = virtualSlotsDoc.data();
+        return virtualData.slots;
+      } else {
+        console.log("No virtual slots found for this date");
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching virtual slots: ", error);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    if (appointmentType === "Clinic") {
+      const loadSlots = async () => {
+        setLoadingSlots(true);
+        const fetchedSlots = await fetchClinicSlots(doctor.id, selectedDate);
+        setClinicSlots(fetchedSlots);
+        setLoadingSlots(false);
+      };
+
+      loadSlots();
+    } else {
+      const loadSlots = async () => {
+        setLoadingSlots(true);
+        const fetchedSlots = await fetchVirtualSlots(doctor.id, selectedDate);
+        setVirtualSlots(fetchedSlots);
+        setLoadingSlots(false);
+      };
+
+      loadSlots();
+    }
+  }, [selectedDate, doctor.id]);
+
+  useEffect(() => {
+    console.log(categorizedSlots);
+  }, [categorizedSlots]);
+
+  const dialNumber = () => {
+    const args = {
+      number: doctor.profileData.phone,
+      prompt: true,
+      skipCanOpen: true,
+    };
+
+    call(args).catch((error) => {
+      Toast.show({
+        type: "error",
+        text1: "Can't place a call right now",
+        text2: error,
+      });
+    });
+  };
+
+  const renderItem = ({ item, index }) => (
+    <Pressable
+      key={index}
+      onPress={() => handleSlotPress(index)}
+      style={[
+        styles.dateButton,
+        selectedSlot === index && styles.selectedButton,
+      ]}
+    >
+      <Text
+        style={[
+          styles.slotdatetext,
+          selectedSlot === index && styles.selectedSlotText,
+        ]}
+      >
+        {item.displayDate}
+      </Text>
+      {/* <Text
+        style={[
+          styles.slotsAvailable,
+          selectedSlot === index && styles.selectedSlotText,
+        ]}
+      >
+        {item.available} slots available
+      </Text> */}
+    </Pressable>
+  );
 
   return (
     <>
@@ -126,7 +310,7 @@ export default function SlotScreen({ navigation, route }) {
               fontSize: 18,
             }}
           >
-            {doctor.name}
+            {`${doctor.firstname} ${doctor.lastname}`}
           </Text>
           <Text
             style={{
@@ -135,7 +319,7 @@ export default function SlotScreen({ navigation, route }) {
               textAlign: "center",
             }}
           >
-            {doctor.specialization}
+            {doctor.profileData.designation}
           </Text>
         </View>
         <View style={{ height: 20, width: 20 }} />
@@ -155,77 +339,110 @@ export default function SlotScreen({ navigation, route }) {
           </Text>
         </View>
         <View style={{ flexDirection: "column" }}>
-          <ScrollView
-            ref={scrollViewRef}
-            horizontal={true}
+          <FlatList
+            ref={flatListRef}
+            horizontal
+            data={slots}
+            renderItem={renderItem}
+            keyExtractor={(item, index) => index.toString()}
             contentContainerStyle={{
               flexDirection: "row",
               justifyContent: "space-between",
               marginBottom: 20,
             }}
-            indicatorStyle="white"
-          >
-            {slots.map((slot, index) => (
-              <Pressable
-                key={index}
-                onPress={() => handleSlotPress(index)}
-                style={[
-                  styles.dateButton,
-                  selectedSlot === index && styles.selectedButton,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.slotdatetext,
-                    selectedSlot === index && styles.selectedSlotText,
-                  ]}
-                >
-                  {slot.date}
-                </Text>
-                <Text
-                  style={[
-                    styles.slotsAvailable,
-                    selectedSlot === index && styles.selectedSlotText,
-                  ]}
-                >
-                  {slot.available} slots available
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
+            showsHorizontalScrollIndicator={false}
+          />
         </View>
 
         <View style={styles.selectedDateContainer}>
-          <Text style={styles.selectedDateText}>{selectedDate}</Text>
+          <Text style={styles.selectedDateText}>
+            {slots[selectedSlot].displayDate}
+          </Text>
         </View>
         <Divider style={{ marginTop: 10 }} />
 
         <ScrollView>
-          {Object.entries(slotsData).map(([timeOfDay, slotTimes], index) => (
-            <View key={index} style={styles.timeSlotContainer}>
-              <Text style={styles.slotHeading}>
-                {timeOfDay} {slotTimes.length} slots
-              </Text>
-              <View style={styles.slotRow}>
-                {slotTimes.map((time, idx) => (
-                  <SlotButton
-                    key={idx}
-                    time={time}
-                    onPress={() =>
-                      navigation.navigate("Booking", {
-                        doctor,
-                        slotno: time,
-                        selectedDate,
-                        appointmentType,
-                        inx: slots[selectedSlot].inx,
-                      })
-                    }
-                    style={styles.slotButton}
-                  />
-                ))}
+          {loadingSlots ? (
+            <Text style={styles.loadingSlots}>Loading slots...</Text>
+          ) : Object.values(categorizedSlots).flat().length > 0 ? (
+            Object.entries(categorizedSlots).map(
+              ([timeOfDay, slotTimes], index) => (
+                <View key={index} style={{ marginVertical: 10 }}>
+                  <Text style={styles.timeofday}>
+                    {timeOfDay} ({slotTimes.length} slots)
+                  </Text>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                    {slotTimes.map((slot, idx) => (
+                      <SlotButton
+                        key={idx}
+                        time={slot.time}
+                        onPress={() =>
+                          navigation.navigate("Booking", {
+                            doctor,
+                            slotno: slot.time,
+                            selectedDate,
+                            appointmentType,
+                          })
+                        }
+                      />
+                    ))}
+                  </View>
+                </View>
+              )
+            )
+          ) : (
+            <View
+              style={{
+                width: "100%",
+                height: "100%",
+                justifyContent: "center",
+                marginVertical: 20,
+              }}
+            >
+              <View
+                style={{
+                  alignSelf: "center",
+                  width: "100%",
+                  marginTop: 5,
+                  marginBottom: 16,
+                }}
+              >
+                <Text style={styles.noSlots}>
+                  No available slots on {slots[selectedSlot].displayDate}
+                </Text>
+                <Text style={styles.noSlotsDesc}>
+                  Contact the clinic/doctor for further enquiry
+                </Text>
               </View>
+
+              <Pressable
+                style={[
+                  styles.button,
+                  {
+                    width: "50%",
+                    alignSelf: "center",
+                    flexDirection: "row",
+                    justifyContent: "space-around",
+                    alignItems: "center",
+                  },
+                ]}
+                onPress={dialNumber}
+              >
+                <Image
+                  source={require("../../assets/icons/phone.png")}
+                  style={{
+                    height: 20,
+                    width: 20,
+                    alignSelf: "flex-end",
+                    marginLeft: 5,
+                  }}
+                />
+                <Text style={[styles.buttonText, { marginRight: 5 }]}>
+                  Contact clinic
+                </Text>
+              </Pressable>
             </View>
-          ))}
+          )}
         </ScrollView>
       </View>
     </>
@@ -235,8 +452,6 @@ export default function SlotScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // justifyContent: "center",
-    // alignItems: "center",
     backgroundColor: colors.darkback,
     padding: 16,
   },
@@ -249,8 +464,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    width: itemWidth,
-    height: hp("10%"),
+    width: wp("40%"),
+    height: hp("8%"),
     marginBottom: 0,
   },
 
@@ -297,5 +512,49 @@ const styles = StyleSheet.create({
     color: colors.whitetext,
     fontWeight: "bold",
     fontSize: 18,
+  },
+
+  loadingSlots: {
+    color: colors.whitetext,
+    fontSize: 18,
+    fontWeight: "bold",
+    alignSelf: "center",
+    textAlign: "center",
+  },
+
+  timeofday: {
+    color: colors.lightgraytext,
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+
+  noSlots: {
+    color: colors.whitetext,
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+    width: "100%",
+  },
+
+  noSlotsDesc: {
+    alignSelf: "center",
+    width: "100%",
+    textAlign: "center",
+    fontWeight: "600",
+    color: colors.lightgraytext,
+  },
+
+  button: {
+    backgroundColor: colors.lightaccent,
+    paddingVertical: 12,
+    borderRadius: 5,
+  },
+
+  buttonText: {
+    color: colors.whitetext,
+    fontSize: 16,
+    fontWeight: "500",
+    textAlign: "center",
   },
 });

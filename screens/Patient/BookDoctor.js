@@ -256,7 +256,18 @@ export default function BookDoctor({ navigation, route }) {
       <View style={styles.slots}>
         {filteredSlots.length > 0 ? (
           filteredSlots.map((slot, index) => (
-            <Pressable key={index} style={styles.slot}>
+            <Pressable
+              key={index}
+              style={styles.slot}
+              onPress={() =>
+                navigation.navigate("Booking", {
+                  doctor,
+                  slotno: slot.time,
+                  selectedDate: format(new Date(), "yyyy-MM-dd"),
+                  appointmentType: value === "clinic" ? "Clinic" : "Virtual",
+                })
+              }
+            >
               <Text style={styles.slotText}>{slot.time}</Text>
             </Pressable>
           ))
@@ -285,6 +296,7 @@ export default function BookDoctor({ navigation, route }) {
                   flexDirection: "row",
                   justifyContent: "space-around",
                   alignItems: "center",
+                  backgroundColor: colors.complementary,
                 },
               ]}
               onPress={dialNumber}
@@ -438,31 +450,6 @@ export default function BookDoctor({ navigation, route }) {
                     Today
                   </Text>
                 </View>
-                {/* <View style={styles.slots}>
-                  {[
-                    "6:15 PM",
-                    "6:15 PM",
-                    "6:15 PM",
-                    "6:15 PM",
-                    "6:15 PM",
-                    "6:15 PM",
-                  ].map((slot, index) => (
-                    <Pressable
-                      key={index}
-                      style={styles.slot}
-                      onPress={() =>
-                        navigation.navigate("Booking", {
-                          doctor,
-                          slotno: slot,
-                          selectedDate: generateDate(),
-                          appointmentType: "Clinic",
-                        })
-                      }
-                    >
-                      <Text style={styles.slotText}>{slot}</Text>
-                    </Pressable>
-                  ))}
-                </View> */}
 
                 <SlotComponent slots={clinicSlots} />
 
@@ -839,7 +826,6 @@ const styles = StyleSheet.create({
   slots: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
     padding: 10,
   },
   slot: {
@@ -849,6 +835,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     width: "30%",
     alignItems: "center",
+    marginHorizontal: "1%",
   },
 
   slotText: {
