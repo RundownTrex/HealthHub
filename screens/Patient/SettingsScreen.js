@@ -71,7 +71,32 @@ export default function SettingsScreen({ navigation }) {
       passwordPromise(password);
     }
   };
+  const deleteSubcollections = async (docRef) => {
+    try {
+      const subcollections = await docRef.listCollections();
+      
+      if (subcollections.length === 0) {
+        console.log("No subcollections to delete.");
+        return;
+      }
+  
+      const deletePromises = subcollections.map(async (subcollection) => {
+        const subcollectionSnapshot = await subcollection.get();
+        const deleteDocsPromises = subcollectionSnapshot.docs.map((doc) =>
+          doc.ref.delete()
+        );
+        await Promise.all(deleteDocsPromises);
+        console.log(`Deleted subcollection: ${subcollection.id}`);
+      });
+      
+      await Promise.all(deletePromises);
+      console.log("All subcollections deleted successfully");
+    } catch (error) {
+      console.error("Error deleting subcollections:", error);
+    }
+  };
 
+  
   const confirmDeleteAccount = () => {
     Alert.alert(
       "Delete Account",

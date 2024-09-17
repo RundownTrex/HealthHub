@@ -11,6 +11,8 @@ import {
 import { TextInputMask } from "react-native-masked-text";
 import { Dropdown } from "react-native-element-dropdown";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
 
 import colors from "../../utils/colors";
 import { useBottomSheet } from "../../context/BottomSheetContext";
@@ -19,6 +21,21 @@ import Button1 from "../../components/Button1";
 import TextInput1 from "../../components/TextInput1";
 import LoadingOverlay from "../../components/LoadingOverlay";
 import Toast from "react-native-toast-message";
+
+const genders = [
+  {
+    label: "Male",
+    value: "male",
+  },
+  {
+    label: "Female",
+    value: "female",
+  },
+  {
+    label: "Other",
+    value: "other",
+  },
+];
 
 const mstatus = [
   {
@@ -139,11 +156,12 @@ const diet = [
 
 export default function MedicalProfileScreen({ navigation }) {
   const { toggleBottomSheet } = useBottomSheet();
-  const [firstName, setFirstName] = useState("");
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const [healthProfile, setHealthProfile] = useState({
+    age: "",
+    gender: "",
     height: "",
     weight: "",
     maritalStatus: "",
@@ -163,6 +181,8 @@ export default function MedicalProfileScreen({ navigation }) {
     occupation: "",
   });
 
+  const user = auth().currentUser;
+
   const handleInputChange = (name, value) => {
     setHealthProfile((prevState) => ({
       ...prevState,
@@ -170,18 +190,88 @@ export default function MedicalProfileScreen({ navigation }) {
     }));
   };
 
-  const handleSubmit = () => {
-    console.log(healthProfile);
+  const areAllFieldsFilled = (profile) => {
+    return Object.values(profile).every((value) => value.trim() !== "");
+  };
 
+  const saveChanges = async () => {
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      if (!areAllFieldsFilled(healthProfile)) {
+        setIsLoading(false);
+        Toast.show({
+          type: "error",
+          text1: "Failed to update profile",
+          text2: "Make sure all fields are filled",
+        });
+        return;
+      }
+
+      const profileRef = firestore().collection("profile").doc(user.uid);
+      await profileRef.set(healthProfile, { merge: true });
+
+      console.log(healthProfile);
+
+      const usersRef = firestore().collection("users").doc(user.uid);
+
+      await usersRef.set(
+        {
+          profileRef: profileRef,
+        },
+        { merge: true }
+      );
+
       setIsLoading(false);
       Toast.show({
         type: "success",
-        text1: "Submitted Successfully",
+        text1: "Profile edited successfully",
       });
-    }, 3000);
+    } catch (error) {
+      console.error("Error updating profile : ", error);
+      setIsLoading(false);
+      Toast.show({
+        type: "error",
+        text1: "Failed to update profile",
+        text2: "Make sure none of the fields are left empty",
+      });
+    }
   };
+
+  useEffect(() => {
+    setIsLoading(true);
+    const fetchUserProfile = async () => {
+      if (user) {
+        try {
+          const profileDoc = await firestore()
+            .collection("profile")
+            .doc(user.uid)
+            .get();
+
+          if (profileDoc.exists) {
+            profileData = profileDoc.data();
+
+            setHealthProfile(profileData);
+
+            console.log("Profile data: ", profileData);
+          } else {
+            console.log("No such document!");
+          }
+
+          setIsLoading(false);
+        } catch (error) {
+          console.error("Error fetching document: ", error);
+          setIsLoading(false);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        console.log("No user is logged in");
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   useEffect(() => {
     toggleBottomSheet(true);
@@ -198,22 +288,6 @@ export default function MedicalProfileScreen({ navigation }) {
       backHandler.remove();
     };
   }, [toggleBottomSheet, navigation]);
-
-  // useEffect(() => {
-  //   const keyboardDidShowListener = Keyboard.addListener(
-  //     "keyboardDidShow",
-  //     () => setKeyboardVisible(true)
-  //   );
-  //   const keyboardDidHideListener = Keyboard.addListener(
-  //     "keyboardDidHide",
-  //     () => setKeyboardVisible(false)
-  //   );
-
-  //   return () => {
-  //     keyboardDidHideListener.remove();
-  //     keyboardDidShowListener.remove();
-  //   };
-  // }, []);
 
   return (
     <>
@@ -262,6 +336,65 @@ export default function MedicalProfileScreen({ navigation }) {
           extraScrollHeight={120} // Adjust this value as needed
           keyboardShouldPersistTaps="handled"
         >
+          <View style={{ marginTop: 5 }}>
+            <Text style={styles.label}>Age</Text>
+            <TextInput1
+              placeholder="Ex. 34"
+              placeholderTextColor={colors.lightgraytext}
+              value={healthProfile.age}
+              onChangeText={(p) => handleInputChange("age", p)}
+              kbtype="numeric"
+              maxlen={2}
+            />
+          </View>
+          <View>
+            <Text style={[styles.label]}>Gender at birth</Text>
+            <Dropdown
+              placeholder="Gender"
+              data={genders}
+              maxHeight={500}
+              value={healthProfile.gender}
+              onChange={(item) => {
+                handleInputChange("gender", item.value);
+              }}
+              style={{
+                height: 45,
+                borderColor: "gray",
+                borderWidth: 1,
+                paddingHorizontal: 10,
+                paddingVertical: 12,
+                borderRadius: 2,
+                backgroundColor: colors.somewhatlightback,
+                fontSize: 16,
+                marginVertical: 5,
+              }}
+              placeholderStyle={{
+                color: colors.lightgraytext,
+              }}
+              labelField="label"
+              valueField="value"
+              itemContainerStyle={{
+                backgroundColor: colors.darkback,
+                borderRadius: 8,
+              }}
+              selectedTextStyle={{
+                color: colors.whitetext,
+              }}
+              mode="modal"
+              itemTextStyle={{
+                color: colors.whitetext,
+              }}
+              containerStyle={{
+                backgroundColor: colors.darkback,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: colors.darkback,
+              }}
+              activeColor={colors.somewhatlightback}
+              backgroundColor="#000000b3"
+            />
+          </View>
+
           <View style={{ marginBottom: 10 }}>
             <Text style={styles.label}>Height</Text>
             <TextInputMask
@@ -275,6 +408,7 @@ export default function MedicalProfileScreen({ navigation }) {
               onChangeText={(value) => handleInputChange("height", value)}
               style={[styles.input, { marginTop: 5 }]}
               keyboardType="numeric"
+              maxLength={4}
             />
           </View>
           <View style={{ marginBottom: 10 }}>
@@ -327,7 +461,7 @@ export default function MedicalProfileScreen({ navigation }) {
               selectedTextStyle={{
                 color: colors.whitetext,
               }}
-              mode="default"
+              mode="modal"
               itemTextStyle={{
                 color: colors.whitetext,
               }}
@@ -343,14 +477,14 @@ export default function MedicalProfileScreen({ navigation }) {
           </View>
 
           <View style={{ marginBottom: 10 }}>
-            <Text style={[styles.label]}>Martial Status</Text>
+            <Text style={[styles.label]}>Marital Status</Text>
             <Dropdown
-              placeholder="Martial Status"
+              placeholder="Marital Status"
               data={mstatus}
               maxHeight={500}
               value={healthProfile.maritalStatus}
               onChange={(item) => {
-                handleInputChange("martialStatus", item.value);
+                handleInputChange("maritalStatus", item.value);
               }}
               style={{
                 height: 50,
@@ -391,9 +525,7 @@ export default function MedicalProfileScreen({ navigation }) {
           </View>
 
           <View style={{ marginBottom: 10 }}>
-            <Text style={styles.label}>
-              Allergies (put 'No' if no allergies)
-            </Text>
+            <Text style={styles.label}>Allergies (put 'None' if none)</Text>
             <TextInput1
               placeholder="Ex. Food Allergy"
               value={healthProfile.allergies}
@@ -401,7 +533,7 @@ export default function MedicalProfileScreen({ navigation }) {
             />
           </View>
           <View style={{ marginBottom: 10 }}>
-            <Text style={styles.label}>Injuries (put 'No' if no injuries)</Text>
+            <Text style={styles.label}>Injuries (put 'None' if none)</Text>
             <TextInput1
               placeholder="Ex. Fracture"
               value={healthProfile.injuries}
@@ -409,7 +541,9 @@ export default function MedicalProfileScreen({ navigation }) {
             />
           </View>
           <View style={{ marginBottom: 10 }}>
-            <Text style={styles.label}>Chronic Diseases</Text>
+            <Text style={styles.label}>
+              Chronic Diseases (put 'None' if none)
+            </Text>
             <TextInput1
               placeholder="Ex. Diabetes"
               value={healthProfile.chronicDiseases}
@@ -417,7 +551,7 @@ export default function MedicalProfileScreen({ navigation }) {
             />
           </View>
           <View style={{ marginBottom: 10 }}>
-            <Text style={styles.label}>Past Illness</Text>
+            <Text style={styles.label}>Past Illness (put 'None' if none)</Text>
             <TextInput1
               placeholder="Ex. Chickenpox"
               value={healthProfile.pastIllnesses}
@@ -425,7 +559,9 @@ export default function MedicalProfileScreen({ navigation }) {
             />
           </View>
           <View style={{ marginBottom: 10 }}>
-            <Text style={styles.label}>Current Medications</Text>
+            <Text style={styles.label}>
+              Current Medications (put 'None' if none)
+            </Text>
             <TextInput1
               placeholder="None"
               value={healthProfile.currentMedications}
@@ -433,7 +569,9 @@ export default function MedicalProfileScreen({ navigation }) {
             />
           </View>
           <View style={{ marginBottom: 10 }}>
-            <Text style={styles.label}>Past Medications</Text>
+            <Text style={styles.label}>
+              Past Medications (put 'None' if none)
+            </Text>
             <TextInput1
               placeholder="None"
               value={healthProfile.pastMedications}
@@ -442,7 +580,9 @@ export default function MedicalProfileScreen({ navigation }) {
           </View>
 
           <View style={{ marginBottom: 10 }}>
-            <Text style={styles.label}>Previous Surgeries</Text>
+            <Text style={styles.label}>
+              Previous Surgeries (put 'None' if none)
+            </Text>
             <TextInput1
               placeholder="None"
               value={healthProfile.previousSurgeries}
@@ -659,7 +799,7 @@ export default function MedicalProfileScreen({ navigation }) {
           </View>
         </KeyboardAwareScrollView>
         <View style={styles.bottomPanel}>
-          <Button1 text="Submit Changes" onPress={handleSubmit} />
+          <Button1 text="Submit Changes" onPress={saveChanges} />
         </View>
       </View>
     </>

@@ -347,12 +347,12 @@ export default function BookedDoctor({ navigation }) {
         >
           <Text style={styles.buttonText}>Cancel</Text>
         </Pressable>
-        <Pressable
+        {/* <Pressable
           style={styles.button}
           onPress={() => console.log("Hello world")}
         >
           <Text style={[styles.buttonText]}>Reschedule</Text>
-        </Pressable>
+        </Pressable> */}
       </View>
     </>
   );

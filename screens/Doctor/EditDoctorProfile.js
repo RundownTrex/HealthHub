@@ -28,20 +28,6 @@ import LoadingOverlay from "../../components/LoadingOverlay";
 let data;
 let profileData;
 
-const genders = [
-  {
-    label: "Male",
-    value: "male",
-  },
-  {
-    label: "Female",
-    value: "female",
-  },
-  {
-    label: "Other",
-    value: "other",
-  },
-];
 
 const doctorDesignations = [
   {
@@ -241,6 +227,8 @@ export default function EditDoctorProfile({ navigation }) {
         text1: "Failed to update profile",
         text2: "Make sure none of the fields are left empty",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -269,7 +257,7 @@ export default function EditDoctorProfile({ navigation }) {
             setSpecializations(profileData.specializations);
             setWorkExperience(profileData.workexperience);
             setEducation(profileData.education);
-            setDesignation(profileData.designation)
+            setDesignation(profileData.designation);
 
             console.log(data);
             console.log(profileData);
