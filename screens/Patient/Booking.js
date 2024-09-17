@@ -8,7 +8,13 @@ import {
   ScrollView,
 } from "react-native";
 import { Avatar, Divider, RadioButton } from "react-native-paper";
-import { format, formatDistanceToNow, addDays } from "date-fns";
+import {
+  format,
+  formatDistanceToNow,
+  addDays,
+  parseISO,
+  parse,
+} from "date-fns";
 
 import colors from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";
@@ -67,7 +73,7 @@ export default function Booking({ navigation, route }) {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.profileSection}>
           <View style={styles.avatarwrap}>
-            <Avatar.Image source={doctor.image} size={90} />
+            <Avatar.Image source={{ uri: doctor.pfpUrl }} size={90} />
             {doctor.virtualConsultation && (
               <View style={styles.cameraIcon}>
                 <Image
@@ -78,7 +84,9 @@ export default function Booking({ navigation, route }) {
             )}
           </View>
           <View style={styles.textwrap}>
-            <Text style={styles.name}>{doctor.name}</Text>
+            <Text style={styles.name}>
+              {`${doctor.firstname} ${doctor.lastname}`}
+            </Text>
             <Text
               style={{
                 fontSize: 14,
@@ -86,7 +94,7 @@ export default function Booking({ navigation, route }) {
                 fontWeight: "bold",
               }}
             >
-              {doctor.specialization}
+              {doctor.profileData.designation}
             </Text>
           </View>
         </View>
@@ -107,7 +115,7 @@ export default function Booking({ navigation, route }) {
               Appointment time
             </Text>
           </View>
-          <View style={{ flexDirection: "row" }}>
+          <View style={{ flexDirection: "column" }}>
             <Text
               style={{
                 color: colors.whitetext,
@@ -115,9 +123,18 @@ export default function Booking({ navigation, route }) {
                 fontSize: 18,
               }}
             >
-              {selectedDate} {slotno}
+              {format(parseISO(selectedDate), "EEEE, dd MMMM yyyy")}
             </Text>
-            <View
+            <Text
+              style={{
+                color: colors.whitetext,
+                fontWeight: "bold",
+                fontSize: 18,
+              }}
+            >
+              {slotno}
+            </Text>
+            {/* <View
               style={{
                 height: "100%",
                 width: 1,
@@ -133,135 +150,172 @@ export default function Booking({ navigation, route }) {
               }}
             >
               {inx}
-            </Text>
+            </Text> */}
           </View>
         </View>
-        <View style={{ padding: 16, marginTop: 10, paddingBottom: 0 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              gap: 10,
-              alignItems: "center",
-              marginBottom: 5,
-            }}
-          >
-            <Image
-              source={require("../../assets/icons/clinic.png")}
-              style={{ width: 18, height: 18 }}
-            />
+        {appointmentType === "Clinic" && (
+          <View style={{ padding: 16, marginTop: 10, paddingBottom: 0 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 10,
+                alignItems: "center",
+                marginBottom: 5,
+              }}
+            >
+              <Image
+                source={require("../../assets/icons/clinic.png")}
+                style={{ width: 18, height: 18 }}
+              />
+              <Text
+                style={{
+                  color: colors.whitetext,
+                  fontSize: 14,
+                  fontWeight: "500",
+                }}
+              >
+                Clinic address
+              </Text>
+            </View>
             <Text
               style={{
                 color: colors.whitetext,
-                fontSize: 14,
-                fontWeight: "500",
+                fontWeight: "bold",
+                fontSize: 18,
               }}
             >
-              Clinic address
+              {doctor.profileData.clinicAddress}
             </Text>
           </View>
-          <Text
-            style={{
-              color: colors.whitetext,
-              fontWeight: "bold",
-              fontSize: 18,
-            }}
-          >
-            {doctor.address}
-          </Text>
-        </View>
-        <View style={{ padding: 16, paddingBottom: 0 }}>
-          <Text
-            style={{
-              color: colors.whitetext,
-              fontSize: 18,
-              fontWeight: "bold",
-            }}
-          >
-            Choose a mode of payment
-          </Text>
-          <View style={{ marginTop: 10 }}>
-            <Pressable
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingVertical: 8,
-              }}
-              onPress={() => setChecked("online")}
-            >
-              <RadioButton
-                value="online"
-                status={checked === "online" ? "checked" : "unchecked"}
-                onPress={() => setChecked("online")}
-                color={colors.lightaccent}
-                uncheckedColor={colors.darkgraytext}
-              />
-              <Text style={styles.radioText}>Online payment</Text>
-            </Pressable>
-            <Pressable
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingVertical: 8,
-              }}
-              onPress={() => setChecked("clinic")}
-            >
-              <RadioButton
-                value="clinic"
-                status={checked === "clinic" ? "checked" : "unchecked"}
-                onPress={() => setChecked("clinic")}
-                color={colors.lightaccent}
-                uncheckedColor={colors.darkgraytext}
-              />
-              <Text style={styles.radioText}>In-clinic payment</Text>
-            </Pressable>
-          </View>
-        </View>
-        <Divider />
-        {checked === "online" ? (
+        )}
+
+        {appointmentType === "Clinic" ? (
           <>
-            <View
-              style={{
-                padding: 20,
-                paddingTop: 15,
-                paddingBottom: 0,
-                gap: 5,
-              }}
-            >
+            <View style={{ padding: 16, paddingBottom: 0 }}>
+              <Text
+                style={{
+                  color: colors.whitetext,
+                  fontSize: 18,
+                  fontWeight: "bold",
+                }}
+              >
+                Choose a mode of payment
+              </Text>
+              <View style={{ marginTop: 10 }}>
+                <Pressable
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingVertical: 8,
+                  }}
+                  onPress={() => setChecked("online")}
+                >
+                  <RadioButton
+                    value="online"
+                    status={checked === "online" ? "checked" : "unchecked"}
+                    onPress={() => setChecked("online")}
+                    color={colors.lightaccent}
+                    uncheckedColor={colors.darkgraytext}
+                  />
+                  <Text style={styles.radioText}>Online payment</Text>
+                </Pressable>
+                <Pressable
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingVertical: 8,
+                  }}
+                  onPress={() => setChecked("clinic")}
+                >
+                  <RadioButton
+                    value="clinic"
+                    status={checked === "clinic" ? "checked" : "unchecked"}
+                    onPress={() => setChecked("clinic")}
+                    color={colors.lightaccent}
+                    uncheckedColor={colors.darkgraytext}
+                  />
+                  <Text style={styles.radioText}>In-clinic payment</Text>
+                </Pressable>
+              </View>
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={{ padding: 16, marginTop: 10, paddingBottom: 0 }}>
               <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+                style={{
+                  flexDirection: "row",
+                  gap: 10,
+                  alignItems: "center",
+                  marginBottom: 5,
+                }}
               >
                 <Image
-                  source={require("../../assets/icons/alert.png")}
-                  style={{ height: 17, width: 17 }}
+                  source={require("../../assets/rupee.png")}
+                  style={{ width: 18, height: 18 }}
                 />
                 <Text
                   style={{
-                    color: colors.alert,
-                    fontWeight: "bold",
-                    fontSize: 18,
+                    color: colors.whitetext,
+                    fontSize: 14,
+                    fontWeight: "500",
                   }}
                 >
-                  Cancellation policy
+                  Mode of Payment
                 </Text>
               </View>
-              <Text style={[styles.itemText, { color: colors.alert }]}>
-                <Text style={[styles.bullet, { color: colors.alert }]}>
-                  {"\u2022  "}
-                </Text>
-                If you wish to cancel or reschedule the appointment, you can do
-                it up to 2 hours before the appointment time
-              </Text>
-              <Text style={[styles.itemText, { color: colors.alert }]}>
-                <Text style={[styles.bullet, { color: colors.alert }]}>
-                  {"\u2022  "}
-                </Text>
-                You will be charged ₹ 50 cancellation fee is you cancel within 2
-                hours of your appointment time or absent
+              <Text
+                style={{
+                  color: colors.whitetext,
+                  fontWeight: "bold",
+                  fontSize: 18,
+                }}
+              >
+                Online
               </Text>
             </View>
-            <Divider style={{ marginVertical: 16, marginBottom: 0 }} />
           </>
-        ) : null}
+        )}
+        <Divider style={{ marginTop: 15 }} />
+        <View
+          style={{
+            padding: 20,
+            paddingTop: 15,
+            paddingBottom: 0,
+            gap: 5,
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Image
+              source={require("../../assets/icons/alert.png")}
+              style={{ height: 17, width: 17 }}
+            />
+            <Text
+              style={{
+                color: colors.alert,
+                fontWeight: "bold",
+                fontSize: 18,
+              }}
+            >
+              Cancellation policy
+            </Text>
+          </View>
+          <Text style={[styles.itemText, { color: colors.alert }]}>
+            <Text style={[styles.bullet, { color: colors.alert }]}>
+              {"\u2022  "}
+            </Text>
+            If you wish to cancel or reschedule the appointment, you can do it
+            up to 2 hours before the appointment time
+          </Text>
+          <Text style={[styles.itemText, { color: colors.alert }]}>
+            <Text style={[styles.bullet, { color: colors.alert }]}>
+              {"\u2022  "}
+            </Text>
+            You will be charged ₹ 50 cancellation fee is you cancel within 2
+            hours of your appointment time or absent
+          </Text>
+        </View>
+        <Divider style={{ marginVertical: 16, marginBottom: 0 }} />
 
         <View style={{ padding: 16, paddingBottom: 0 }}>
           <Text
@@ -294,7 +348,7 @@ export default function Booking({ navigation, route }) {
                   color: colors.whitetext,
                 }}
               >
-                ₹ {doctor.fee}
+                ₹ {doctor.profileData.consultFees}
               </Text>
             </View>
             <View
@@ -361,7 +415,7 @@ export default function Booking({ navigation, route }) {
                   fontWeight: "bold",
                 }}
               >
-                ₹ {doctor.fee}
+                ₹ {doctor.profileData.consultFees}
               </Text>
             </View>
           </View>

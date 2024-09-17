@@ -8,7 +8,13 @@ import {
   Image,
   BackHandler,
 } from "react-native";
-import { Searchbar, MD3LightTheme, Chip, Avatar } from "react-native-paper";
+import {
+  Searchbar,
+  MD3LightTheme,
+  Chip,
+  Avatar,
+  ActivityIndicator,
+} from "react-native-paper";
 import { FlashList } from "@shopify/flash-list";
 import { useRoute } from "@react-navigation/native";
 import { useBottomSheet } from "../../context/BottomSheetContext";
@@ -18,6 +24,7 @@ import firestore from "@react-native-firebase/firestore";
 import BackIcon from "../../assets/icons/BackIcon";
 import colors from "../../utils/colors";
 import DoctorProfileCard from "../../components/DoctorProfileCard";
+import Toast from "react-native-toast-message";
 
 // const doctors = [
 //   // {
@@ -104,6 +111,7 @@ export default function Providers({ navigation }) {
   const [clinic, setClinic] = useState(false);
   const { toggleBottomSheet } = useBottomSheet();
   const [options, setOptions] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const user = auth().currentUser;
 
@@ -118,6 +126,7 @@ export default function Providers({ navigation }) {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
+        setLoading(true);
         const doctorsSnapshot = await firestore()
           .collection("users")
           .where("accountType", "==", "doctor")
@@ -151,8 +160,16 @@ export default function Providers({ navigation }) {
 
         setDoctors(doctorsList);
         setFilteredDoctors(doctorsList);
+        setLoading(false);
       } catch (error) {
+        setLoading(false);
         console.error("Error fetching doctors: ", error);
+        Toast.show({
+          type: "error",
+          text1: error,
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -318,7 +335,17 @@ export default function Providers({ navigation }) {
               </Chip>
             </View>
           ) : null}
-          {filteredDoctors.length === 0 ? (
+          {loading ? (
+            <View
+              style={{
+                alignSelf: "center",
+                flex: 1,
+                justifyContent: "center",
+              }}
+            >
+              <ActivityIndicator size={"large"} color={colors.lightaccent} />
+            </View>
+          ) : filteredDoctors.length === 0 ? (
             <View style={styles.noResultsContainer}>
               <Text style={styles.noResultsText}>No results found!</Text>
             </View>
