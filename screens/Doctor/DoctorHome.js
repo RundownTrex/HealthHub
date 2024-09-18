@@ -16,75 +16,10 @@ import firestore from "@react-native-firebase/firestore";
 import Svg, { Path } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
 import { Divider } from "react-native-paper";
+import { format, parse } from "date-fns";
 
 import colors from "../../utils/colors";
 import LoadingOverlay from "../../components/LoadingOverlay";
-
-const appointments = [
-  {
-    id: 1,
-    time: "10:00 AM",
-    with: "Consultation with John Doe",
-    icon: require("../../assets/icons/video-cam.png"),
-    type: "video",
-  },
-  {
-    id: 2,
-    time: "11:00 AM",
-    with: "Consultation with Jane Smith",
-    icon: require("../../assets/icons/video-cam.png"),
-    type: "video",
-  },
-  {
-    id: 3,
-    time: "12:00 PM",
-    with: "Consultation with Alice Brown",
-    icon: require("../../assets/icons/clinic.png"),
-    type: "clinic",
-  },
-  {
-    id: 4,
-    time: "1:00 PM",
-    with: "Consultation with Bob White",
-    icon: require("../../assets/icons/clinic.png"),
-    type: "clinic",
-  },
-  {
-    id: 5,
-    time: "2:00 PM",
-    with: "Consultation with Bob White",
-    icon: require("../../assets/icons/clinic.png"),
-    type: "clinic",
-  },
-  // {
-  //   id: 6,
-  //   time: "2:00 PM",
-  //   with: "Consultation with Bob White",
-  //   icon: require("../../assets/icons/clinic.png"),
-  //   type: "clinic",
-  // },
-  // {
-  //   id: 7,
-  //   time: "2:00 PM",
-  //   with: "Consultation with Bob White",
-  //   icon: require("../../assets/icons/clinic.png"),
-  //   type: "clinic",
-  // },
-  // {
-  //   id: 8,
-  //   time: "2:00 PM",
-  //   with: "Consultation with Bob White",
-  //   icon: require("../../assets/icons/clinic.png"),
-  //   type: "clinic",
-  // },
-  // {
-  //   id: 9,
-  //   time: "2:00 PM",
-  //   with: "Consultation with Bob White",
-  //   icon: require("../../assets/icons/clinic.png"),
-  //   type: "clinic",
-  // },
-];
 
 const tips = [
   "Remember to take breaks between consultations.",
@@ -126,17 +61,13 @@ export default function DoctorHome({ navigation }) {
     extrapolate: "clamp",
   });
 
+  const [data, setData] = useState(null);
   const [userName, setUserName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [randomTip, setRandomTip] = useState("");
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 2000);
-  };
+  const [appointments, setAppointments] = useState([]);
+  const user = auth().currentUser;
 
   const getCurrentGreeting = () => {
     const currentHour = new Date().getHours();
@@ -150,6 +81,77 @@ export default function DoctorHome({ navigation }) {
     }
   };
 
+  const fetchUserProfile = async () => {
+    if (user) {
+      const userDoc = await firestore().collection("users").doc(user.uid).get();
+
+      setData(userDoc.data());
+
+      setUserName(userDoc.data().firstname + " " + userDoc.data().lastname);
+    } else {
+      console.log("No user is logged in");
+    }
+  };
+
+  const fetchAppointments = async () => {
+    try {
+      const today = format(new Date(), "yyyy-MM-dd");
+
+      const appointmentsSnapshot = await firestore()
+        .collection("appointments")
+        .where("doctorId", "==", user.uid)
+        .where("appointmentDate", "==", today)
+        .get();
+
+      let fetchedAppointments = appointmentsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      fetchedAppointments = fetchedAppointments.sort((a, b) => {
+        const timeA = parse(a.slotTime, "hh:mm a", new Date());
+        const timeB = parse(b.slotTime, "hh:mm a", new Date());
+        return timeA - timeB;
+      });
+
+      const appointmentsWithPatientNames = await Promise.all(
+        fetchedAppointments.map(async (appointment) => {
+          const patientDoc = await firestore()
+            .collection("users")
+            .doc(appointment.patientId)
+            .get();
+          const patientData = patientDoc.data();
+          const patientName = `${patientData.firstname} ${patientData.lastname}`;
+          return { ...appointment, patientName };
+        })
+      );
+
+      setAppointments(appointmentsWithPatientNames);
+    } catch (error) {
+      console.error("Error fetching appointments: ", error);
+    }
+  };
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * tips.length);
+    setRandomTip(tips[randomIndex]);
+
+    fetchUserProfile();
+  }, []);
+
+  useEffect(() => {
+    console.log(appointments);
+  }, [appointments]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchUserProfile();
+    fetchAppointments();
+    setRefreshing(false);
+  };
+
   const CustomHeader = () => {
     return (
       <View style={styles.headerContainer}>
@@ -157,37 +159,9 @@ export default function DoctorHome({ navigation }) {
           <Text style={styles.greetingText}>{getCurrentGreeting()},</Text>
           <Text style={styles.nameText}>{userName}</Text>
         </View>
-        {/* <View style={styles.locationBlock}>
-          <LocationIcon />
-          <Text style={styles.locationText}>Mumbai</Text>
-        </View> */}
       </View>
     );
   };
-
-  useEffect(() => {
-    const randomIndex = Math.floor(Math.random() * tips.length);
-    setRandomTip(tips[randomIndex]);
-
-    const fetchUserProfile = async () => {
-      const user = auth().currentUser;
-
-      if (user) {
-        const userDoc = await firestore()
-          .collection("users")
-          .doc(user.uid)
-          .get();
-
-        const data = userDoc.data();
-
-        setUserName(data.firstname + " " + data.lastname);
-      } else {
-        console.log("No user is logged in");
-      }
-    };
-
-    fetchUserProfile();
-  }, []);
 
   return (
     <>
@@ -252,8 +226,7 @@ export default function DoctorHome({ navigation }) {
                 height: 20,
                 width: 20,
                 marginRight: 8,
-                alignSelf: "flex-start",
-                marginTop: 5,
+                alignSelf: "center",
               }}
             />
             <Text
@@ -269,50 +242,80 @@ export default function DoctorHome({ navigation }) {
 
           <View style={[styles.topContainer, {}]}>
             <View style={styles.topcard}>
-              <Text style={styles.topcardHeading}>9</Text>
+              <Text style={styles.topcardHeading}>{appointments.length}</Text>
               <Text style={styles.topcardSubtitle}>Appointments today</Text>
             </View>
             <View style={styles.topcard}>
-              <Text style={styles.topcardHeading}>9</Text>
+              <Text style={styles.topcardHeading}>0</Text>
               <Text style={styles.topcardSubtitle}>New messages</Text>
             </View>
           </View>
           <View style={styles.topContainer}>
             <View style={styles.topcard}>
-              <Text style={styles.topcardHeading}>2</Text>
+              <Text style={styles.topcardHeading}>
+                {" "}
+                {
+                  appointments.filter(
+                    (appt) => appt.appointmentType === "Virtual"
+                  ).length
+                }
+              </Text>
               <Text style={styles.topcardSubtitle}>Virtual</Text>
             </View>
             <View style={styles.topcard}>
-              <Text style={styles.topcardHeading}>3</Text>
+              <Text style={styles.topcardHeading}>
+                {" "}
+                {
+                  appointments.filter(
+                    (appt) => appt.appointmentType === "Clinic"
+                  ).length
+                }
+              </Text>
               <Text style={styles.topcardSubtitle}>In-clinic</Text>
             </View>
           </View>
 
           <View style={styles.appointmentContainer}>
             <Text style={styles.heading}>Today's Schedule</Text>
-            {appointments.map((appointment) => (
-              <View key={appointment.id} style={styles.appointment}>
-                <View style={{ flexDirection: "row" }}>
-                  <View style={styles.iconBackground}>
-                    <Image source={appointment.icon} style={styles.icon} />
+            {appointments.length > 0 ? (
+              appointments.map((appointment) => (
+                <View key={appointment.id} style={styles.appointment}>
+                  <View style={{ flexDirection: "row" }}>
+                    <View style={styles.iconBackground}>
+                      <Image
+                        source={
+                          appointment.appointmentType === "Virtual"
+                            ? require("../../assets/icons/video-cam.png")
+                            : require("../../assets/icons/clinic.png")
+                        }
+                        style={styles.icon}
+                      />
+                    </View>
+                    <View style={styles.consulttext}>
+                      <Text style={styles.time}>{appointment.slotTime}</Text>
+                      <Text style={styles.with}>
+                        Consultation with {appointment.patientName}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.consulttext}>
-                    <Text style={styles.time}>{appointment.time}</Text>
-                    <Text style={styles.with}>{appointment.with}</Text>
-                  </View>
+                  <Ionicons
+                    name={"arrow-forward-outline"}
+                    size={24}
+                    color={colors.whitetext}
+                  />
                 </View>
-                <Ionicons
-                  name={"arrow-forward-outline"}
-                  size={24}
-                  color={colors.whitetext}
-                />
+              ))
+            ) : (
+              <View style={styles.noappointments}>
+                <Text style={styles.noappointmentText}>
+                  No appointments for today
+                </Text>
               </View>
-            ))}
+            )}
             <Pressable style={styles.viewallButton}>
               <Text style={styles.viewalltext}>View all</Text>
             </Pressable>
           </View>
-          <Divider style={{ marginBottom: 10 }} />
         </ScrollView>
       </View>
     </>
@@ -321,7 +324,7 @@ export default function DoctorHome({ navigation }) {
 
 const styles = StyleSheet.create({
   container: {
-    // flex: 1,
+    flex: 1,
     height: "auto",
     backgroundColor: colors.darkback,
     // alignItems: "center",
@@ -418,6 +421,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.somewhatlightback,
     padding: 8,
     borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   consulttext: {
@@ -448,5 +453,19 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: colors.somewhatlightback,
     marginTop: 5,
+  },
+
+  noappointments: {
+    width: "100%",
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 15,
+    marginVertical: 15,
+  },
+
+  noappointmentText: {
+    color: colors.whitetext,
+    fontWeight: "bold",
+    fontSize: 18,
   },
 });

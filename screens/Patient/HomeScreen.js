@@ -213,7 +213,7 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.nameText}>{userName}</Text>
         </View>
 
-        <Pressable
+        {/* <Pressable
           onPress={openLocationSheet}
           style={({ pressed }) => [
             styles.locationBlock,
@@ -224,7 +224,7 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.locationText}>
             {location === "" ? "Select city" : location}
           </Text>
-        </Pressable>
+        </Pressable> */}
       </View>
     );
   };
