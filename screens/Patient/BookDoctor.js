@@ -242,7 +242,6 @@ export default function BookDoctor({ navigation, route }) {
 
         let slotTime = parse(slot.time, "hh:mm a", new Date());
 
-        // Set the same year, month, and day as the current date to make the comparison
         slotTime = set(new Date(), {
           hours: slotTime.getHours(),
           minutes: slotTime.getMinutes(),

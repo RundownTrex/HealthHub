@@ -32,16 +32,11 @@ const items = [
 
 export default function Booking({ navigation, route }) {
   const { doctor, slotno, appointmentType, selectedDate } = route.params;
-  const [paymentMethod, setPaymentMethod] = useState("online");
+  const [paymentMethod, setPaymentMethod] = useState("Online");
   const [isLoading, setIsLoading] = useState(false);
   const user = auth().currentUser;
 
-  const bookAppointment = () => {
-    navigation.pop();
-    navigation.pop();
-    navigation.pop();
-    navigation.navigate("Home");
-  };
+
 
   // useEffect(() => {
   //   console.log(slotno);
@@ -298,14 +293,14 @@ export default function Booking({ navigation, route }) {
                     alignItems: "center",
                     paddingVertical: 8,
                   }}
-                  onPress={() => setPaymentMethod("online")}
+                  onPress={() => setPaymentMethod("Online")}
                 >
                   <RadioButton
                     value="online"
                     status={
-                      paymentMethod === "online" ? "checked" : "unchecked"
+                      paymentMethod === "Online" ? "checked" : "unchecked"
                     }
-                    onPress={() => setPaymentMethod("online")}
+                    onPress={() => setPaymentMethod("Online")}
                     color={colors.lightaccent}
                     uncheckedColor={colors.darkgraytext}
                   />
@@ -317,14 +312,14 @@ export default function Booking({ navigation, route }) {
                     alignItems: "center",
                     paddingVertical: 8,
                   }}
-                  onPress={() => setPaymentMethod("clinic")}
+                  onPress={() => setPaymentMethod("Clinic")}
                 >
                   <RadioButton
                     value="clinic"
                     status={
-                      paymentMethod === "clinic" ? "checked" : "unchecked"
+                      paymentMethod === "Clinic" ? "checked" : "unchecked"
                     }
-                    onPress={() => setPaymentMethod("clinic")}
+                    onPress={() => setPaymentMethod("Clinic")}
                     color={colors.lightaccent}
                     uncheckedColor={colors.darkgraytext}
                   />
@@ -364,11 +359,11 @@ export default function Booking({ navigation, route }) {
                   alignItems: "center",
                   paddingVertical: 8,
                 }}
-                onPress={() => setPaymentMethod("online")}
+                onPress={() => setPaymentMethod("Online")}
               >
                 <RadioButton
                   value="online"
-                  status={paymentMethod === "online" ? "checked" : "unchecked"}
+                  status={paymentMethod === "Online" ? "checked" : "unchecked"}
                   onPress={() => setPaymentMethod("online")}
                   color={colors.lightaccent}
                   uncheckedColor={colors.darkgraytext}

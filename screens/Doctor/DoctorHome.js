@@ -101,6 +101,7 @@ export default function DoctorHome({ navigation }) {
         .collection("appointments")
         .where("doctorId", "==", user.uid)
         .where("appointmentDate", "==", today)
+        .where("status", "==", "booked")
         .get();
 
       let fetchedAppointments = appointmentsSnapshot.docs.map((doc) => ({
@@ -122,7 +123,8 @@ export default function DoctorHome({ navigation }) {
             .get();
           const patientData = patientDoc.data();
           const patientName = `${patientData.firstname} ${patientData.lastname}`;
-          return { ...appointment, patientName };
+          const patientPfp = patientData.pfpUrl;
+          return { ...appointment, patientName, patientPfp };
         })
       );
 
@@ -279,7 +281,16 @@ export default function DoctorHome({ navigation }) {
             <Text style={styles.heading}>Today's Schedule</Text>
             {appointments.length > 0 ? (
               appointments.map((appointment) => (
-                <View key={appointment.id} style={styles.appointment}>
+                <Pressable
+                  key={appointment.id}
+                  style={styles.appointment}
+                  onPress={() => {
+                    console.log(appointment);
+                    navigation.navigate("PatientProfile", {
+                      appointment,
+                    });
+                  }}
+                >
                   <View style={{ flexDirection: "row" }}>
                     <View style={styles.iconBackground}>
                       <Image
@@ -303,7 +314,7 @@ export default function DoctorHome({ navigation }) {
                     size={24}
                     color={colors.whitetext}
                   />
-                </View>
+                </Pressable>
               ))
             ) : (
               <View style={styles.noappointments}>

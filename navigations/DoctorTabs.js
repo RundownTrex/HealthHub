@@ -1,7 +1,7 @@
 import React from "react";
 import { Image, View, Text, StyleSheet, StatusBar } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import DoctorHome from "../screens/Doctor/DoctorHome";
+import DoctorHomeStack from "./DoctorHomeStack";
 import DoctorMessagesStack from "./DoctorMessagesStack";
 import DoctorProfileStack from "./DoctorProfileStack";
 import colors from "../utils/colors";
@@ -28,7 +28,7 @@ export default function DoctorTabs() {
       >
         <Tab.Screen
           name="Home"
-          component={DoctorHome}
+          component={DoctorHomeStack}
           options={{
             headerShown: false,
           }}

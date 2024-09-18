@@ -25,30 +25,30 @@ import Toast from "react-native-toast-message";
 const genders = [
   {
     label: "Male",
-    value: "male",
+    value: "Male",
   },
   {
     label: "Female",
-    value: "female",
+    value: "Female",
   },
   {
     label: "Other",
-    value: "other",
+    value: "Other",
   },
 ];
 
 const mstatus = [
   {
     label: "Married",
-    value: "married",
+    value: "Married",
   },
   {
     label: "Single",
-    value: "single",
+    value: "Single",
   },
   {
     label: "Divorced",
-    value: "divorced",
+    value: "Divorced",
   },
 ];
 const bgroup = [
