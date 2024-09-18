@@ -31,8 +31,8 @@ export default function ClinicSlots({ navigation }) {
   const [selectedDate, setSelectedDate] = useState(
     format(new Date(), "yyyy-MM-dd")
   ); // For the calendar
-  const [time, setTime] = useState(new Date()); // For the date picker
-  const [open, setOpen] = useState(false); // Controls opening of date picker
+  const [time, setTime] = useState(new Date());
+  const [open, setOpen] = useState(false);
   const [slotsByDate, setSlotsByDate] = useState({});
 
   const addClinicSlot = (selectedTime) => {

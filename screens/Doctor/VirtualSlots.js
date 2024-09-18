@@ -136,8 +136,6 @@ export default function VirtualSlots({ navigation }) {
     }
   }, [selectedDate]);
 
-
-
   const saveSlots = async () => {
     setIsLoading(true);
 
@@ -240,31 +238,53 @@ export default function VirtualSlots({ navigation }) {
             </Text>
           </Text>
           <ScrollView>
-            {slotsForSelectedDate.map((slot, index) => (
+            {slotsForSelectedDate.length === 0 ? (
               <View
-                key={index}
                 style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
                   padding: 15,
                   backgroundColor: colors.somewhatlightback,
                   borderRadius: 8,
                   marginVertical: 5,
                 }}
               >
-                <Text style={styles.slotTime}>{slot.time}</Text>
-                {slot.status !== "booked" ? (
-                  <Pressable onPress={() => removeSlot(index)}>
-                    <Image
-                      source={require("../../assets/red-cross.png")}
-                      style={styles.removeIcon}
-                    />
-                  </Pressable>
-                ) : (
-                  <Text style={{ color: colors.whitetext }}>Booked</Text>
-                )}
+                <Text
+                  style={{
+                    textAlign: "center",
+                    color: colors.whitetext,
+                    fontSize: 16,
+                    fontWeight: "bold",
+                  }}
+                >
+                  No Slots
+                </Text>
               </View>
-            ))}
+            ) : (
+              slotsForSelectedDate.map((slot, index) => (
+                <View
+                  key={index}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    padding: 15,
+                    backgroundColor: colors.somewhatlightback,
+                    borderRadius: 8,
+                    marginVertical: 5,
+                  }}
+                >
+                  <Text style={styles.slotTime}>{slot.time}</Text>
+                  {slot.status !== "booked" ? (
+                    <Pressable onPress={() => removeSlot(index)}>
+                      <Image
+                        source={require("../../assets/red-cross.png")}
+                        style={styles.removeIcon}
+                      />
+                    </Pressable>
+                  ) : (
+                    <Text style={{ color: colors.whitetext }}>Booked</Text>
+                  )}
+                </View>
+              ))
+            )}
           </ScrollView>
 
           <Button1

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -15,10 +15,14 @@ import {
   parseISO,
   parse,
 } from "date-fns";
+import firestore from "@react-native-firebase/firestore";
+import auth from "@react-native-firebase/auth";
+import Toast from "react-native-toast-message";
 
 import colors from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";
 import Button1 from "../../components/Button1";
+import LoadingOverlay from "../../components/LoadingOverlay";
 
 const items = [
   "Wearing a mask",
@@ -27,14 +31,10 @@ const items = [
 ];
 
 export default function Booking({ navigation, route }) {
-  const [checked, setChecked] = useState("online");
-  const {
-    doctor,
-    slotno,
-    appointmentType,
-    selectedDate,
-    inx = "Today",
-  } = route.params;
+  const { doctor, slotno, appointmentType, selectedDate } = route.params;
+  const [paymentMethod, setPaymentMethod] = useState("online");
+  const [isLoading, setIsLoading] = useState(false);
+  const user = auth().currentUser;
 
   const bookAppointment = () => {
     navigation.pop();
@@ -43,8 +43,98 @@ export default function Booking({ navigation, route }) {
     navigation.navigate("Home");
   };
 
+  // useEffect(() => {
+  //   console.log(slotno);
+  // }, [slotno]);
+
+  const updateSlotStatus = async (date, time, type) => {
+    try {
+      console.log("Date: ", date);
+      console.log("Time: ", time);
+      console.log("Type: ", type);
+      const slotRef = firestore()
+        .collection("profile")
+        .doc(doctor.id)
+        .collection(type === "Clinic" ? "clinicSlots" : "virtualSlots")
+        .doc(date);
+
+      const docSnapshot = await slotRef.get();
+
+      if (docSnapshot.exists) {
+        const data = docSnapshot.data();
+        const slots = data.slots;
+
+        const slotIndex = slots.findIndex((slot) => slot.time === time);
+
+        if (slotIndex !== -1) {
+          slots[slotIndex].status = "booked";
+
+          await slotRef.update({
+            slots: slots,
+          });
+
+          console.log(`Slot at ${time} on ${date} updated to booked`);
+        } else {
+          console.log(`Slot with time ${time} not found on ${date}`);
+        }
+      } else {
+        console.log(`Document for date ${date} does not exist`);
+      }
+    } catch (error) {
+      console.error("Error updating slot status:", error);
+    }
+  };
+
+  const createAppointment = async (appointmentData) => {
+    try {
+      setIsLoading(true);
+      const appointmentsRef = firestore().collection("appointments");
+
+      updateSlotStatus(selectedDate, slotno, appointmentType);
+
+      const appointmentData = {
+        doctorId: doctor.id,
+        patientId: user.uid,
+        appointmentDate: selectedDate,
+        appointmentType: appointmentType,
+        slotTime: slotno,
+        status: "booked",
+        paymentMethod,
+      };
+
+      await appointmentsRef.add({
+        ...appointmentData,
+        createdAt: firestore.FieldValue.serverTimestamp(),
+      });
+
+      console.log(appointmentData);
+      Toast.show({
+        type: "success",
+        text1: "Appointment booked successfully!",
+      });
+      console.log("Appointment created successfully!");
+      setIsLoading(false);
+      navigation.pop();
+      navigation.pop();
+      navigation.pop();
+      navigation.pop();
+      navigation.navigate("Home");
+    } catch (error) {
+      setIsLoading(false);
+      Toast.show({
+        type: "error",
+        text1: "Appointment booking failed",
+        text2: "Check if the slot is not booked!",
+      });
+      console.error("Error creating appointment:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <>
+      <LoadingOverlay isVisible={isLoading} />
       <View
         style={{
           height: 60,
@@ -208,12 +298,14 @@ export default function Booking({ navigation, route }) {
                     alignItems: "center",
                     paddingVertical: 8,
                   }}
-                  onPress={() => setChecked("online")}
+                  onPress={() => setPaymentMethod("online")}
                 >
                   <RadioButton
                     value="online"
-                    status={checked === "online" ? "checked" : "unchecked"}
-                    onPress={() => setChecked("online")}
+                    status={
+                      paymentMethod === "online" ? "checked" : "unchecked"
+                    }
+                    onPress={() => setPaymentMethod("online")}
                     color={colors.lightaccent}
                     uncheckedColor={colors.darkgraytext}
                   />
@@ -225,12 +317,14 @@ export default function Booking({ navigation, route }) {
                     alignItems: "center",
                     paddingVertical: 8,
                   }}
-                  onPress={() => setChecked("clinic")}
+                  onPress={() => setPaymentMethod("clinic")}
                 >
                   <RadioButton
                     value="clinic"
-                    status={checked === "clinic" ? "checked" : "unchecked"}
-                    onPress={() => setChecked("clinic")}
+                    status={
+                      paymentMethod === "clinic" ? "checked" : "unchecked"
+                    }
+                    onPress={() => setPaymentMethod("clinic")}
                     color={colors.lightaccent}
                     uncheckedColor={colors.darkgraytext}
                   />
@@ -264,15 +358,23 @@ export default function Booking({ navigation, route }) {
                   Mode of Payment
                 </Text>
               </View>
-              <Text
+              <Pressable
                 style={{
-                  color: colors.whitetext,
-                  fontWeight: "bold",
-                  fontSize: 18,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingVertical: 8,
                 }}
+                onPress={() => setPaymentMethod("online")}
               >
-                Online
-              </Text>
+                <RadioButton
+                  value="online"
+                  status={paymentMethod === "online" ? "checked" : "unchecked"}
+                  onPress={() => setPaymentMethod("online")}
+                  color={colors.lightaccent}
+                  uncheckedColor={colors.darkgraytext}
+                />
+                <Text style={styles.radioText}>Online payment</Text>
+              </Pressable>
             </View>
           </>
         )}
@@ -463,7 +565,7 @@ export default function Booking({ navigation, route }) {
           <Button1
             text={"Book Appointment"}
             style={{ alignSelf: "center", marginBottom: 16 }}
-            onPress={bookAppointment}
+            onPress={createAppointment}
           />
         </View>
       </ScrollView>
