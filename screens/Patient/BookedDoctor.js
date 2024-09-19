@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -7,14 +7,117 @@ import {
   Pressable,
   Image,
   ScrollView,
+  Linking,
 } from "react-native";
 import { Divider } from "react-native-paper";
+import { format, parseISO, parse, compareAsc } from "date-fns";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import firestore from "@react-native-firebase/firestore";
+import auth from "@react-native-firebase/auth";
+import call from "react-native-phone-call";
 
 import colors from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";
 import { useBottomSheet } from "../../context/BottomSheetContext";
+import Button1 from "../../components/Button1";
+import CustomAlert from "../../components/CustomAlert";
+import LoadingOverlay from "../../components/LoadingOverlay";
 
-export default function BookedDoctor({ navigation }) {
+export default function BookedDoctor({ navigation, route }) {
+  const { appointment } = route.params;
+  const [clinicLocation, setClinicLocation] = useState({});
+  const [modalVisible, setModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const mapRef = useRef(null);
+  const user = auth().currentUser;
+
+  useEffect(() => {
+    console.log(appointment);
+    setClinicLocation(appointment.profileData.cliniclocation);
+  }, [appointment]);
+
+  const updateAppointment = async (newStatus) => {
+    setModalVisible(false);
+
+    try {
+      setIsLoading(true);
+
+      const appointmentsRef = firestore().collection("appointments");
+
+      const querySnapshot = await appointmentsRef
+        .where("doctorId", "==", appointment.doctorId)
+        .where("patientId", "==", user.uid)
+        .where("appointmentDate", "==", appointment.appointmentDate)
+        .where("appointmentType", "==", appointment.appointmentType)
+        .where("slotTime", "==", appointment.slotTime)
+        .get();
+
+      if (!querySnapshot.empty) {
+        querySnapshot.forEach(async (doc) => {
+          await appointmentsRef.doc(doc.id).update({
+            status: newStatus,
+            updatedAt: firestore.FieldValue.serverTimestamp(),
+          });
+
+          Toast.show({
+            type: "success",
+            text1: `Appointment ${newStatus} successfully!`,
+          });
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "No matching appointment found",
+        });
+      }
+      setIsLoading(false);
+      navigation.pop();
+    } catch (error) {
+      console.error("Error updating appointment status:", error);
+      Toast.show({
+        type: "error",
+        text1: "Failed to update appointment status",
+      });
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOpenInMaps = () => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${clinicLocation.latitude},${clinicLocation.longitude}`;
+    Linking.openURL(url);
+  };
+
+  const handleRecenter = () => {
+    mapRef.current.animateToRegion(
+      {
+        latitude: clinicLocation.latitude,
+        longitude: clinicLocation.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      },
+      1000
+    );
+  };
+
+  const dialNumber = () => {
+    const args = {
+      number: appointment.profileData.phone,
+      prompt: true,
+      skipCanOpen: true,
+    };
+
+    call(args).catch((error) => {
+      Toast.show({
+        type: "error",
+        text1: "Can't place a call right now",
+        text2: error,
+      });
+    });
+  };
+
   const { toggleBottomSheet } = useBottomSheet();
 
   useEffect(() => {
@@ -35,6 +138,12 @@ export default function BookedDoctor({ navigation }) {
 
   return (
     <>
+      <CustomAlert
+        visible={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        onConfirm={() => updateAppointment("Cancelled")}
+      />
+      <LoadingOverlay isVisible={isLoading} />
       <View
         style={{
           height: 60,
@@ -62,25 +171,24 @@ export default function BookedDoctor({ navigation }) {
       </View>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.topcontainer}>
-          <Image
-            source={require("../../assets/doctor-pfp.jpg")}
-            style={styles.pfp}
-          />
+          <Image source={{ uri: appointment.doctorPfp }} style={styles.pfp} />
           <View style={styles.vr} />
           <View style={styles.topinfo}>
             <Text style={[styles.infotext, { fontWeight: "bold" }]}>
-              Dr. Sigma
+              {appointment.doctorName}
             </Text>
             <Text style={{ fontSize: 16, color: colors.whitetext }}>
-              General Physician
+              {appointment.profileData.designation}
             </Text>
             <Text style={{ color: colors.whitetext, fontSize: 16 }}>
-              10 years of experience
+              {appointment.profileData.yearsofexperience} years of experience
             </Text>
           </View>
         </View>
         <View style={styles.bottomContent}>
-          <Text style={styles.label}>Virtual Appointment</Text>
+          <Text style={styles.label}>
+            {appointment.appointmentType} Appointment
+          </Text>
 
           <View style={{ marginTop: 5, paddingHorizontal: 16 }}>
             <View
@@ -111,39 +219,183 @@ export default function BookedDoctor({ navigation }) {
                   fontSize: 18,
                 }}
               >
-                Fri, 14 Sep 6:15 PM
+                {format(
+                  parseISO(appointment.appointmentDate),
+                  "EEEE, dd MMMM yyyy"
+                )}
               </Text>
-              <View
-                style={{
-                  height: "100%",
-                  width: 1,
-                  backgroundColor: colors.darkgraytext,
-                  marginHorizontal: 10,
-                }}
-              />
+            </View>
+            <View style={{ flexDirection: "row" }}>
               <Text
                 style={{
                   color: colors.whitetext,
-                  fontSize: 14,
-                  alignSelf: "center",
+                  fontWeight: "bold",
+                  fontSize: 18,
                 }}
               >
-                Today
+                {appointment.slotTime}
               </Text>
             </View>
           </View>
 
-          <View style={{ marginTop: 10, paddingHorizontal: 16 }}>
+          {appointment.profileData.clinicConsultation && (
+            <>
+              <View style={{ marginTop: 10, paddingHorizontal: 16 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 10,
+                    alignItems: "center",
+                    marginBottom: 5,
+                  }}
+                >
+                  <Image
+                    source={require("../../assets/icons/clinic.png")}
+                    style={{ width: 18, height: 18 }}
+                  />
+                  <Text
+                    style={{
+                      color: colors.whitetext,
+                      fontSize: 14,
+                    }}
+                  >
+                    Clinic address
+                  </Text>
+                </View>
+                <Text
+                  style={{
+                    color: colors.whitetext,
+                    fontWeight: "bold",
+                    fontSize: 18,
+                  }}
+                >
+                  {appointment.profileData.clinicName}
+                </Text>
+                <Text
+                  style={{
+                    color: colors.whitetext,
+                    fontWeight: "500",
+                    fontSize: 16,
+                  }}
+                >
+                  {appointment.profileData.clinicCity}
+                </Text>
+                <Text
+                  style={{
+                    color: colors.whitetext,
+                    fontWeight: "500",
+                    fontSize: 16,
+                  }}
+                >
+                  {appointment.profileData.clinicAddress}
+                </Text>
+              </View>
+              <View
+                style={{
+                  marginTop: 10,
+                  paddingHorizontal: 16,
+                  marginBottom: 10,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 10,
+                    alignItems: "center",
+                    marginBottom: 5,
+                  }}
+                >
+                  <Image
+                    source={require("../../assets/icons/clinic-location.png")}
+                    style={{ width: 18, height: 18 }}
+                  />
+                  <Text
+                    style={{
+                      color: colors.whitetext,
+                      fontSize: 14,
+                    }}
+                  >
+                    Clinic location
+                  </Text>
+                </View>
+
+                <View
+                  style={{
+                    borderRadius: 10,
+                    overflow: "hidden",
+                    marginBottom: 16,
+                  }}
+                >
+                  <MapView
+                    ref={mapRef}
+                    style={{ width: "100%", height: 250 }}
+                    provider={PROVIDER_GOOGLE}
+                    region={
+                      clinicLocation
+                        ? {
+                            latitude: clinicLocation.latitude,
+                            longitude: clinicLocation.longitude,
+                            latitudeDelta: 0.01,
+                            longitudeDelta: 0.01,
+                          }
+                        : {
+                            latitude: 18.94024498803612, // Default latitude
+                            longitude: 72.83573143063485, // Default longitude
+                            latitudeDelta: 0.01,
+                            longitudeDelta: 0.01,
+                          }
+                    }
+                  >
+                    <Marker
+                      coordinate={{
+                        latitude: clinicLocation.latitude,
+                        longitude: clinicLocation.longitude,
+                      }}
+                      title="Clinic Location"
+                      description={
+                        appointment.profileData.clinicName +
+                        ", " +
+                        appointment.profileData.clinicCity
+                      }
+                    />
+                  </MapView>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 5,
+                  }}
+                >
+                  <Button1
+                    text="Get Directions"
+                    onPress={handleOpenInMaps}
+                    style={{ flex: 3, height: 50 }}
+                    textStyle={{ fontSize: 14 }}
+                  />
+                  <Pressable style={{ padding: 10 }} onPress={handleRecenter}>
+                    <Image
+                      source={require("../../assets/icons/recenter.png")}
+                      style={{ width: 30, height: 30 }}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+            </>
+          )}
+          <View style={{ marginTop: 5, paddingHorizontal: 16 }}>
             <View
               style={{
                 flexDirection: "row",
                 gap: 10,
                 alignItems: "center",
-                marginBottom: 5,
+                marginVertical: 5,
               }}
             >
               <Image
-                source={require("../../assets/icons/clinic.png")}
+                source={require("../../assets/rupee.png")}
                 style={{ width: 18, height: 18 }}
               />
               <Text
@@ -152,28 +404,9 @@ export default function BookedDoctor({ navigation }) {
                   fontSize: 14,
                 }}
               >
-                Clinic address
+                Mode of Payment
               </Text>
             </View>
-            <Text
-              style={{
-                color: colors.whitetext,
-                fontWeight: "bold",
-                fontSize: 18,
-              }}
-            >
-              Fit clinic
-            </Text>
-          </View>
-          <View style={{ marginTop: 5, paddingHorizontal: 16 }}>
-            <Text
-              style={{
-                color: colors.whitetext,
-                fontSize: 14,
-              }}
-            >
-              Mode of payment
-            </Text>
             <Text
               style={{
                 color: colors.whitetext,
@@ -211,7 +444,7 @@ export default function BookedDoctor({ navigation }) {
                     color: colors.whitetext,
                   }}
                 >
-                  ₹ 5000
+                  ₹ {appointment.consultFees}
                 </Text>
               </View>
               <View
@@ -288,7 +521,7 @@ export default function BookedDoctor({ navigation }) {
                     fontWeight: "bold",
                   }}
                 >
-                  ₹ 5000
+                  ₹ {appointment.consultFees}
                 </Text>
               </View>
             </View>
@@ -339,20 +572,17 @@ export default function BookedDoctor({ navigation }) {
         </View>
       </ScrollView>
       <View style={styles.bottomPanel}>
+        <Pressable style={styles.button} onPress={dialNumber}>
+          <Text style={styles.buttonText}>Contact</Text>
+        </Pressable>
         <Pressable
-          style={styles.button}
+          style={[styles.button, { backgroundColor: colors.cancelled }]}
           onPress={() => {
-            console.log("Hello world");
+            setModalVisible(true);
           }}
         >
-          <Text style={styles.buttonText}>Cancel</Text>
+          <Text style={styles.buttonText}>Cancel Appointment</Text>
         </Pressable>
-        {/* <Pressable
-          style={styles.button}
-          onPress={() => console.log("Hello world")}
-        >
-          <Text style={[styles.buttonText]}>Reschedule</Text>
-        </Pressable> */}
       </View>
     </>
   );

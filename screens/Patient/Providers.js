@@ -137,10 +137,8 @@ export default function Providers({ navigation }) {
             const data = doc.data();
 
             let profileData = {};
-            // Check if profileRef is a Firestore reference
             if (data.profileRef && typeof data.profileRef.get === "function") {
               try {
-                // Fetch the profile document using the reference
                 const profileDoc = await data.profileRef.get();
                 if (profileDoc.exists) {
                   profileData = profileDoc.data();
