@@ -323,7 +323,12 @@ export default function DoctorHome({ navigation }) {
                 </Text>
               </View>
             )}
-            <Pressable style={styles.viewallButton}>
+            <Pressable
+              style={styles.viewallButton}
+              onPress={() => {
+                navigation.navigate("AllAppointments");
+              }}
+            >
               <Text style={styles.viewalltext}>View all</Text>
             </Pressable>
           </View>
@@ -442,9 +447,9 @@ const styles = StyleSheet.create({
   },
 
   time: {
+    fontSize: 16,
     color: colors.whitetext,
     fontWeight: "bold",
-    fontSize: 16,
   },
   with: {
     color: colors.whitetext,

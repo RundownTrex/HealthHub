@@ -2,6 +2,7 @@ import { enableScreens } from "react-native-screens";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import DoctorHome from "../screens/Doctor/DoctorHome";
 import PatientProfile from "../screens/Doctor/PatientProfile";
+import AllAppointments from "../screens/Doctor/AllAppointments";
 
 enableScreens();
 const Stack = createNativeStackNavigator();
@@ -18,6 +19,7 @@ export default function DoctorHomeStack() {
     >
       <Stack.Screen name="DoctorHome" component={DoctorHome} />
       <Stack.Screen name="PatientProfile" component={PatientProfile} />
+      <Stack.Screen name="AllAppointments" component={AllAppointments} />
     </Stack.Navigator>
   );
 }
