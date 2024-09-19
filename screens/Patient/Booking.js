@@ -95,6 +95,7 @@ export default function Booking({ navigation, route }) {
         slotTime: slotno,
         status: "booked",
         paymentMethod,
+        consultFees: doctor.profileData.consultFees
       };
 
       await appointmentsRef.add({

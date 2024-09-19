@@ -9,8 +9,10 @@ import {
   FlatList,
   RefreshControl,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Searchbar } from "react-native-paper";
+import { ActivityIndicator, Searchbar } from "react-native-paper";
+import firestore from "@react-native-firebase/firestore";
+import auth from "@react-native-firebase/auth";
+import { parse, compareDesc, format, parseISO } from "date-fns";
 
 import colors from "../../utils/colors";
 import { useBottomSheet } from "../../context/BottomSheetContext";
@@ -18,91 +20,8 @@ import LoadingOverlay from "../../components/LoadingOverlay";
 import BackIcon from "../../assets/icons/BackIcon";
 import Button1 from "../../components/Button1";
 
-const appointments = [
-  {
-    id: 1,
-    doctorName: "Dr. Smith",
-    doctorDesignation: "Cardiologist",
-    appointmentSlot: "Tue, 12 Sep 2024, 10:00 AM",
-    appointmentType: "Clinic",
-    appointmentStatus: "Completed",
-  },
-  {
-    id: 2,
-    doctorName: "Dr. Jane Doe",
-    doctorDesignation: "Dermatologist",
-    appointmentSlot: "Wed, 15 Sep 2024, 2:00 PM",
-    appointmentType: "Virtual",
-    appointmentStatus: "Cancelled",
-  },
-  {
-    id: 3,
-    doctorName: "Dr. John Lee",
-    doctorDesignation: "Pediatrician",
-    appointmentSlot: "Fri, 18 Sep 2024, 4:30 PM",
-    appointmentType: "Clinic",
-    appointmentStatus: "Cancelled",
-  },
-  {
-    id: 4,
-    doctorName: "Dr. Emily Clark",
-    doctorDesignation: "Neurologist",
-    appointmentSlot: "Sat, 20 Sep 2024, 11:30 AM",
-    appointmentType: "Virtual",
-    appointmentStatus: "Completed",
-  },
-  {
-    id: 5,
-    doctorName: "Dr. Robert Brown",
-    doctorDesignation: "Orthopedic Surgeon",
-    appointmentSlot: "Mon, 22 Sep 2024, 9:00 AM",
-    appointmentType: "Clinic",
-    appointmentStatus: "Completed",
-  },
-  {
-    id: 6,
-    doctorName: "Dr. Olivia Green",
-    doctorDesignation: "Ophthalmologist",
-    appointmentSlot: "Wed, 24 Sep 2024, 3:00 PM",
-    appointmentType: "Virtual",
-    appointmentStatus: "Cancelled",
-  },
-  {
-    id: 7,
-    doctorName: "Dr. William Johnson",
-    doctorDesignation: "Endocrinologist",
-    appointmentSlot: "Thu, 25 Sep 2024, 12:30 PM",
-    appointmentType: "Clinic",
-    appointmentStatus: "Cancelled",
-  },
-  {
-    id: 8,
-    doctorName: "Dr. Amelia Davis",
-    doctorDesignation: "Psychiatrist",
-    appointmentSlot: "Sat, 27 Sep 2024, 11:00 AM",
-    appointmentType: "Virtual",
-    appointmentStatus: "Completed",
-  },
-  {
-    id: 9,
-    doctorName: "Dr. Michael Harris",
-    doctorDesignation: "Gastroenterologist",
-    appointmentSlot: "Tue, 29 Sep 2024, 10:00 AM",
-    appointmentType: "Clinic",
-    appointmentStatus: "Completed",
-  },
-  {
-    id: 10,
-    doctorName: "Dr. Sophia Martinez",
-    doctorDesignation: "General Practitioner",
-    appointmentSlot: "Thu, 1 Oct 2024, 4:00 PM",
-    appointmentType: "Virtual",
-    appointmentStatus: "Cancelled",
-  },
-];
-
 export default function AppointmentHistory({ navigation }) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [records, setRecords] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -114,13 +33,16 @@ export default function AppointmentHistory({ navigation }) {
 
   const { toggleBottomSheet } = useBottomSheet();
 
-  useEffect(() => {
-    setIsLoading(true);
-    fetchRecords();
-    setIsLoading(false);
-  }, [fetchRecords]);
+  const user = auth().currentUser;
+
+  // useEffect(() => {
+  //   setIsLoading(true);
+  //   fetchRecords();
+  //   setIsLoading(false);
+  // }, [fetchRecords]);
 
   useEffect(() => {
+    console.log("Records: ", records);
     setFilteredRecords(records);
   }, [records]);
 
@@ -148,14 +70,74 @@ export default function AppointmentHistory({ navigation }) {
     setIsLoading(false);
   }, [fetchRecords]);
 
-  const fetchRecords = useCallback(() => {
+  const fetchNonBookedAppointments = async () => {
     try {
-      const allRecords = appointments;
-      console.log(allRecords);
-      setRecords(allRecords); // Assuming 'setRecords' is your state updater
+      const appointmentsRef = firestore().collection("appointments");
+
+      const querySnapshot = await appointmentsRef
+        .where("patientId", "==", user.uid)
+        .where("status", "!=", "booked")
+        .get();
+
+      const nonBookedAppointments = [];
+      querySnapshot.forEach((doc) => {
+        nonBookedAppointments.push({
+          id: doc.id,
+          ...doc.data(),
+        });
+      });
+
+      nonBookedAppointments.sort((a, b) => {
+        const dateTimeA = parse(
+          `${a.appointmentDate} ${a.slotTime}`,
+          "yyyy-MM-dd hh:mm a",
+          new Date()
+        );
+        const dateTimeB = parse(
+          `${b.appointmentDate} ${b.slotTime}`,
+          "yyyy-MM-dd hh:mm a",
+          new Date()
+        );
+        return compareDesc(dateTimeA, dateTimeB);
+      });
+
+      const appointmentWithDoctorNames = await Promise.all(
+        nonBookedAppointments.map(async (appointment) => {
+          const doctorDoc = await firestore()
+            .collection("users")
+            .doc(appointment.doctorId)
+            .get();
+          const doctorData = doctorDoc.data();
+          const doctorName = `${doctorData.firstname} ${doctorData.lastname}`;
+          const doctorPfp = doctorData.pfpUrl;
+
+          return {
+            ...appointment,
+            doctorName,
+            doctorPfp,
+          };
+        })
+      );
+
+      return appointmentWithDoctorNames;
+    } catch (error) {
+      console.error("Error fetching non-booked appointments:", error);
+    }
+  };
+
+  const fetchRecords = async () => {
+    try {
+      const allRecords = await fetchNonBookedAppointments();
+      setRecords(allRecords);
     } catch (error) {
       console.error("Error fetching records:", error);
     }
+  };
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetchRecords();
+    setIsLoading(false);
   }, []);
 
   const handleSearch = (query) => {
@@ -172,17 +154,11 @@ export default function AppointmentHistory({ navigation }) {
 
     if (query) {
       const filtered = records.filter((appointment) => {
-        const {
-          doctorName,
-          doctorDesignation,
-          appointmentStatus,
-          appointmentType,
-        } = appointment;
+        const { doctorName, appointmentType, status } = appointment;
         return (
           doctorName.toLowerCase().includes(query.toLowerCase()) ||
-          doctorDesignation.toLowerCase().includes(query.toLowerCase()) ||
-          appointmentStatus.toLowerCase().includes(query.toLowerCase()) ||
-          appointmentTyp.toLowerCase().includes(query.toLowerCase())
+          status.toLowerCase().includes(query.toLowerCase()) ||
+          appointmentType.toLowerCase().includes(query.toLowerCase())
         );
       });
       setFilteredRecords(filtered);
@@ -199,10 +175,9 @@ export default function AppointmentHistory({ navigation }) {
   const renderRecord = ({ item, index }) => {
     let backgroundColor;
 
-    // Assign background color based on the appointment status
-    switch (item.appointmentStatus) {
+    switch (item.status) {
       case "Completed":
-        backgroundColor = colors.completed; // You can define the color in your colors file
+        backgroundColor = colors.completed;
         break;
       case "Cancelled":
         backgroundColor = colors.cancelled;
@@ -211,7 +186,7 @@ export default function AppointmentHistory({ navigation }) {
         backgroundColor = colors.rescheduled;
         break;
       default:
-        backgroundColor = colors.somewhatlightback; // Default color
+        backgroundColor = colors.somewhatlightback;
     }
 
     return (
@@ -227,18 +202,19 @@ export default function AppointmentHistory({ navigation }) {
         ]}
       >
         <View style={styles.appointmentInfo}>
-          <Text style={styles.doctorName}>{item.doctorName}</Text>
-          <Text style={styles.designation}>{item.doctorDesignation}</Text>
-
+          <Text style={styles.doctorName}>Doctor: {item.doctorName}</Text>
           <Text style={styles.appointmentSlot}>
-            Slot: {item.appointmentSlot}
+            Date: {format(parseISO(item.appointmentDate), "EEEE, dd MMMM yyyy")}
           </Text>
+          <Text style={styles.appointmentSlot}>Slot: {item.slotTime}</Text>
           <Text style={styles.appointmentType}>
             Type: {item.appointmentType} Appointment
           </Text>
-          <Text style={[styles.appointmentStatus]}>
-            Status: {item.appointmentStatus}
+          <Text style={styles.appointmentType}>
+            Payment Method: {item.paymentMethod}
           </Text>
+          <Text style={styles.appointmentType}>Fees: ₹{item.consultFees}</Text>
+          <Text style={[styles.appointmentStatus]}>Status: {item.status}</Text>
         </View>
       </View>
     );
@@ -280,10 +256,11 @@ export default function AppointmentHistory({ navigation }) {
             value={searchQuery}
             rippleColor={colors.lightaccent}
             traileringIconColor={colors.lightaccent}
-            selectionHandleColor={colors.lightaccent}
+            selectionHandleColor={colors.complementary}
+            selectionColor={colors.lightaccent}
             style={{
               backgroundColor: colors.whitetext,
-              width: "85%",
+              width: "100%",
               height: 45,
               alignItems: "center",
               marginBottom: 1,
@@ -310,30 +287,38 @@ export default function AppointmentHistory({ navigation }) {
             </View>
           )}
         </View>
-        <FlatList
-          data={filteredRecords}
-          renderItem={renderRecord}
-          keyExtractor={(item, index) => index.toString()}
-          contentContainerStyle={styles.recordsContainer}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          ListEmptyComponent={
-            <View style={styles.noRecords}>
-              <View style={{ alignItems: "center", justifyContent: "center" }}>
-                <Image
-                  source={require("../../assets/no-appointments.png")}
-                  style={styles.noRecordsImage}
-                />
-                <Text style={styles.noRecordsText}>No appointments yet!</Text>
-                <Text style={styles.noRecordsSubtext}>
-                  You can keep a track of all your
-                  completed/cancelled/rescheduled appointments here
-                </Text>
+        {isLoading === true ? (
+          <View>
+            <ActivityIndicator />
+          </View>
+        ) : (
+          <FlatList
+            data={filteredRecords}
+            renderItem={renderRecord}
+            keyExtractor={(item, index) => index.toString()}
+            contentContainerStyle={styles.recordsContainer}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            ListEmptyComponent={
+              <View style={styles.noRecords}>
+                <View
+                  style={{ alignItems: "center", justifyContent: "center" }}
+                >
+                  <Image
+                    source={require("../../assets/no-appointments.png")}
+                    style={styles.noRecordsImage}
+                  />
+                  <Text style={styles.noRecordsText}>No appointments yet!</Text>
+                  <Text style={styles.noRecordsSubtext}>
+                    You can keep a track of all your completed/cancelled
+                    appointments here
+                  </Text>
+                </View>
               </View>
-            </View>
-          }
-        />
+            }
+          />
+        )}
       </View>
     </>
   );
@@ -389,7 +374,7 @@ const styles = StyleSheet.create({
   },
   doctorName: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "600",
     color: colors.whitetext,
   },
   appointmentSlot: {
