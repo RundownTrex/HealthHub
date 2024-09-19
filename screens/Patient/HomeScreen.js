@@ -9,6 +9,9 @@ import {
   Dimensions,
   Image,
   Pressable,
+  RefreshControl,
+  LayoutAnimation,
+  UIManager,
 } from "react-native";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
@@ -17,19 +20,18 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-
-import colors from "../../utils/colors";
-import RightArrow from "../../assets/icons/RightArrow";
+import { SelectList } from "react-native-dropdown-select-list";
+import { useBottomSheet } from "../../context/BottomSheetContext";
 import Svg, { Path } from "react-native-svg";
 import BottomSheet, {
   BottomSheetView,
   BottomSheetBackdrop,
 } from "@gorhom/bottom-sheet";
-import Button1 from "../../components/Button1";
-import { SelectList } from "react-native-dropdown-select-list";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import Providers from "./Providers";
-import { useBottomSheet } from "../../context/BottomSheetContext";
+import { format, parseISO, parse, compareAsc } from "date-fns";
+
+import colors from "../../utils/colors";
+import RightArrow from "../../assets/icons/RightArrow";
+import LoadingOverlay from "../../components/LoadingOverlay";
 
 const H_MAX_HEIGHT = 80;
 const H_MIN_HEIGHT = 0;
@@ -43,8 +45,13 @@ export default function HomeScreen({ navigation }) {
   const sheetref = useRef();
   const [location, setLocation] = useState("");
   const [userName, setUserName] = useState("");
-  const isFocused = useIsFocused();
+  const [appointments, setAppointments] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
   const { toggleBottomSheet } = useBottomSheet();
+  const isFocused = useIsFocused();
+  const user = auth().currentUser;
 
   const scrollOffsetY = useRef(new Animated.Value(0)).current;
   const headerScrollHeight = scrollOffsetY.interpolate({
@@ -53,25 +60,73 @@ export default function HomeScreen({ navigation }) {
     extrapolate: "clamp",
   });
 
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+
+  const fetchAppointments = async () => {
+    try {
+      const appointmentsSnapshot = await firestore()
+        .collection("appointments")
+        .where("patientId", "==", user.uid)
+        .where("status", "==", "booked")
+        .get();
+
+      let fetchedAppointments = appointmentsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      fetchedAppointments = fetchedAppointments.sort((a, b) => {
+        const dateTimeA = parse(
+          `${a.appointmentDate} ${a.slotTime}`,
+          "yyyy-MM-dd hh:mm a",
+          new Date()
+        );
+        const dateTimeB = parse(
+          `${b.appointmentDate} ${b.slotTime}`,
+          "yyyy-MM-dd hh:mm a",
+          new Date()
+        );
+        return compareAsc(dateTimeA, dateTimeB);
+      });
+
+      const appointmentsWithDoctorData = await Promise.all(
+        fetchedAppointments.map(async (appointment) => {
+          const doctorDoc = await firestore()
+            .collection("users")
+            .doc(appointment.doctorId)
+            .get();
+          const doctorData = doctorDoc.data();
+          const doctorName = `${doctorData.firstname} ${doctorData.lastname}`;
+          setUserName(doctorName);
+          const doctorPfp = doctorData.pfpUrl;
+
+          const profileDoc = await firestore()
+            .collection("profile")
+            .doc(appointment.doctorId)
+            .get();
+          const profileData = profileDoc.data();
+
+          return {
+            ...appointment,
+            doctorName,
+            doctorPfp,
+            profileData,
+          };
+        })
+      );
+
+      setAppointments(appointmentsWithDoctorData);
+    } catch (error) {
+      console.error("Error fetching appointments: ", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      const user = auth().currentUser;
-
-      if (user) {
-        const userDoc = await firestore()
-          .collection("users")
-          .doc(user.uid)
-          .get();
-
-        const data = userDoc.data();
-
-        setUserName(data.firstname + " " + data.lastname);
-      } else {
-        console.log("No user is logged in");
-      }
-    };
-
-    fetchUserProfile();
+    setIsLoading(true);
+    fetchAppointments();
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -82,6 +137,21 @@ export default function HomeScreen({ navigation }) {
       toggleBottomSheet(false);
     }
   }, [isFocused]);
+
+  const onRefresh = async () => {
+    console.log("Refreshing");
+    setRefreshing(true);
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
+    await fetchAppointments();
+    setRefreshing(false);
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  };
+
+  const onScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollOffsetY } } }],
+    { useNativeDriver: false }
+  );
 
   const options = [
     {
@@ -107,49 +177,6 @@ export default function HomeScreen({ navigation }) {
       image: require("../../assets/nutrition.png"),
       to: "Nutritionist ",
     },
-  ];
-
-  const appointments = [
-    {
-      doctorName: "Dr. Upul",
-      specialization: "General Practitioner",
-      image: require("../../assets/doctor-pfp.jpg"), 
-      date: "Sunday, July 15",
-      time: "11:00 am",
-      type: "Virtual appointment",
-    },
-    {
-      doctorName: "Dr. Upul",
-      specialization: "Dentist",
-      image: require("../../assets/doctor-pfp.jpg"), 
-      date: "Monday, July 16",
-      time: "1:30 pm",
-      type: "In clinic appointment",
-    },
-    {
-      doctorName: "Dr. Test User with really long name",
-      specialization: "Dentist",
-      image: require("../../assets/general-practicionor.png"), 
-      date: "Monday, July 16",
-      time: "1:30 pm",
-      type: "In clinic appointment",
-    },
-    // {
-    //   doctorName: "Dr. John Doe",
-    //   specialization: "Nutritionist",
-    //   image: require("../../assets/general-practicionor.png"), 
-    //   date: "Monday, July 16",
-    //   time: "1:30 pm",
-    //   type: "In clinic appointment",
-    // },
-    // {
-    //   doctorName: "Dr. John Doe",
-    //   specialization: "Nutritionist",
-    //   image: require("../../assets/general-practicionor.png"), 
-    //   date: "Monday, July 16",
-    //   time: "1:30 pm",
-    //   type: "In clinic appointment",
-    // },
   ];
 
   const healthTips = [
@@ -250,24 +277,41 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <>
+      <LoadingOverlay isVisible={isLoading} />
       <View style={styles.container}>
         <StatusBar backgroundColor={colors.lightaccent} />
-
         <ScrollView
-          contentContainerStyle={[styles.scrollable, { paddingTop: 80 }]}
+          contentContainerStyle={[
+            styles.scrollable,
+            { paddingTop: 80, zIndex: 0 },
+          ]}
           horizontal={false}
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={true}
-          // pagingEnabled={true}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollOffsetY } } }],
-            { useNativeDriver: false }
-          )}
+          onScroll={onScroll}
           scrollEventThrottle={16}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              progressBackgroundColor={colors.whitetext}
+              progressViewOffset={100}
+            />
+          }
         >
+          {refreshing && (
+            <View style={{ alignItems: "center", padding: 10 }}>
+              <Text style={{ color: colors.whitetext, fontWeight: "bold" }}>
+                Refreshing...
+              </Text>
+            </View>
+          )}
           <View>
             <View
-              style={{ flexDirection: "row", justifyContent: "space-between" }}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
             >
               <Text
                 style={{
@@ -363,7 +407,6 @@ export default function HomeScreen({ navigation }) {
               >
                 Upcoming appointments
               </Text>
-              <RightArrow style={{ marginTop: 3 }} />
             </View>
             <ScrollView
               horizontal={false}
@@ -376,25 +419,37 @@ export default function HomeScreen({ navigation }) {
             >
               {appointments.map((appointment, index) => (
                 <Pressable
-                  onPress={() => navigation.navigate("BookedDoctor")}
+                  onPress={() =>
+                    navigation.navigate("BookedDoctor", { appointment })
+                  }
                   key={index}
                   style={styles.upcomingcard}
                 >
-                  <Image source={appointment.image} style={styles.image} />
+                  <Image
+                    source={{ uri: appointment.doctorPfp }}
+                    style={styles.image}
+                  />
                   <View style={styles.infoContainer}>
                     <View style={styles.infoLeft}>
                       <Text style={styles.doctorName}>
                         {appointment.doctorName}
                       </Text>
                       <Text style={styles.specialization}>
-                        {appointment.specialization}
+                        {appointment.profileData.designation}
                       </Text>
                     </View>
                     <View style={styles.divider} />
                     <View style={styles.infoRight}>
-                      <Text style={styles.date}>{appointment.date}</Text>
-                      <Text style={styles.time}>{appointment.time}</Text>
-                      <Text style={styles.type}>{appointment.type}</Text>
+                      <Text style={styles.date}>
+                        {format(
+                          parseISO(appointment.appointmentDate),
+                          "EEEE, dd MMMM yyyy"
+                        )}
+                      </Text>
+                      <Text style={styles.time}>{appointment.slotTime}</Text>
+                      <Text style={styles.type}>
+                        {appointment.appointmentType}
+                      </Text>
                     </View>
                   </View>
                 </Pressable>
@@ -683,7 +738,7 @@ const styles = StyleSheet.create({
   infoRight: {
     flex: 1,
     alignItems: "center",
-    justifyContent: 'center'
+    justifyContent: "center",
   },
   date: {
     fontSize: width * 0.035,
@@ -691,12 +746,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   time: {
-    fontSize: width * 0.04, 
+    fontSize: width * 0.04,
     fontWeight: "bold",
     textAlign: "center",
   },
   type: {
-    fontSize: width * 0.035, 
+    fontSize: width * 0.035,
     color: colors.darkgraytext,
     textAlign: "center",
   },
