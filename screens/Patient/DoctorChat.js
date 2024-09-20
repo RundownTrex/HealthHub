@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useContext } from "react";
 import {
   View,
   Text,
@@ -16,29 +16,61 @@ import {
 } from "react-native-gifted-chat";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
+import RoleContext from "../../context/RoleContext";
 
 import colors from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";
 import { useBottomSheet } from "../../context/BottomSheetContext";
 import LoadingOverlay from "../../components/LoadingOverlay";
 
-const callId = "Fw39EziXX2kB";
-
 export default function DoctorChat({ navigation, route }) {
-  const { doctorname, pfp } = route.params;
+  const { doctorName, patientName, userpfp, doctorId, patientId } =
+    route.params;
   const { toggleBottomSheet } = useBottomSheet();
   const [userData, setUserData] = useState({});
   const [fullName, setFullName] = useState("");
+  const [curPfp, setCurPfp] = useState();
+  const { userRole } = useContext(RoleContext);
 
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const user = auth().currentUser;
+  const callId = "Fw39EziXX2kB";
 
-  // Fetch messages from Firestore
+  const createChatRoomId = (userId1, userId2) => {
+    return [userId1, userId2].sort().join("_");
+  };
+  const chatId = createChatRoomId(patientId, doctorId);
+
+  const fetchUserData = async () => {
+    const profileDoc = await firestore()
+      .collection("users")
+      .doc(user.uid)
+      .get();
+
+    if (profileDoc.exists) {
+      profileData = profileDoc.data();
+      setUserData(profileData);
+      setFullName(profileData.firstname + " " + profileData.lastname);
+      setCurPfp(profileData.pfpUrl);
+    }
+  };
+
+  useEffect(() => {
+    console.log(doctorName);
+    console.log(patientName);
+    console.log("Receiver's : ", userpfp);
+    console.log("Senders's : ", userData.pfpUrl);
+    console.log(doctorId);
+    console.log(patientId);
+  }, [userData]);
+
   useEffect(() => {
     setIsLoading(true);
     const unsubscribe = firestore()
       .collection("chats")
+      .doc(chatId)
+      .collection("messages")
       .orderBy("createdAt", "desc")
       .onSnapshot((snapshot) =>
         setMessages(
@@ -51,30 +83,12 @@ export default function DoctorChat({ navigation, route }) {
         )
       );
 
+    fetchUserData();
+
     setIsLoading(false);
 
     return () => unsubscribe();
   }, []);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const profileDoc = await firestore()
-        .collection("users")
-        .doc(user.uid)
-        .get();
-
-      if (profileDoc.exists) {
-        profileData = profileDoc.data();
-        setUserData(profileData);
-        setFullName(profileData.firstname + " " + profileData.lastname);
-      }
-    };
-    fetchUserData();
-  }, []);
-
-  useEffect(() => {
-    console.log(fullName);
-  }, [fullName]);
 
   //Toggle bottom tab navigator visibility
   useEffect(() => {
@@ -93,21 +107,78 @@ export default function DoctorChat({ navigation, route }) {
     };
   }, [toggleBottomSheet, navigation]);
 
-  const onSend = useCallback((messages = []) => {
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, messages)
-    );
+  const onSend = useCallback(
+    (messages = []) => {
+      setMessages((previousMessages) =>
+        GiftedChat.append(previousMessages, messages)
+      );
 
-    const { _id, createdAt, text, user } = messages[0];
+      const { _id, createdAt, text, user } = messages[0];
 
-    // Add the new message to Firestore
-    firestore().collection("chats").add({
-      _id,
-      text,
-      createdAt,
-      user,
-    });
-  }, []);
+      // Add the new message to Firestore
+      firestore()
+        .collection("chats")
+        .doc(chatId)
+        .collection("messages")
+        .add({
+          _id,
+          text,
+          createdAt,
+          user,
+        })
+        .then(() => {
+          if (userRole === "patient") {
+            const recentData = {
+              doctorId: doctorId,
+              doctorName: doctorName,
+              doctorPfp: userpfp,
+              patientId: patientId,
+              patientName: patientName,
+              patientPfp: userData.pfpUrl,
+              latestMessage: text,
+              timestamp: createdAt,
+              participants: [doctorId, patientId],
+              doctorUnread: firestore.FieldValue.increment(1),
+            };
+
+            console.log(recentData);
+
+            firestore()
+              .collection("recentChats")
+              .doc(chatId)
+              .set(recentData, { merge: true });
+          } else {
+            const recentData = {
+              doctorId: doctorId,
+              doctorName: fullName,
+              doctorPfp: userData.pfpUrl,
+              patientId: patientId,
+              patientName: patientName,
+              patientPfp: userpfp,
+              latestMessage: text,
+              timestamp: createdAt,
+              participants: [doctorId, patientId],
+              patientUnread: firestore.FieldValue.increment(1),
+            };
+
+            firestore()
+              .collection("recentChats")
+              .doc(chatId)
+              .set(recentData, { merge: true });
+          }
+        });
+    },
+    [
+      userData,
+      fullName,
+      doctorName,
+      doctorId,
+      patientId,
+      patientName,
+      userRole,
+      userpfp,
+    ]
+  );
 
   const renderInputToolbar = (props) => {
     return (
@@ -199,7 +270,7 @@ export default function DoctorChat({ navigation, route }) {
   const renderAvatar = (props) => {
     const avataruri = props.currentMessage.user.avatar;
     const placeholderpfp = require("../../assets/avatar.png");
-    console.log(avataruri);
+    // console.log(avataruri);
 
     return (
       <View
@@ -230,7 +301,7 @@ export default function DoctorChat({ navigation, route }) {
   };
 
   if (!userData || !fullName) {
-    return <LoadingOverlay isVisible={true} />; 
+    return <LoadingOverlay isVisible={true} />;
   }
 
   return (
@@ -249,15 +320,24 @@ export default function DoctorChat({ navigation, route }) {
         <Pressable style={{ padding: 5 }} onPress={() => navigation.pop()}>
           <BackIcon style={{ alignItems: "center" }} />
         </Pressable>
-        <Image
-          source={pfp}
+        <View
           style={{
-            marginRight: 10,
-            height: 45,
-            width: 45,
             borderRadius: 100,
+            overflow: "hidden",
+            width: 45,
+            height: 45,
+            marginRight: 10,
           }}
-        />
+        >
+          <Image
+            source={{ uri: userpfp }}
+            style={{
+              height: 45,
+              width: 45,
+              borderRadius: 100,
+            }}
+          />
+        </View>
         <Text
           style={{
             color: colors.whitetext,
@@ -265,7 +345,7 @@ export default function DoctorChat({ navigation, route }) {
             fontSize: 18,
           }}
         >
-          {doctorname}
+          {userRole === "patient" ? doctorName : patientName}
         </Text>
         <View
           style={{
@@ -301,15 +381,16 @@ export default function DoctorChat({ navigation, route }) {
           messages={messages}
           onSend={(messages) => onSend(messages)}
           user={{
-            _id: user.uid, // Use the Firebase user's ID
+            _id: user.uid,
             name: fullName || user.displayName || "Anonymous",
-            avatar: userData.pfpUrl || user.photoURL || "null", // Use Firebase user profile picture or passed prop
+            avatar: userData.pfpUrl || user.photoURL || "null",
           }}
           renderInputToolbar={renderInputToolbar}
           renderComposer={renderComposer}
           renderSend={renderSend}
           renderBubble={renderBubble}
           renderAvatar={renderAvatar}
+          renderFooter={() => <View style={{ height: 12}} />}
         />
       </View>
     </>

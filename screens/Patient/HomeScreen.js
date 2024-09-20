@@ -66,6 +66,15 @@ export default function HomeScreen({ navigation }) {
 
   const fetchAppointments = async () => {
     try {
+      const patientDoc = await firestore()
+        .collection("users")
+        .doc(user.uid)
+        .get();
+
+      const patientData = patientDoc.data();
+      const patientName = `${patientData.firstname} ${patientData.lastname}`;
+      setUserName(patientName);
+
       const appointmentsSnapshot = await firestore()
         .collection("appointments")
         .where("patientId", "==", user.uid)
@@ -99,7 +108,6 @@ export default function HomeScreen({ navigation }) {
             .get();
           const doctorData = doctorDoc.data();
           const doctorName = `${doctorData.firstname} ${doctorData.lastname}`;
-          setUserName(doctorName);
           const doctorPfp = doctorData.pfpUrl;
 
           const profileDoc = await firestore()
@@ -113,6 +121,7 @@ export default function HomeScreen({ navigation }) {
             doctorName,
             doctorPfp,
             profileData,
+            patientName,
           };
         })
       );
@@ -417,43 +426,76 @@ export default function HomeScreen({ navigation }) {
               }}
               contentContainerStyle={{ flexGrow: 1 }}
             >
-              {appointments.map((appointment, index) => (
-                <Pressable
-                  onPress={() =>
-                    navigation.navigate("BookedDoctor", { appointment })
-                  }
-                  key={index}
-                  style={styles.upcomingcard}
+              {appointments.length === 0 ? (
+                <View
+                  style={{
+                    flex: 1,
+                    alignItems: "center",
+                    paddingVertical: 10,
+                    backgroundColor: colors.somewhatlightback,
+                    borderRadius: 8,
+                    paddingHorizontal: 10,
+                  }}
                 >
-                  <Image
-                    source={{ uri: appointment.doctorPfp }}
-                    style={styles.image}
-                  />
-                  <View style={styles.infoContainer}>
-                    <View style={styles.infoLeft}>
-                      <Text style={styles.doctorName}>
-                        {appointment.doctorName}
-                      </Text>
-                      <Text style={styles.specialization}>
-                        {appointment.profileData.designation}
-                      </Text>
+                  <Text
+                    style={{
+                      color: colors.whitetext,
+                      fontWeight: "bold",
+                      fontSize: 16,
+                    }}
+                  >
+                    No upcoming appointments
+                  </Text>
+                  <Text
+                    style={{
+                      color: colors.lightgraytext,
+                      fontWeight: "500",
+                      fontSize: 14,
+                      textAlign: "center",
+                    }}
+                  >
+                    Schedule an appointment in the appointments tab
+                  </Text>
+                </View>
+              ) : (
+                appointments.map((appointment, index) => (
+                  <Pressable
+                    onPress={() =>
+                      navigation.navigate("BookedDoctor", { appointment })
+                    }
+                    key={index}
+                    style={styles.upcomingcard}
+                  >
+                    <Image
+                      source={{ uri: appointment.doctorPfp }}
+                      style={styles.image}
+                    />
+                    <View style={styles.infoContainer}>
+                      <View style={styles.infoLeft}>
+                        <Text style={styles.doctorName}>
+                          {appointment.doctorName}
+                        </Text>
+                        <Text style={styles.specialization}>
+                          {appointment.profileData.designation}
+                        </Text>
+                      </View>
+                      <View style={styles.divider} />
+                      <View style={styles.infoRight}>
+                        <Text style={styles.date}>
+                          {format(
+                            parseISO(appointment.appointmentDate),
+                            "EEEE, dd MMMM yyyy"
+                          )}
+                        </Text>
+                        <Text style={styles.time}>{appointment.slotTime}</Text>
+                        <Text style={styles.type}>
+                          {appointment.appointmentType}
+                        </Text>
+                      </View>
                     </View>
-                    <View style={styles.divider} />
-                    <View style={styles.infoRight}>
-                      <Text style={styles.date}>
-                        {format(
-                          parseISO(appointment.appointmentDate),
-                          "EEEE, dd MMMM yyyy"
-                        )}
-                      </Text>
-                      <Text style={styles.time}>{appointment.slotTime}</Text>
-                      <Text style={styles.type}>
-                        {appointment.appointmentType}
-                      </Text>
-                    </View>
-                  </View>
-                </Pressable>
-              ))}
+                  </Pressable>
+                ))
+              )}
             </ScrollView>
           </View>
 
@@ -699,10 +741,10 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   image: {
-    width: width * 0.13,
-    height: width * 0.13,
+    width: width * 0.15,
+    height: width * 0.15,
     marginRight: width * 0.03,
-    borderRadius: 2,
+    borderRadius: 10,
   },
   infoContainer: {
     flex: 1,
@@ -712,7 +754,8 @@ const styles = StyleSheet.create({
   infoLeft: {
     flex: 1,
     // marginRight: 0,
-    marginTop: height * 0.01,
+    // marginTop: height * 0.01,
+    alignSelf: "center",
   },
   doctorName: {
     fontSize: width * 0.045,
@@ -760,10 +803,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.whitetext,
     borderRadius: 10,
     marginRight: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
     elevation: 2,
     alignItems: "center",
     width: 230,

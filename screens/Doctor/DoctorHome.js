@@ -124,7 +124,7 @@ export default function DoctorHome({ navigation }) {
           const patientData = patientDoc.data();
           const patientName = `${patientData.firstname} ${patientData.lastname}`;
           const patientPfp = patientData.pfpUrl;
-          return { ...appointment, patientName, patientPfp };
+          return { ...appointment, patientName, patientPfp, doctorName: patientName };
         })
       );
 
@@ -133,9 +133,7 @@ export default function DoctorHome({ navigation }) {
       console.error("Error fetching appointments: ", error);
     }
   };
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
+
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * tips.length);
     setRandomTip(tips[randomIndex]);

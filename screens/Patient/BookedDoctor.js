@@ -183,6 +183,55 @@ export default function BookedDoctor({ navigation, route }) {
             <Text style={{ color: colors.whitetext, fontSize: 16 }}>
               {appointment.profileData.yearsofexperience} years of experience
             </Text>
+            <Pressable
+              style={styles.chatButton}
+              onPress={() => {
+                navigation.pop();
+                navigation.navigate("Message");
+                setTimeout(() => {
+                  firestore()
+                    .collection("recentChats")
+                    .where("doctorId", "==", appointment.doctorId)
+                    .where("patientId", "==", appointment.patientId)
+                    .get()
+                    .then((querySnapshot) => {
+                      querySnapshot.forEach((doc) => {
+                        firestore()
+                          .collection("recentChats")
+                          .doc(doc.id)
+                          .update({
+                            patientUnread: 0,
+                          })
+                          .then(() => {
+                            console.log("Unread count reset for patient.");
+                          })
+                          .catch((error) => {
+                            console.error(
+                              "Error updating unread count: ",
+                              error
+                            );
+                          });
+                      });
+                    })
+                    .catch((error) => {
+                      console.error("Error fetching recent chats: ", error);
+                    });
+                  navigation.navigate("DoctorChat", {
+                    doctorName: appointment.doctorName,
+                    patientName: appointment.patientName,
+                    userpfp: appointment.doctorPfp,
+                    doctorId: appointment.doctorId,
+                    patientId: appointment.patientId,
+                  });
+                }, 10);
+              }}
+            >
+              <Image
+                source={require("../../assets/icons/chat-now.png")}
+                style={{ height: 20, width: 20 }}
+              />
+              <Text style={styles.chatbuttonText}>Chat now</Text>
+            </Pressable>
           </View>
         </View>
         <View style={styles.bottomContent}>
@@ -688,5 +737,23 @@ const styles = StyleSheet.create({
   itemText: {
     fontSize: 16,
     color: colors.whitetext,
+  },
+
+  chatButton: {
+    marginTop: 10,
+    flexDirection: "row",
+    backgroundColor: colors.complementary,
+    alignSelf: "flex-start",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+
+  chatbuttonText: {
+    color: colors.whitetext,
+    fontWeight: "500",
+    marginLeft: 5,
+    fontSize: 16,
   },
 });

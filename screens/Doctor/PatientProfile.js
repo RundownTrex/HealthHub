@@ -321,6 +321,57 @@ export default function PatientProfile({ navigation, route }) {
             <Text style={[styles.infotext, { fontWeight: "bold" }]}>
               {appointment.patientName}
             </Text>
+            <Pressable
+              style={styles.chatButton}
+              onPress={() => {
+                navigation.pop();
+                navigation.pop();
+                navigation.navigate("Message");
+                setTimeout(() => {
+                  firestore()
+                    .collection("recentChats")
+                    .where("doctorId", "==", appointment.doctorId)
+                    .where("patientId", "==", appointment.patientId)
+                    .get() 
+                    .then((querySnapshot) => {
+                      querySnapshot.forEach((doc) => {
+                        firestore()
+                          .collection("recentChats")
+                          .doc(doc.id)
+                          .update({
+                            doctorUnread: 0,
+                          })
+                          .then(() => {
+                            console.log("Unread count reset for doctor.");
+                          })
+                          .catch((error) => {
+                            console.error(
+                              "Error updating unread count: ",
+                              error
+                            );
+                          });
+                      });
+                    })
+                    .catch((error) => {
+                      console.error("Error fetching recent chats: ", error);
+                    });
+
+                  navigation.navigate("DoctorChat", {
+                    patientName: appointment.patientName,
+                    doctorName: appointment.doctorName,
+                    userpfp: appointment.patientPfp,
+                    doctorId: appointment.doctorId,
+                    patientId: appointment.patientId,
+                  });
+                }, 10);
+              }}
+            >
+              <Image
+                source={require("../../assets/icons/chat-now.png")}
+                style={{ height: 20, width: 20 }}
+              />
+              <Text style={styles.chatbuttonText}>Chat now</Text>
+            </Pressable>
           </View>
         </View>
         <View style={styles.bottomContent}>
@@ -591,5 +642,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     paddingHorizontal: 16,
+  },
+  chatButton: {
+    marginTop: 10,
+    flexDirection: "row",
+    backgroundColor: colors.complementary,
+    alignSelf: "flex-start",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+
+  chatbuttonText: {
+    color: colors.whitetext,
+    fontWeight: "500",
+    marginLeft: 5,
+    fontSize: 16,
   },
 });

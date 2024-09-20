@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,121 +9,55 @@ import {
   Pressable,
 } from "react-native";
 import { Searchbar, Avatar, MD3LightTheme } from "react-native-paper";
+import firestore from "@react-native-firebase/firestore";
+import auth from "@react-native-firebase/auth";
+import { format } from "date-fns";
 
 import colors from "../../utils/colors";
 
-const messages = [
-  {
-    id: "1",
-    name: "Dr. Upul",
-    pfp: require("../../assets/doctor-pfp.jpg"),
-    message:
-      "Worem consectetur adipiscing elit. Bruh what are you even talking about blud pluh test test",
-    time: "12:50",
-    unread: 2,
-  },
-  {
-    id: "2",
-    name: "Dr. Upul",
-    pfp: require("../../assets/doctor-pfp.jpg"),
-    message: "Worem consectetur adipiscing elit.",
-    time: "12:50",
-    unread: 2,
-  },
-  {
-    id: "3",
-    name: "Dr. Upul",
-    pfp: require("../../assets/doctor-pfp.jpg"),
-    message: "Worem consectetur adipiscing elit.",
-    time: "12:50",
-    unread: 0,
-  },
-  {
-    id: "4",
-    name: "Dr. Test",
-    pfp: require("../../assets/doctor-pfp.jpg"),
-    message: "Worem consectetur adipiscing elit.",
-    time: "12:50",
-    unread: 0,
-  },
-  {
-    id: "5",
-    name: "Dr. Test",
-    pfp: require("../../assets/doctor-pfp.jpg"),
-    message: "Worem consectetur adipiscing elit.",
-    time: "12:50",
-    unread: 0,
-  },
-  {
-    id: "6",
-    name: "Dr. Test",
-    pfp: require("../../assets/doctor-pfp.jpg"),
-    message: "Worem consectetur adipiscing elit.",
-    time: "12:50",
-    unread: 0,
-  },
-  {
-    id: "7",
-    name: "Dr. Test",
-    pfp: require("../../assets/doctor-pfp.jpg"),
-    message: "Worem consectetur adipiscing elit.",
-    time: "12:50",
-    unread: 0,
-  },
-  {
-    id: "8",
-    name: "Dr. Test",
-    pfp: require("../../assets/doctor-pfp.jpg"),
-    message: "Worem consectetur adipiscing elit.",
-    time: "12:50",
-    unread: 0,
-  },
-  {
-    id: "9",
-    name: "Dr. Test",
-    pfp: require("../../assets/doctor-pfp.jpg"),
-    message: "Worem consectetur adipiscing elit.",
-    time: "12:50",
-    unread: 0,
-  },
-  {
-    id: "10",
-    name: "Dr. Test",
-    pfp: require("../../assets/doctor-pfp.jpg"),
-    message: "Worem consectetur adipiscing elit.",
-    time: "12:50",
-    unread: 0,
-  },
-  {
-    id: "11",
-    name: "Dr. Test",
-    pfp: require("../../assets/doctor-pfp.jpg"),
-    message: "Worem consectetur adipiscing elit.",
-    time: "12:50",
-    unread: 0,
-  },
-  {
-    id: "12",
-    name: "Dr. Test",
-    pfp: require("../../assets/doctor-pfp.jpg"),
-    message: "Worem consectetur adipiscing elit.",
-    time: "12:50",
-    unread: 0,
-  },
-  {
-    id: "13",
-    name: "Dr. Test",
-    pfp: require("../../assets/doctor-pfp.jpg"),
-    message: "Worem consectetur adipiscing elit.",
-    time: "12:50",
-    unread: 0,
-  },
-];
-
 export default function Messages({ navigation }) {
   const { width } = Dimensions.get("screen");
-
   const searchBarRef = useRef();
+  const [recentChats, setRecentChats] = useState([]);
+  const [patientData, setPatientData] = useState();
+  const [searchQuery, setSearchQuery] = useState("");
+  const user = auth().currentUser;
+
+  useEffect(() => {
+    const unsubscribe = firestore()
+      .collection("recentChats")
+      .where("participants", "array-contains", user.uid)
+      .onSnapshot((snapshot) => {
+        const chats = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setRecentChats(chats);
+      });
+
+    return () => unsubscribe();
+  }, [user.uid]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const patientDoc = await firestore()
+          .collection("users")
+          .doc(user.uid)
+          .get();
+
+        const patientData = patientDoc.data();
+        setPatientData(patientData);
+      } catch {
+        console.error("error");
+      }
+    };
+    fetchData();
+  }, [user]);
+
+  const filteredChats = recentChats.filter((chat) =>
+    chat.doctorName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <>
@@ -148,11 +82,12 @@ export default function Messages({ navigation }) {
       <View style={styles.container}>
         <Searchbar
           placeholder="Search"
-          // onChangeText={setSearchQuery}
-          // value={searchQuery}
+          onChangeText={setSearchQuery}
+          value={searchQuery}
           rippleColor={colors.lightaccent}
           traileringIconColor={colors.lightaccent}
           selectionHandleColor={colors.lightaccent}
+          selectionColor={colors.lightaccent}
           theme={MD3LightTheme}
           // loading={true}
           ref={searchBarRef}
@@ -171,62 +106,49 @@ export default function Messages({ navigation }) {
           }}
         />
 
-        {/* <View style={{ padding: 16 }}>
-          <Text style={styles.sectionTitle}>Active Now</Text>
-          <FlashList
-            estimatedItemSize={100}
-            horizontal
-            data={activeNow}
-            renderItem={({ item }) => (
-              <View style={styles.activeUser}>
-                <Avatar.Image
-                  size={width / 6}
-                  source={item.avatar}
-                  style={styles.avatar}
-                />
-                <View style={styles.onlineIndicator} />
-              </View>
-            )}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-          />
-        </View> */}
-
         <FlatList
-          data={messages}
+          data={filteredChats}
           style={{ padding: 16, paddingTop: 0 }}
           renderItem={({ item }) => (
             <Pressable
               style={styles.chatItem}
               onPress={() => {
+                firestore().collection("recentChats").doc(item.id).update({
+                  patientUnread: 0,
+                });
+
                 navigation.navigate("DoctorChat", {
-                  doctorname: item.name,
-                  pfp: item.pfp,
+                  doctorName: item.doctorName,
+                  patientId: user.uid,
+                  doctorId: item.doctorId,
+                  patientPfp: patientData.pfpUrl,
+                  userpfp: item.doctorPfp,
+                  patientName: `${patientData.firstname} ${patientData.lastname}`,
                 });
               }}
             >
               <Avatar.Image
-                source={item.pfp}
+                source={{ uri: item.doctorPfp }}
                 style={styles.chatAvatar}
                 size={width / 6}
               />
               <View style={styles.chatTextContainer}>
-                <Text style={styles.chatName}>{item.name}</Text>
+                <Text style={styles.chatName}>{item.doctorName}</Text>
                 <Text style={styles.chatMessage} numberOfLines={1}>
-                  {item.message}
+                  {item.latestMessage}
                 </Text>
               </View>
               <View style={styles.chatTimeContainer}>
-                <Text style={styles.chatTime}>{item.time}</Text>
-                {item.unread > 0 ? (
+                <Text style={styles.chatTime}>
+                  {format(item.timestamp?.toDate(), "hh:mm a")}
+                </Text>
+                {item.patientUnread > 0 ? (
                   <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadText}>{item.unread}</Text>
+                    <Text style={styles.unreadText}>{item.patientUnread}</Text>
                   </View>
                 ) : (
                   <View style={[styles.unreadBadge, { opacity: 0 }]}>
-                    <Text style={[styles.unreadText, { opacity: 0 }]}>
-                      {item.unread}
-                    </Text>
+                    <Text style={[styles.unreadText, { opacity: 0 }]}></Text>
                   </View>
                 )}
               </View>
@@ -286,7 +208,7 @@ const styles = StyleSheet.create({
     color: colors.lightgraytext,
   },
   unreadBadge: {
-    backgroundColor: colors.complementary, // Red color
+    backgroundColor: colors.complementary,
     borderRadius: 100,
     width: 20,
     height: 20,
