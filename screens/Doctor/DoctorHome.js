@@ -9,6 +9,8 @@ import {
   Image,
   Pressable,
   RefreshControl,
+  LayoutAnimation,
+  UIManager,
 } from "react-native";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import auth from "@react-native-firebase/auth";
@@ -53,6 +55,10 @@ const H_MIN_HEIGHT = 0;
 const H_SCROLL_DISTANCE = H_MAX_HEIGHT - H_MIN_HEIGHT;
 const tabheight = 65;
 
+if (UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 export default function DoctorHome({ navigation }) {
   const scrollOffsetY = useRef(new Animated.Value(0)).current;
   const headerScrollHeight = scrollOffsetY.interpolate({
@@ -83,16 +89,26 @@ export default function DoctorHome({ navigation }) {
 
   const fetchUserProfile = async () => {
     if (user) {
-      const userDoc = await firestore().collection("users").doc(user.uid).get();
+      try {
+        const userDoc = await firestore()
+          .collection("users")
+          .doc(user.uid)
+          .get();
 
-      setData(userDoc.data());
-
-      setUserName(userDoc.data().firstname + " " + userDoc.data().lastname);
+        if (userDoc.exists && userDoc.data()) {
+          const userData = userDoc.data();
+          setUserName(userData.firstname + " " + userData.lastname);
+          setData(userData);
+        } else {
+          console.log("User document does not exist or has no data");
+        }
+      } catch (error) {
+        console.error("Error fetching user profile: ", error);
+      }
     } else {
       console.log("No user is logged in");
     }
   };
-
   const fetchAppointments = async () => {
     try {
       const today = format(new Date(), "yyyy-MM-dd");
@@ -109,6 +125,7 @@ export default function DoctorHome({ navigation }) {
         ...doc.data(),
       }));
 
+      // Sort the appointments based on slotTime
       fetchedAppointments = fetchedAppointments.sort((a, b) => {
         const timeA = parse(a.slotTime, "hh:mm a", new Date());
         const timeB = parse(b.slotTime, "hh:mm a", new Date());
@@ -121,10 +138,33 @@ export default function DoctorHome({ navigation }) {
             .collection("users")
             .doc(appointment.patientId)
             .get();
-          const patientData = patientDoc.data();
-          const patientName = `${patientData.firstname} ${patientData.lastname}`;
-          const patientPfp = patientData.pfpUrl;
-          return { ...appointment, patientName, patientPfp, doctorName: patientName };
+
+          if (patientDoc.exists && patientDoc.data()) {
+            const patientData = patientDoc.data();
+            console.log("Patient data: ", patientData.firstname);
+
+            const patientName = `${patientData.firstname || "Unknown"} ${
+              patientData.lastname || "Patient"
+            }`;
+            const patientPfp = patientData.pfpUrl || null;
+
+            return {
+              ...appointment,
+              patientName,
+              patientPfp,
+              doctorName: patientName,
+            };
+          } else {
+            console.warn(
+              `Patient document with ID ${appointment.patientId} does not exist or has no data`
+            );
+            return {
+              ...appointment,
+              patientName: "Unknown Patient",
+              patientPfp: null,
+              doctorName: "Unknown",
+            };
+          }
         })
       );
 
@@ -133,12 +173,12 @@ export default function DoctorHome({ navigation }) {
       console.error("Error fetching appointments: ", error);
     }
   };
-
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * tips.length);
     setRandomTip(tips[randomIndex]);
 
     fetchUserProfile();
+    fetchAppointments();
   }, []);
 
   useEffect(() => {
@@ -146,9 +186,15 @@ export default function DoctorHome({ navigation }) {
   }, [appointments]);
 
   const onRefresh = () => {
+    console.log("Refreshing!");
     setRefreshing(true);
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
     fetchUserProfile();
     fetchAppointments();
+
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+
     setRefreshing(false);
   };
 
@@ -185,30 +231,18 @@ export default function DoctorHome({ navigation }) {
               refreshing={refreshing}
               onRefresh={onRefresh}
               style={{ zIndex: 10 }}
+              progressBackgroundColor={colors.whitetext}
+              progressViewOffset={115}
             />
           }
         >
-          <Animated.View
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: 0,
-              height: headerScrollHeight,
-              width: "auto",
-              overflow: "hidden",
-              zIndex: 8,
-              // STYLE
-              // borderBottomColor: "#EFEFF4",
-              // borderBottomWidth: 1,
-              // padding: 10,
-              backgroundColor: colors.lightaccent,
-              borderBottomLeftRadius: 20,
-              borderBottomRightRadius: 20,
-            }}
-          >
-            <CustomHeader />
-          </Animated.View>
+          {refreshing && (
+            <View style={{ alignItems: "center", padding: 10 }}>
+              <Text style={{ color: colors.whitetext, fontWeight: "bold" }}>
+                Refreshing...
+              </Text>
+            </View>
+          )}
           <View
             style={{
               marginTop: H_MAX_HEIGHT + 10,
@@ -331,6 +365,27 @@ export default function DoctorHome({ navigation }) {
             </Pressable>
           </View>
         </ScrollView>
+        <Animated.View
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 0,
+            height: headerScrollHeight,
+            width: "auto",
+            overflow: "hidden",
+            zIndex: 8,
+            // STYLE
+            // borderBottomColor: "#EFEFF4",
+            // borderBottomWidth: 1,
+            // padding: 10,
+            backgroundColor: colors.lightaccent,
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
+          }}
+        >
+          <CustomHeader />
+        </Animated.View>
       </View>
     </>
   );

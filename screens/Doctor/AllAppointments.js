@@ -46,6 +46,7 @@ export default function AllAppointments({ navigation }) {
         ...doc.data(),
       }));
 
+      // Sort the appointments based on appointmentDate and slotTime
       fetchedAppointments = fetchedAppointments.sort((a, b) => {
         const dateTimeA = parse(
           `${a.appointmentDate} ${a.slotTime}`,
@@ -62,14 +63,41 @@ export default function AllAppointments({ navigation }) {
 
       const appointmentsWithPatientNames = await Promise.all(
         fetchedAppointments.map(async (appointment) => {
-          const patientDoc = await firestore()
-            .collection("users")
-            .doc(appointment.patientId)
-            .get();
-          const patientData = patientDoc.data();
-          const patientName = `${patientData.firstname} ${patientData.lastname}`;
-          const patientPfp = patientData.pfpUrl;
-          return { ...appointment, patientName, patientPfp };
+          try {
+            const patientDoc = await firestore()
+              .collection("users")
+              .doc(appointment.patientId)
+              .get();
+
+            if (patientDoc.exists && patientDoc.data()) {
+              const patientData = patientDoc.data();
+              const patientName = `${patientData.firstname || "Unknown"} ${
+                patientData.lastname || "Patient"
+              }`;
+              const patientPfp = patientData.pfpUrl || null;
+
+              return { ...appointment, patientName, patientPfp };
+            } else {
+              console.warn(
+                `Patient document with ID ${appointment.patientId} does not exist or has no data.`
+              );
+              return {
+                ...appointment,
+                patientName: "Unknown Patient",
+                patientPfp: null,
+              };
+            }
+          } catch (error) {
+            console.error(
+              `Error fetching patient data for appointment ID ${appointment.id}: `,
+              error
+            );
+            return {
+              ...appointment,
+              patientName: "Error fetching patient",
+              patientPfp: null,
+            };
+          }
         })
       );
 

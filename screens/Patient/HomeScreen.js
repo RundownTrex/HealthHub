@@ -12,6 +12,7 @@ import {
   RefreshControl,
   LayoutAnimation,
   UIManager,
+  Linking,
 } from "react-native";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
@@ -48,6 +49,7 @@ export default function HomeScreen({ navigation }) {
   const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [healthTips, setHealthTips] = useState([]);
 
   const { toggleBottomSheet } = useBottomSheet();
   const isFocused = useIsFocused();
@@ -132,9 +134,24 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  const fetchBlogPosts = async () => {
+    try {
+      const blogPostsSnapshot = await firestore().collection("blogposts").get();
+      const blogPosts = blogPostsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        title: doc.data().title,
+        image: doc.data().image,
+        link: doc.data().link,
+      }));
+      setHealthTips(blogPosts);
+    } catch (error) {
+      console.error("Error fetching blog posts: ", error);
+    }
+  };
   useEffect(() => {
     setIsLoading(true);
     fetchAppointments();
+    fetchBlogPosts();
     setIsLoading(false);
   }, []);
 
@@ -147,11 +164,15 @@ export default function HomeScreen({ navigation }) {
     }
   }, [isFocused]);
 
+  useEffect(() => {
+    console.log(appointments);
+  }, [appointments]);
+
   const onRefresh = async () => {
     console.log("Refreshing");
     setRefreshing(true);
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-
+    fetchBlogPosts();
     await fetchAppointments();
     setRefreshing(false);
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -185,22 +206,6 @@ export default function HomeScreen({ navigation }) {
       pricerange: "1000₹ - 3000₹",
       image: require("../../assets/nutrition.png"),
       to: "Nutritionist ",
-    },
-  ];
-
-  const healthTips = [
-    {
-      image: require("../../assets/tip1.png"),
-      title: "Yoga for beginnners",
-    },
-    {
-      image: require("../../assets/tip1.png"),
-      title: "Healthy recipies for busy people",
-    },
-    {
-      image: require("../../assets/tip1.png"),
-      title:
-        "TESTESTETSTttttttttttttttttttttttttttttttttttsssssssssssssssssssssssssssssssssssssssssssss",
     },
   ];
 
@@ -525,17 +530,17 @@ export default function HomeScreen({ navigation }) {
             >
               {healthTips.map((tip, index) => (
                 <Pressable
-                  onPress={() => console.log("Health Tip Clicked!")}
+                  onPress={() => Linking.openURL(tip.link)}
                   key={index}
                   style={({ pressed }) => [
                     styles.tipCard,
                     pressed && { opacity: 0.8 },
                   ]}
                 >
-                  <Image source={tip.image} style={styles.tipimage} />
+                  <Image source={{ uri: tip.image }} style={styles.tipimage} />
                   <Text
                     style={styles.tiptitle}
-                    numberOfLines={1}
+                    numberOfLines={2}
                     ellipsizeMode="tail"
                   >
                     {tip.title}
@@ -805,12 +810,12 @@ const styles = StyleSheet.create({
     marginRight: 10,
     elevation: 2,
     alignItems: "center",
-    width: 230,
+    width: 250,
     height: "auto",
   },
   tipimage: {
-    width: 230,
-    height: 130,
+    width: 250,
+    height: 150,
     borderRadius: 10,
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,

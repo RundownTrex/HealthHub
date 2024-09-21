@@ -16,11 +16,10 @@ const apiKey = "6a8qhywws3sz";
 const token =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiR2VuZXJhbF9Eb2Rvbm5hIn0.CbaVdGaIvA7ziJXjj55aaKncqvi0zTP85GrcfI-sPYk";
 const userId = "General_Dodonna";
-const callId = "Fw39EziXX2kB";
 
 const user = {
   id: userId,
-  name: "John Malkovich",
+  name: "Da Wei",
   image: "https://robohash.org/John",
 };
 const client = new StreamVideoClient({ apiKey, user, token });

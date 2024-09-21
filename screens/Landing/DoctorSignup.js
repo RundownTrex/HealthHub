@@ -23,9 +23,8 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import * as ImagePicker from "expo-image-picker";
 import { Dropdown } from "react-native-element-dropdown";
 import { Checkbox } from "react-native-paper";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import storage from "@react-native-firebase/storage";
-
+import MapView, { Marker } from "react-native-maps";
 import LoadingOverlay from "../../components/LoadingOverlay";
 
 GoogleSignin.configure({
@@ -115,6 +114,10 @@ const doctorDesignations = [
     value: "Hematologist",
   },
 ];
+const initialMarkerPosition = {
+  latitude: 18.94024498803612,
+  longitude: 72.83573143063485,
+};
 
 export default function DoctorSignup({ navigation }) {
   const { userRole, setUserRole } = useContext(RoleContext);
@@ -122,6 +125,13 @@ export default function DoctorSignup({ navigation }) {
   const [cpassword, setCpassword] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [region, setRegion] = useState({
+    latitude: 18.94024498803612,
+    longitude: 72.83573143063485,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  });
+  const [markerPosition, setMarkerPosition] = useState(initialMarkerPosition);
 
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
@@ -214,7 +224,7 @@ export default function DoctorSignup({ navigation }) {
       !doctorProfile.licenseNumber ||
       !doctorProfile.yearsofexperience ||
       !doctorProfile.phone ||
-      !doctorProfile.consultFees
+      !doctorProfile.consultFees 
     ) {
       Toast.show({
         type: "error",
@@ -261,14 +271,19 @@ export default function DoctorSignup({ navigation }) {
         setIsLoading(false);
         return;
       }
+  
+      if (
+        markerPosition.latitude === initialMarkerPosition.latitude &&
+        markerPosition.longitude === initialMarkerPosition.longitude
+      ) {
+        Toast.show({
+          type: "error",
+          text1: "Please move the clinic marker to your clinic location",
+        });
+        setIsLoading(false);
+        return;
+      }
     }
-
-    // Toast.show({
-    //   type: "info",
-    //   text1: "Test",
-    // });
-    // setIsLoading(false);
-    // return;
 
     console.log(doctorProfile);
     console.log(userPfp);
@@ -612,6 +627,36 @@ export default function DoctorSignup({ navigation }) {
                   no={10}
                 />
               </View>
+              <View>
+                <Text style={[styles.label]}>Clinic Location</Text>
+                <Text
+                  style={{
+                    color: colors.whitetext,
+                    fontSize: 16,
+                    marginBottom: 5,
+                  }}
+                >
+                  Place the marker on the clinic location
+                </Text>
+                <View style={{ borderRadius: 10, overflow: "hidden" }}>
+                  <MapView
+                    style={styles.map}
+                    region={region}
+                    onRegionChangeComplete={(newRegion) => setRegion(newRegion)}
+                    onPress={(e) => {
+                      setMarkerPosition(e.nativeEvent.coordinate);
+                    }}
+                  >
+                    <Marker
+                      coordinate={markerPosition}
+                      draggable
+                      onDragEnd={(e) => {
+                        setMarkerPosition(e.nativeEvent.coordinate);
+                      }}
+                    />
+                  </MapView>
+                </View>
+              </View>
             </>
           )}
 
@@ -692,5 +737,9 @@ const styles = StyleSheet.create({
     color: colors.lightgraytext,
     fontSize: 16,
     fontWeight: "500",
+  },
+  map: {
+    width: "100%",
+    height: 300,
   },
 });

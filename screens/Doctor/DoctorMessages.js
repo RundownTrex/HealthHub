@@ -14,13 +14,13 @@ import auth from "@react-native-firebase/auth";
 import { format } from "date-fns";
 
 import colors from "../../utils/colors";
+const { width, height } = Dimensions.get("screen");
 
 export default function DoctorMessages({ navigation }) {
-  const { width } = Dimensions.get("screen");
   const searchBarRef = useRef();
   const [recentChats, setRecentChats] = useState([]);
   const [doctorData, setDoctorData] = useState();
-  const [searchQuery, setSearchQuery] = useState(""); 
+  const [searchQuery, setSearchQuery] = useState("");
   const user = auth().currentUser;
 
   useEffect(() => {
@@ -32,6 +32,8 @@ export default function DoctorMessages({ navigation }) {
           id: doc.id,
           ...doc.data(),
         }));
+
+        chats.sort((a, b) => b.timestamp - a.timestamp);
         setRecentChats(chats);
       });
 
@@ -127,11 +129,20 @@ export default function DoctorMessages({ navigation }) {
                 });
               }}
             >
-              <Avatar.Image
-                source={{ uri: item.patientPfp }}
-                style={styles.chatAvatar}
-                size={width / 6}
-              />
+              <View
+                style={{
+                  width: 70,
+                  height: 70,
+                  borderRadius: 100,
+                  overflow: "hidden",
+                  marginRight: 12,
+                }}
+              >
+                <Image
+                  source={{ uri: item.patientPfp }}
+                  style={styles.chatAvatar}
+                />
+              </View>
               <View style={styles.chatTextContainer}>
                 <Text style={styles.chatName}>{item.patientName}</Text>
                 <Text style={styles.chatMessage} numberOfLines={1}>
@@ -155,6 +166,20 @@ export default function DoctorMessages({ navigation }) {
             </Pressable>
           )}
           keyExtractor={(item) => item.id}
+          ListEmptyComponent={() => (
+            <View
+              style={{
+                marginTop: 20,
+                flex: 1,
+              }}
+            >
+              <Text style={styles.emptyText}>No Chats here!</Text>
+              <Text style={styles.emptyTextDesc}>
+                Select a patient profile from the booked appointments and press
+                "Chat now" to start a chat
+              </Text>
+            </View>
+          )}
         />
       </View>
     </>
@@ -187,7 +212,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   chatAvatar: {
-    marginRight: 12,
+    height: 70,
+    width: 70,
   },
   chatTextContainer: {
     flex: 1,
@@ -222,5 +248,21 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 12,
     alignSelf: "center",
+  },
+
+  emptyText: {
+    color: colors.whitetext,
+    fontWeight: "bold",
+    fontSize: 18,
+    alignSelf: "center",
+    textAlign: "center",
+  },
+
+  emptyTextDesc: {
+    color: colors.lightgraytext,
+    fontWeight: "500",
+    alignSelf: "center",
+    textAlign: "center",
+    marginTop: 5,
   },
 });

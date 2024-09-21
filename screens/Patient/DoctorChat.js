@@ -115,7 +115,6 @@ export default function DoctorChat({ navigation, route }) {
 
       const { _id, createdAt, text, user } = messages[0];
 
-      // Add the new message to Firestore
       firestore()
         .collection("chats")
         .doc(chatId)
@@ -201,8 +200,8 @@ export default function DoctorChat({ navigation, route }) {
       <Composer
         {...props}
         textInputStyle={{
-          color: colors.whitetext, // Change text color
-          backgroundColor: colors.darkback, // Change background color
+          color: colors.whitetext, 
+          backgroundColor: colors.darkback, 
           borderRadius: 20,
           paddingLeft: 15,
           paddingRight: 10,
@@ -213,12 +212,11 @@ export default function DoctorChat({ navigation, route }) {
           marginBottom: 0,
           marginRight: 5,
         }}
-        placeholderTextColor={colors.coolback} // Change placeholder color
+        placeholderTextColor={colors.coolback} 
       />
     );
   };
 
-  // Customize the send button
   const renderSend = (props) => {
     return (
       <Send {...props}>
@@ -235,7 +233,7 @@ export default function DoctorChat({ navigation, route }) {
           }}
         >
           <Image
-            source={require("../../assets/icons/send.png")} // Your custom send icon
+            source={require("../../assets/icons/send.png")} 
             style={{ height: 28, width: 28 }}
           />
         </View>
@@ -286,13 +284,13 @@ export default function DoctorChat({ navigation, route }) {
         <Image
           source={avataruri !== "null" ? { uri: avataruri } : placeholderpfp}
           style={{
-            width: 36, // Customize the size
-            height: 36, // Customize the size
-            borderRadius: 100, // Make it round
-            // borderWidth: 1, // Add a border
-            // borderColor: colors.whitetext, // Border color
-            // marginLeft: 5, // Adjust spacing
-            // marginBottom: 5, // Adjust spacing
+            width: 36, 
+            height: 36, 
+            borderRadius: 100, 
+            // borderWidth: 1, 
+            // borderColor: colors.whitetext, 
+            // marginLeft: 5, 
+            // marginBottom: 5, 
             // overflow: "hidden",
           }}
         />

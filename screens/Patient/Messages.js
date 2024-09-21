@@ -32,6 +32,8 @@ export default function Messages({ navigation }) {
           id: doc.id,
           ...doc.data(),
         }));
+
+        chats.sort((a, b) => b.timestamp - a.timestamp);
         setRecentChats(chats);
       });
 
@@ -109,6 +111,20 @@ export default function Messages({ navigation }) {
         <FlatList
           data={filteredChats}
           style={{ padding: 16, paddingTop: 0 }}
+          ListEmptyComponent={() => (
+            <View
+              style={{
+                marginTop: 20,
+                flex: 1,
+              }}
+            >
+              <Text style={styles.emptyText}>No Chats here!</Text>
+              <Text style={styles.emptyTextDesc}>
+                Select a doctor profile from the booked appointments and press
+                "Chat now" to start a chat.
+              </Text>
+            </View>
+          )}
           renderItem={({ item }) => (
             <Pressable
               style={styles.chatItem}
@@ -221,5 +237,21 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 12,
     alignSelf: "center",
+  },
+
+  emptyText: {
+    color: colors.whitetext,
+    fontWeight: "bold",
+    fontSize: 18,
+    alignSelf: "center",
+    textAlign: "center",
+  },
+
+  emptyTextDesc: {
+    color: colors.lightgraytext,
+    fontWeight: "500",
+    alignSelf: "center",
+    textAlign: "center",
+    marginTop: 5,
   },
 });
