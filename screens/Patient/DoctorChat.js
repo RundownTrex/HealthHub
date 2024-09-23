@@ -17,6 +17,8 @@ import {
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
 import RoleContext from "../../context/RoleContext";
+import io from "socket.io-client";
+import { TypingAnimation } from "react-native-typing-animation";
 
 import colors from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";
@@ -34,13 +36,18 @@ export default function DoctorChat({ navigation, route }) {
 
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingUser, setTypingUser] = useState("");
+
   const user = auth().currentUser;
   const callId = "Fw39EziXX2kB";
+  const socket = useRef();
 
   const createChatRoomId = (userId1, userId2) => {
     return [userId1, userId2].sort().join("_");
   };
   const chatId = createChatRoomId(patientId, doctorId);
+  const userId = user.uid;
 
   const fetchUserData = async () => {
     const profileDoc = await firestore()
@@ -87,8 +94,35 @@ export default function DoctorChat({ navigation, route }) {
 
     setIsLoading(false);
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+    };
   }, []);
+
+  useEffect(() => {
+    console.log("Attempting to connect to socket server...");
+    socket.current = io("http://192.168.145.151:3000");
+
+    socket.current.on("connect", () => {
+      console.log("Socket connected:", socket.current.id);
+    });
+
+    socket.current.on(
+      "userTyping",
+      ({ chatId: incomingChatId, userId: typingUserId, isTyping }) => {
+        console.log("Typing user Id: ", typingUserId);
+        if (incomingChatId === chatId && typingUserId !== userId) {
+          console.log("Typing event received:", { typingUserId, isTyping });
+          setIsTyping(isTyping);
+          setTypingUser(typingUserId);
+        }
+      }
+    );
+
+    return () => {
+      socket.current.disconnect();
+    };
+  }, [chatId, userId]);
 
   //Toggle bottom tab navigator visibility
   useEffect(() => {
@@ -106,6 +140,18 @@ export default function DoctorChat({ navigation, route }) {
       backHandler.remove();
     };
   }, [toggleBottomSheet, navigation]);
+
+  const handleTyping = (text) => {
+    const isTyping = text.length > 0;
+
+    // console.log(`User ${userId} is typing:`, isTyping);
+
+    socket.current.emit("userTyping", {
+      chatId,
+      userId,
+      isTyping,
+    });
+  };
 
   const onSend = useCallback(
     (messages = []) => {
@@ -200,8 +246,8 @@ export default function DoctorChat({ navigation, route }) {
       <Composer
         {...props}
         textInputStyle={{
-          color: colors.whitetext, 
-          backgroundColor: colors.darkback, 
+          color: colors.whitetext,
+          backgroundColor: colors.darkback,
           borderRadius: 20,
           paddingLeft: 15,
           paddingRight: 10,
@@ -212,7 +258,7 @@ export default function DoctorChat({ navigation, route }) {
           marginBottom: 0,
           marginRight: 5,
         }}
-        placeholderTextColor={colors.coolback} 
+        placeholderTextColor={colors.coolback}
       />
     );
   };
@@ -233,7 +279,7 @@ export default function DoctorChat({ navigation, route }) {
           }}
         >
           <Image
-            source={require("../../assets/icons/send.png")} 
+            source={require("../../assets/icons/send.png")}
             style={{ height: 28, width: 28 }}
           />
         </View>
@@ -284,13 +330,13 @@ export default function DoctorChat({ navigation, route }) {
         <Image
           source={avataruri !== "null" ? { uri: avataruri } : placeholderpfp}
           style={{
-            width: 36, 
-            height: 36, 
-            borderRadius: 100, 
-            // borderWidth: 1, 
-            // borderColor: colors.whitetext, 
-            // marginLeft: 5, 
-            // marginBottom: 5, 
+            width: 36,
+            height: 36,
+            borderRadius: 100,
+            // borderWidth: 1,
+            // borderColor: colors.whitetext,
+            // marginLeft: 5,
+            // marginBottom: 5,
             // overflow: "hidden",
           }}
         />
@@ -336,15 +382,41 @@ export default function DoctorChat({ navigation, route }) {
             }}
           />
         </View>
-        <Text
-          style={{
-            color: colors.whitetext,
-            fontWeight: "bold",
-            fontSize: 18,
-          }}
-        >
-          {userRole === "patient" ? doctorName : patientName}
-        </Text>
+        <View>
+          <Text
+            style={{
+              color: colors.whitetext,
+              fontWeight: "bold",
+              fontSize: 18,
+            }}
+          >
+            {userRole === "patient" ? doctorName : patientName}
+          </Text>
+          {isTyping && typingUser !== userId ? (
+            <View style={{ flexDirection: "row" }}>
+              <Text style={{ color: colors.whitetext }}>Typing</Text>
+              <TypingAnimation
+                dotColor="white"
+                dotMargin={5}
+                dotAmplitude={3}
+                dotRadius={2.2}
+                dotX={12}
+                dotY={0}
+              />
+            </View>
+          ) : null}
+          {/* <View style={{ flexDirection: "row" }}>
+            <Text style={{ color: colors.whitetext }}>Typing</Text>
+            <TypingAnimation
+              dotColor="white"
+              dotMargin={5}
+              dotAmplitude={3}
+              dotRadius={2.2}
+              dotX={12}
+              dotY={0}
+            />
+          </View> */}
+        </View>
         <View
           style={{
             flexDirection: "row",
@@ -378,6 +450,7 @@ export default function DoctorChat({ navigation, route }) {
           key={user.uid}
           messages={messages}
           onSend={(messages) => onSend(messages)}
+          onInputTextChanged={(text) => handleTyping(text)}
           user={{
             _id: user.uid,
             name: fullName || user.displayName || "Anonymous",
@@ -388,7 +461,7 @@ export default function DoctorChat({ navigation, route }) {
           renderSend={renderSend}
           renderBubble={renderBubble}
           renderAvatar={renderAvatar}
-          renderFooter={() => <View style={{ height: 12}} />}
+          renderFooter={() => <View style={{ height: 12 }} />}
         />
       </View>
     </>

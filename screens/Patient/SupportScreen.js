@@ -54,9 +54,9 @@ export default function SupportScreen({ navigation }) {
   };
 
   const handleEmailPress = () => {
-    const email = "aditya.goriwale@gmail.com"; // Replace with your support email address
-    const subject = "Support Request"; // Replace with your email subject
-    const body = "<YOUR COMPLAINT/REQUST HERE>"; // Replace with your email body content
+    const email = "aditya.goriwale@gmail.com"; 
+    const subject = "Support Request"; 
+    const body = "<YOUR COMPLAINT/REQUEST HERE>"; 
 
     const url = `mailto:${email}?subject=${encodeURIComponent(
       subject
