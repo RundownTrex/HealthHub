@@ -101,12 +101,13 @@ export default function DoctorChat({ navigation, route }) {
 
   useEffect(() => {
     console.log("Attempting to connect to socket server...");
-    socket.current = io("http://192.168.145.151:3000");
-
+    socket.current = io("http://192.168.159.151:3000");
+  
     socket.current.on("connect", () => {
       console.log("Socket connected:", socket.current.id);
+      socket.current.emit("joinRoom", chatId);
     });
-
+  
     socket.current.on(
       "userTyping",
       ({ chatId: incomingChatId, userId: typingUserId, isTyping }) => {
@@ -118,11 +119,12 @@ export default function DoctorChat({ navigation, route }) {
         }
       }
     );
-
+  
     return () => {
       socket.current.disconnect();
     };
   }, [chatId, userId]);
+  
 
   //Toggle bottom tab navigator visibility
   useEffect(() => {
@@ -401,7 +403,7 @@ export default function DoctorChat({ navigation, route }) {
                 dotAmplitude={3}
                 dotRadius={2.2}
                 dotX={12}
-                dotY={0}
+                dotY={12}
               />
             </View>
           ) : null}
