@@ -1,4 +1,5 @@
-import { StyleSheet, StatusBar, View } from "react-native";
+import { useEffect } from "react";
+import { StyleSheet, StatusBar, View, } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import PatientTabs from "./navigations/PatientTabs";
 import DoctorTabs from "./navigations/DoctorTabs";
@@ -10,23 +11,41 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useContext } from "react";
 import RoleContext, { UserProvider } from "./context/RoleContext";
 import { Provider as PaperProvider } from "react-native-paper";
+import messaging from "@react-native-firebase/messaging";
 
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-        <PaperProvider>
-          <BottomSheetModalProvider>
-            <UserProvider>
-              <Main />
-            </UserProvider>
-          </BottomSheetModalProvider>
-        </PaperProvider>
+      <PaperProvider>
+        <BottomSheetModalProvider>
+          <UserProvider>
+            <Main />
+          </UserProvider>
+        </BottomSheetModalProvider>
+      </PaperProvider>
     </GestureHandlerRootView>
   );
 }
 
 function Main() {
   const { userRole } = useContext(RoleContext);
+
+  const requestUserPermission = async () => {
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+    if (enabled) {
+      console.log("Notification permission granted.");
+    } else {
+      console.log("Notification permission denied.");
+    }
+  };
+
+  useEffect(() => {
+    requestUserPermission();
+  }, []);
 
   return (
     <View style={styles.container}>

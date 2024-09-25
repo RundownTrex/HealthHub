@@ -36,8 +36,6 @@ export default function Booking({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(false);
   const user = auth().currentUser;
 
-
-
   // useEffect(() => {
   //   console.log(slotno);
   // }, [slotno]);
@@ -95,7 +93,8 @@ export default function Booking({ navigation, route }) {
         slotTime: slotno,
         status: "booked",
         paymentMethod,
-        consultFees: doctor.profileData.consultFees
+        consultFees: doctor.profileData.consultFees,
+        reminderSent: false,
       };
 
       await appointmentsRef.add({

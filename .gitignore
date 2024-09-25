@@ -33,3 +33,6 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+backend/healthhub-2cbba-firebase-adminsdk-aej53-cb62774064.json
+

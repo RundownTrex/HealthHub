@@ -101,7 +101,7 @@ export default function DoctorChat({ navigation, route }) {
 
   useEffect(() => {
     console.log("Attempting to connect to socket server...");
-    socket.current = io("http://192.168.159.151:3000");
+    socket.current = io("http://192.168.155.151:3000");
   
     socket.current.on("connect", () => {
       console.log("Socket connected:", socket.current.id);
@@ -111,7 +111,7 @@ export default function DoctorChat({ navigation, route }) {
     socket.current.on(
       "userTyping",
       ({ chatId: incomingChatId, userId: typingUserId, isTyping }) => {
-        console.log("Typing user Id: ", typingUserId);
+        console.log(" Typing user Id: ", typingUserId);
         if (incomingChatId === chatId && typingUserId !== userId) {
           console.log("Typing event received:", { typingUserId, isTyping });
           setIsTyping(isTyping);
