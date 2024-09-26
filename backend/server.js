@@ -6,6 +6,8 @@ const cron = require("node-cron");
 const admin = require("firebase-admin");
 const { format, parse, addMinutes, isWithinInterval } = require("date-fns");
 
+const userRooms = {};
+
 const app = express();
 app.use(cors());
 
@@ -18,6 +20,76 @@ admin.initializeApp({
 });
 
 const firestore = admin.firestore();
+
+const sendNotification = async (recipientId, message, title, pfp) => {
+  try {
+    const userDoc = await firestore.collection("users").doc(recipientId).get();
+    const userData = userDoc.data();
+    const fcmToken = userData.fcmToken;
+
+    console.log("Receivers pfp: ",pfp);
+
+    if (fcmToken) {
+      const notificationMessage = {
+        notification: {
+          title: title,
+          body: message,
+          image: pfp,
+        
+        },
+        token: fcmToken,
+      };
+
+      await admin.messaging().send(notificationMessage);
+      console.log("Notification sent successfully");
+    }
+  } catch (error) {
+    console.error("Error sending notification:", error);
+  }
+};
+
+const recentChatsCollection = firestore.collection("recentChats");
+
+recentChatsCollection.onSnapshot((snapshot) => {
+  snapshot.docChanges().forEach(async (change) => {
+    if (change.type === "modified") {
+      const chatData = change.doc.data();
+
+      const doctorUnread = chatData.doctorUnread;
+      const patientUnread = chatData.patientUnread;
+      const latestMessage = chatData.latestMessage;
+      const patientId = chatData.patientId;
+      const doctorId = chatData.doctorId;
+      const chatId = `${patientId}_${doctorId}`;
+
+      const doctorConnected = Object.values(userRooms).some(
+        (user) => user.userId === doctorId && user.chatId === chatId
+      );
+
+      const patientConnected = Object.values(userRooms).some(
+        (user) => user.userId === patientId && user.chatId === chatId
+      );
+
+      if (doctorUnread > 0 && !doctorConnected) {
+        await sendNotification(
+          doctorId,
+          `${latestMessage}`,
+          chatData.patientName,
+          chatData.patientPfp
+        );
+      }
+
+      if (patientUnread > 0 && !patientConnected) {
+        await sendNotification(
+          patientId,
+          `${latestMessage}`,
+          chatData.doctorName,
+          chatData.doctorPfp
+        );
+      }
+    }
+  });
+});
 
 cron.schedule("* * * * *", async () => {
   console.log("Checking for upcoming appointments...");
@@ -103,10 +175,6 @@ cron.schedule("* * * * *", async () => {
   }
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello");
-});
-
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -116,9 +184,10 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  socket.on("joinRoom", (chatId) => {
+  socket.on("joinRoom", (chatId, userId) => {
     socket.join(chatId);
-    console.log(`User joined chat room: ${chatId}`);
+    userRooms[socket.id] = { chatId, userId };
+    console.log(`User joined chat room: ${chatId} (User ID: ${userId})`);
   });
 
   socket.on("userTyping", ({ chatId, userId, isTyping }) => {
@@ -131,6 +200,9 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
+
+    delete userRooms[socket.id];
+    console.log(`User removed from userRooms: ${socket.id}`);
   });
 });
 

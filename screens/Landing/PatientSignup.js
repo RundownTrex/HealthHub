@@ -85,84 +85,111 @@ export default function PatientSignup({ navigation }) {
 
   const registerwemail = async () => {
     setIsLoading(true);
-    if (
-      !userPfp ||
-      !email ||
-      !password ||
-      !cpassword ||
-      !firstname ||
-      !lastname
-    ) {
+  
+    if (!userPfp) {
       Toast.show({
         type: "error",
-        text1: "Enter credentials",
-        text2: "All the fields are mandatory",
+        text1: "Profile picture is required",
       });
       setIsLoading(false);
       return;
     }
-
+  
+    if (!firstname.trim()) {
+      Toast.show({
+        type: "error",
+        text1: "First name is required",
+      });
+      setIsLoading(false);
+      return;
+    }
+  
+    if (!lastname.trim()) {
+      Toast.show({
+        type: "error",
+        text1: "Last name is required",
+      });
+      setIsLoading(false);
+      return;
+    }
+  
+    if (!email.trim()) {
+      Toast.show({
+        type: "error",
+        text1: "Email is required",
+      });
+      setIsLoading(false);
+      return;
+    }
+  
+    if (!password.trim() || !cpassword.trim()) {
+      Toast.show({
+        type: "error",
+        text1: "Password is required",
+      });
+      setIsLoading(false);
+      return;
+    }
+  
     if (password !== cpassword) {
       Toast.show({
         type: "error",
-        text1: "Enter proper password",
-        text2: "The password and confirm password should be same",
+        text1: "Passwords do not match",
       });
       setIsLoading(false);
       return;
     }
-
+  
     try {
       const userCredential = await auth().createUserWithEmailAndPassword(
         email,
         password
       );
-
+  
       const user = userCredential.user;
-      console.log("Before verification");
+  
       await user.sendEmailVerification();
-      console.log("After verification");
-
+  
       const profileImageUrl = await uploadImageToFirebase(user.uid);
-      console.log(profileImageUrl);
+  
       await firestore()
         .collection("users")
         .doc(user.uid)
         .set({
           email: user.email,
-          firstname,
-          lastname,
+          firstname: firstname.trim(),
+          lastname: lastname.trim(),
           pfpUrl: profileImageUrl || "",
           accountType: "patient",
         });
-
+  
       Toast.show({
         type: "info",
         text1: "Verification email sent",
         text2: "Check your inbox for the verification email",
       });
+  
       navigation.pop();
     } catch (error) {
-      console.log(error);
-      if (error.code.includes("email-already-in-use")) {
+      if (error.code === "auth/email-already-in-use") {
         Toast.show({
           type: "error",
           text1: "Email is already in use",
           text2: "Try logging in instead",
         });
-        setIsLoading(false);
       } else {
         Toast.show({
           type: "error",
-          text1: "Error signing up!",
-          text2: error,
+          text1: "Error signing up",
+          text2: error.message,
         });
-        setIsLoading(false);
       }
+      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   const signupwgoogle = async () => {
     setIsLoading(true);

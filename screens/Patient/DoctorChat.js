@@ -19,6 +19,7 @@ import firestore from "@react-native-firebase/firestore";
 import RoleContext from "../../context/RoleContext";
 import io from "socket.io-client";
 import { TypingAnimation } from "react-native-typing-animation";
+import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 
 import colors from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";
@@ -48,6 +49,7 @@ export default function DoctorChat({ navigation, route }) {
   };
   const chatId = createChatRoomId(patientId, doctorId);
   const userId = user.uid;
+  const isDoctor = userRole === "doctor" ? true : false;
 
   const fetchUserData = async () => {
     const profileDoc = await firestore()
@@ -96,18 +98,30 @@ export default function DoctorChat({ navigation, route }) {
 
     return () => {
       unsubscribe();
+
+      if (userRole === "doctor") {
+        firestore()
+          .collection("recentChats")
+          .doc(chatId)
+          .set({ doctorUnread: 0 }, { merge: true });
+      } else {
+        firestore()
+          .collection("recentChats")
+          .doc(chatId)
+          .set({ patientUnread: 0 }, { merge: true });
+      }
     };
   }, []);
 
   useEffect(() => {
     console.log("Attempting to connect to socket server...");
-    socket.current = io("http://192.168.155.151:3000");
-  
+    socket.current = io("http://192.168.148.151:3000");
+
     socket.current.on("connect", () => {
       console.log("Socket connected:", socket.current.id);
-      socket.current.emit("joinRoom", chatId);
+      socket.current.emit("joinRoom", chatId, userId, isDoctor);
     });
-  
+
     socket.current.on(
       "userTyping",
       ({ chatId: incomingChatId, userId: typingUserId, isTyping }) => {
@@ -119,12 +133,11 @@ export default function DoctorChat({ navigation, route }) {
         }
       }
     );
-  
+
     return () => {
       socket.current.disconnect();
     };
   }, [chatId, userId]);
-  
 
   //Toggle bottom tab navigator visibility
   useEffect(() => {

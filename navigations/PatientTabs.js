@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import messaging from "@react-native-firebase/messaging";
 import firestore from "@react-native-firebase/firestore";
 import auth from "@react-native-firebase/auth";
+import Toast from "react-native-toast-message";
 
 import HomeScreen from "../screens/Patient/HomeScreen";
 import HomeStack from "./HomeStack";
@@ -65,10 +66,11 @@ export default function PatientTabs() {
     const unsubscribe = messaging().onMessage(async (remoteMessage) => {
       console.log("A new FCM message arrived!", JSON.stringify(remoteMessage));
 
-      Alert.alert(
-        remoteMessage.notification.title,
-        remoteMessage.notification.body
-      );
+      Toast.show({
+        type: "info",
+        text1: remoteMessage.notification.title,
+        text2: remoteMessage.notification.body,
+      });
     });
 
     return unsubscribe;
