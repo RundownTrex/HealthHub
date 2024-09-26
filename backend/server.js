@@ -27,7 +27,7 @@ const sendNotification = async (recipientId, message, title, pfp) => {
     const userData = userDoc.data();
     const fcmToken = userData.fcmToken;
 
-    console.log("Receivers pfp: ",pfp);
+    console.log("Receivers pfp: ", pfp);
 
     if (fcmToken) {
       const notificationMessage = {
@@ -35,7 +35,6 @@ const sendNotification = async (recipientId, message, title, pfp) => {
           title: title,
           body: message,
           image: pfp,
-        
         },
         token: fcmToken,
       };
@@ -96,6 +95,7 @@ cron.schedule("* * * * *", async () => {
 
   const now = new Date();
   const thirtyMinutesLater = addMinutes(now, 30);
+  const tenMinutesLater = addMinutes(now, 10);
 
   try {
     const appointmentsSnapshot = await firestore
@@ -106,9 +106,9 @@ cron.schedule("* * * * *", async () => {
       appointmentsSnapshot.forEach((doc) => {
         const appointment = doc.data();
 
-        if (appointment.reminderSent) {
-          return;
-        }
+        // if (appointment.reminderSent && appointment.doctorReminder) {
+        //   return;
+        // }
 
         const appointmentDateTimeStr = `${appointment.appointmentDate} ${appointment.slotTime}`;
         const appointmentDateTime = parse(
@@ -118,6 +118,7 @@ cron.schedule("* * * * *", async () => {
         );
 
         if (
+          !appointment.reminderSent &&
           isWithinInterval(appointmentDateTime, {
             start: now,
             end: thirtyMinutesLater,
@@ -161,6 +162,59 @@ cron.schedule("* * * * *", async () => {
                       })
                       .catch((error) => {
                         console.error("Error sending message:", error);
+                      });
+                  }
+                });
+            });
+        }
+
+        if (
+          !appointment.doctorReminder &&
+          isWithinInterval(appointmentDateTime, {
+            start: now,
+            end: tenMinutesLater,
+          })
+        ) {
+          firestore
+            .collection("users")
+            .doc(appointment.doctorId)
+            .get()
+            .then((doctorDoc) => {
+              const doctorData = doctorDoc.data();
+              const fcmToken = doctorData.fcmToken;
+
+              firestore
+                .collection("users")
+                .doc(appointment.patientId)
+                .get()
+                .then((patDoc) => {
+                  const patientData = patDoc.data();
+                  const patientName = `${patientData.firstname} ${patientData.lastname}`;
+
+                  if (fcmToken) {
+                    const message = {
+                      notification: {
+                        title: "Upcoming Appointment",
+                        body: `You have an appointment in 10 minutes with ${patientName}`,
+                      },
+                      token: fcmToken,
+                    };
+
+                    admin
+                      .messaging()
+                      .send(message)
+                      .then(async (response) => {
+                        await firestore
+                          .collection("appointments")
+                          .doc(doc.id)
+                          .update({ doctorReminder: true });
+                        console.log(
+                          "Successfully sent doctor reminder:",
+                          response
+                        );
+                      })
+                      .catch((error) => {
+                        console.error("Error sending doctor reminder:", error);
                       });
                   }
                 });

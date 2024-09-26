@@ -95,6 +95,7 @@ export default function Booking({ navigation, route }) {
         paymentMethod,
         consultFees: doctor.profileData.consultFees,
         reminderSent: false,
+        doctorReminder: false,
       };
 
       await appointmentsRef.add({

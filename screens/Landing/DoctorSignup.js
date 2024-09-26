@@ -235,6 +235,16 @@ export default function DoctorSignup({ navigation }) {
       return;
     }
 
+    if (doctorProfile.licenseNumber.length !== 10 || isNaN(doctorProfile.licenseNumber)) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid License Number",
+        text2: "The license number must be exactly 10 digits",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     if (password !== cpassword) {
       Toast.show({
         type: "error",
@@ -511,6 +521,7 @@ export default function DoctorSignup({ navigation }) {
               style={{ marginBottom: 10 }}
               kbtype="numeric"
               maxlen={10}
+              minlen={10}
             />
           </View>
 
