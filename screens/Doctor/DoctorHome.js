@@ -22,6 +22,8 @@ import { format, parse } from "date-fns";
 
 import colors from "../../utils/colors";
 import LoadingOverlay from "../../components/LoadingOverlay";
+import { useBottomSheet } from "../../context/BottomSheetContext";
+
 
 const tips = [
   "Remember to take breaks between consultations.",
@@ -73,6 +75,10 @@ export default function DoctorHome({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [randomTip, setRandomTip] = useState("");
   const [appointments, setAppointments] = useState([]);
+  const isFocused = useIsFocused();
+  const { toggleBottomSheet } = useBottomSheet();
+
+
   const user = auth().currentUser;
 
   const getCurrentGreeting = () => {
@@ -184,6 +190,15 @@ export default function DoctorHome({ navigation }) {
   useEffect(() => {
     console.log(appointments);
   }, [appointments]);
+
+  useEffect(() => {
+    if (isFocused) {
+      console.log(
+        "Home Screen is focused or returned to after navigating back"
+      );
+      toggleBottomSheet(false);
+    }
+  }, [isFocused]);
 
   const onRefresh = () => {
     console.log("Refreshing!");

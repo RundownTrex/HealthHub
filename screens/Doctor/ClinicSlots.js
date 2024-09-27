@@ -36,16 +36,30 @@ export default function ClinicSlots({ navigation }) {
   const [slotsByDate, setSlotsByDate] = useState({});
 
   const addClinicSlot = (selectedTime) => {
+    const existingSlots = slotsByDate[selectedDate] || [];
+  
+    const isDuplicate = existingSlots.some(slot => slot.time === selectedTime);
+  
+    if (isDuplicate) {
+      Toast.show({
+        type: "error",
+        text1: "Duplicate Slot",
+        text2: "A slot with this time already exists.",
+      });
+      return; 
+    }
+  
     const newSlot = {
       time: selectedTime,
       status: "not booked",
     };
-
+  
     setSlotsByDate((prev) => ({
       ...prev,
       [selectedDate]: [...(prev[selectedDate] || []), newSlot],
     }));
   };
+  
 
   const removeSlot = (index) => {
     setSlotsByDate((prev) => ({

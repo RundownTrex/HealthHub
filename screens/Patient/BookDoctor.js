@@ -48,6 +48,10 @@ export default function BookDoctor({ navigation, route }) {
 
   const [expanded, setExpanded] = useState(false);
 
+  useEffect(() => {
+    console.log(doctor);
+  }, [doctor]);
+
   //Expanding about text
   const toggleRead = useCallback(() => {
     const customAnimation = {
@@ -725,6 +729,9 @@ export default function BookDoctor({ navigation, route }) {
               justifyContent: "space-between",
               width: "100%",
               marginBottom: 10,
+            }}
+            onPress={() => {
+              navigation.navigate("ReportScreen", { doctor });
             }}
           >
             <Text

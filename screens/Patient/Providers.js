@@ -16,7 +16,6 @@ import {
   ActivityIndicator,
 } from "react-native-paper";
 import { FlashList } from "@shopify/flash-list";
-import { useRoute } from "@react-navigation/native";
 import { useBottomSheet } from "../../context/BottomSheetContext";
 import auth from "@react-native-firebase/auth";
 import firestore from "@react-native-firebase/firestore";
@@ -26,83 +25,9 @@ import colors from "../../utils/colors";
 import DoctorProfileCard from "../../components/DoctorProfileCard";
 import Toast from "react-native-toast-message";
 
-// const doctors = [
-//   // {
-//   //   name: "Dr. Bludma",
-//   //   degree: "MBBS",
-//   //   specialization: "General physician",
-//   //   experience: 10,
-//   //   location: "Dadar",
-//   //   clinic: "Fit clinic",
-//   //   address:
-//   //     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
-//   //   fee: 2500,
-//   //   image: require("../../assets/general-practicionor.png"),
-//   //   virtualConsultation: true,
-//   //   clinicAvailable: true,
-//   // },
-//   // {
-//   //   name: "Dr. Okay",
-//   //   degree: "MBBS",
-//   //   specialization: "General physician",
-//   //   experience: 10,
-//   //   location: "Dadar",
-//   //   clinic: "Fit clinic",
-//   //   address:
-//   //     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
-//   //   fee: 2500,
-//   //   image: require("../../assets/general-practicionor.png"),
-//   //   virtualConsultation: false,
-//   //   clinicAvailable: true,
-//   // },
-//   // {
-//   //   name: "Dr. Sure",
-//   //   degree: "MBBS",
-//   //   specialization: "General physician",
-//   //   experience: 10,
-//   //   location: "Dadar",
-//   //   clinic: "Fit clinic",
-//   //   address:
-//   //     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
-//   //   fee: 2500,
-//   //   image: require("../../assets/general-practicionor.png"),
-//   //   virtualConsultation: true,
-//   //   clinicAvailable: false,
-//   // },
-//   // {
-//   //   name: "Dr. Sure",
-//   //   degree: "MBBS",
-//   //   specialization: "General physician",
-//   //   experience: 10,
-//   //   location: "Dadar",
-//   //   clinic: "Fit clinic",
-//   //   address:
-//   //     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
-//   //   fee: 2500,
-//   //   image: require("../../assets/general-practicionor.png"),
-//   //   virtualConsultation: false,
-//   //   clinicAvailable: true,
-//   // },
-//   // {
-//   //   name: "Dr. Sure",
-//   //   degree: "MBBS",
-//   //   specialization: "General physician",
-//   //   experience: 10,
-//   //   location: "Dadar",
-//   //   clinic: "Fit clinic",
-//   //   address:
-//   //     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
-//   //   fee: 2500,
-//   //   image: require("../../assets/general-practicionor.png"),
-//   //   virtualConsultation: true,
-//   //   clinicAvailable: true,
-//   // },
-// ];
-
-export default function Providers({ navigation }) {
+export default function Providers({ navigation, route }) {
   const searchBarRef = useRef(null);
 
-  const route = useRoute();
   const { send } = route.params;
   const [searchQuery, setSearchQuery] = useState("");
   const [doctors, setDoctors] = useState([]);
@@ -195,6 +120,13 @@ export default function Providers({ navigation }) {
       searchBarRef.current?.focus();
     }
   }, [route.params?.focus]);
+
+  useEffect(() => {
+    if (route.params?.clinic) {
+      setOptions(true);
+      setClinic(true);
+    }
+  }, [route.params?.clinic]);
 
   useEffect(() => {
     if (send) {

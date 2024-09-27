@@ -213,6 +213,18 @@ export default function PatientAppointmentHistory({ navigation }) {
             Type: {item.appointmentType} Appointment
           </Text>
           <Text style={[styles.appointmentStatus]}>Status: {item.status}</Text>
+          <Pressable
+            style={styles.recordButton}
+            onPress={() => {
+              console.log(item);
+              navigation.pop();
+              // navigation.navigate("Home");
+
+              navigation.navigate("UploadMedicalRecord", { appointment: item });
+            }}
+          >
+            <Text style={styles.recordButtonText}>Add a record</Text>
+          </Pressable>
         </View>
       </View>
     );
@@ -309,8 +321,8 @@ export default function PatientAppointmentHistory({ navigation }) {
                   />
                   <Text style={styles.noRecordsText}>No appointments yet!</Text>
                   <Text style={styles.noRecordsSubtext}>
-                    You can keep a track of all your
-                    completed/cancelled appointments here
+                    You can keep a track of all your completed/cancelled
+                    appointments here
                   </Text>
                 </View>
               </View>
@@ -410,5 +422,22 @@ const styles = StyleSheet.create({
     color: colors.whitetext,
     fontSize: 15,
     fontWeight: "500",
+  },
+
+  recordButton: {
+    marginTop: 10,
+    marginHorizontal: 16,
+    backgroundColor: colors.complementary,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+
+  recordButtonText: {
+    color: colors.whitetext,
+    fontWeight: "500",
+    fontSize: 16,
   },
 });

@@ -373,7 +373,16 @@ export default function HomeScreen({ navigation }) {
               styles.cliniccard,
               pressed && { opacity: 0.8 },
             ]}
-            onPress={() => console.log("Clinic visit")}
+            onPress={() => {
+              navigation.navigate("Appointment");
+
+              setTimeout(() => {
+                navigation.navigate("Appointment", {
+                  screen: "Providers",
+                  params: { send: "", clinic: true },
+                });
+              }, 10);
+            }}
           >
             <View>
               <Text

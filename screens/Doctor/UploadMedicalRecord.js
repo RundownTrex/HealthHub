@@ -6,6 +6,7 @@ import {
   Pressable,
   Image,
   Dimensions,
+  BackHandler,
 } from "react-native";
 import BackIcon from "../../assets/icons/BackIcon";
 import { Dropdown } from "react-native-element-dropdown";
@@ -45,6 +46,21 @@ export default function UploadMedicalRecord({ navigation, route }) {
   useEffect(() => {
     console.log(appointment);
   }, []);
+
+  useEffect(() => {
+    toggleBottomSheet(true);
+    const backAction = () => {
+      navigation.pop();
+      return true;
+    };
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+    return () => {
+      backHandler.remove();
+    };
+  }, [toggleBottomSheet, navigation]);
 
   const pickDocument = async () => {
     try {

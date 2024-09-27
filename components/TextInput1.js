@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   multilineInput: {
-    maxHeight: 200,
+    maxHeight: 1000,
     textAlignVertical: "top", // Ensures text starts at the top
   },
 });
