@@ -224,7 +224,7 @@ export default function DoctorSignup({ navigation }) {
       !doctorProfile.licenseNumber ||
       !doctorProfile.yearsofexperience ||
       !doctorProfile.phone ||
-      !doctorProfile.consultFees 
+      !doctorProfile.consultFees
     ) {
       Toast.show({
         type: "error",
@@ -235,7 +235,10 @@ export default function DoctorSignup({ navigation }) {
       return;
     }
 
-    if (doctorProfile.licenseNumber.length !== 10 || isNaN(doctorProfile.licenseNumber)) {
+    if (
+      doctorProfile.licenseNumber.length !== 10 ||
+      isNaN(doctorProfile.licenseNumber)
+    ) {
       Toast.show({
         type: "error",
         text1: "Invalid License Number",
@@ -281,7 +284,7 @@ export default function DoctorSignup({ navigation }) {
         setIsLoading(false);
         return;
       }
-  
+
       if (
         markerPosition.latitude === initialMarkerPosition.latitude &&
         markerPosition.longitude === initialMarkerPosition.longitude

@@ -130,6 +130,7 @@ export default function MedicalRecordsScreen({ navigation }) {
         .doc(userId)
         .collection("medicalRecords")
         .where("type", "==", recordType)
+        .orderBy("createdAt", "desc")
         .get();
 
       const fetchedRecords = querySnapshot.docs.map((doc) => ({

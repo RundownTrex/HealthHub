@@ -17,6 +17,7 @@ const userRooms = {};
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 const server = http.createServer(app);
 
@@ -317,4 +318,50 @@ const deleteOldSlots = async () => {
 cron.schedule("0 0 * * *", () => {
   console.log("Running daily cleanup task...");
   deleteOldSlots();
+});
+
+const sendNotificationForNewMedicalRecord = async (appointmentId, doctorName) => {
+  try {
+    const appointmentDoc = await firestore.collection("appointments").doc(appointmentId).get();
+    const appointmentData = appointmentDoc.data();
+    const patientId = appointmentData.patientId;
+
+    const patientDoc = await firestore.collection("users").doc(patientId).get();
+    const patientData = patientDoc.data();
+    const fcmToken = patientData.fcmToken;
+
+    if (fcmToken) {
+      const notificationMessage = {
+        notification: {
+          title: "New Medical Record Added",
+          body: `Dr. ${doctorName} has uploaded a new medical record for you.`,
+        },
+        token: fcmToken,
+      };
+
+      await admin.messaging().send(notificationMessage);
+      console.log("Notification sent to patient successfully");
+    } else {
+      console.log("FCM Token not available for this patient.");
+    }
+  } catch (error) {
+    console.error("Error sending notification for medical record:", error);
+  }
+};
+
+app.post("/add-medical-record", async (req, res) => {
+  const { appointmentId, doctorName } = req.body;
+
+  if (!appointmentId || !doctorName) {
+    return res.status(400).json({ error: "appointmentId and doctorName are required" });
+  }
+
+  try {
+    await sendNotificationForNewMedicalRecord(appointmentId, doctorName);
+
+    res.status(200).json({ success: true, message: "Notification sent" });
+  } catch (error) {
+    console.error("Error in /add-medical-record route:", error);
+    res.status(500).json({ error: "Failed to send notification" });
+  }
 });

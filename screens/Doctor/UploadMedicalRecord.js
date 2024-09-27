@@ -147,6 +147,26 @@ export default function UploadMedicalRecord({ navigation, route }) {
         .collection("medicalRecords")
         .add(record);
 
+      const API_URL = `http://192.168.8.151:3000/add-medical-record`;
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          appointmentId: appointment.id,
+          doctorName: doctorName,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log("Notification sent successfully:", result.message);
+      } else {
+        console.error("Error sending notification:", result.error);
+      }
+
       Toast.show({
         type: "success",
         text1: "Record uploaded successfully!",

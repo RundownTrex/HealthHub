@@ -66,12 +66,13 @@ export default function DoctorChat({ navigation, route }) {
   };
 
   useEffect(() => {
-    console.log(doctorName);
-    console.log(patientName);
-    console.log("Receiver's : ", userpfp);
-    console.log("Senders's : ", userData.pfpUrl);
-    console.log(doctorId);
-    console.log(patientId);
+    // console.log(doctorName);
+    // console.log(patientName);
+    // console.log("Receiver's : ", userpfp);
+    // console.log("Senders's : ", userData.pfpUrl);
+    // console.log(doctorId);
+    // console.log(patientId);
+    console.log(process.env.EXPO_PUBLIC_LOCAL_IP);
   }, [userData]);
 
   useEffect(() => {
@@ -115,7 +116,7 @@ export default function DoctorChat({ navigation, route }) {
 
   useEffect(() => {
     console.log("Attempting to connect to socket server...");
-    socket.current = io("http://192.168.8.151:3000");
+    socket.current = io(`http://${process.env.EXPO_PUBLIC_LOCAL_IP}:3000`);
 
     socket.current.on("connect", () => {
       console.log("Socket connected:", socket.current.id);
@@ -269,7 +270,7 @@ export default function DoctorChat({ navigation, route }) {
           lineHeight: 30,
           //   borderWidth: 1,
           alignItems: "center",
-          backgroundColor: colors.darkgraytext,
+          backgroundColor: colors.somewhatlightback,
           marginBottom: 0,
           marginRight: 5,
         }}
@@ -285,10 +286,9 @@ export default function DoctorChat({ navigation, route }) {
           style={{
             marginRight: 10,
             // marginBottom: 10,
-            borderWidth: 1,
             padding: 10,
             borderRadius: 200,
-            backgroundColor: colors.darkgraytext,
+            backgroundColor: colors.complementary,
             alignSelf: "center",
             justifyContent: "center",
           }}
