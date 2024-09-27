@@ -7,7 +7,7 @@ import {
   Pressable,
   Image,
   ScrollView,
-  Alert,
+  Dimensions,
 } from "react-native";
 import { Divider } from "react-native-paper";
 import { format, parse, parseISO } from "date-fns";
@@ -113,6 +113,8 @@ const diet = [
   },
   { label: "Organic (prefers organically grown foods)", value: "organic" },
 ];
+
+const { height, width } = Dimensions.get("screen");
 
 export default function PatientProfile({ navigation, route }) {
   const { appointment } = route.params;
@@ -332,7 +334,7 @@ export default function PatientProfile({ navigation, route }) {
                     .collection("recentChats")
                     .where("doctorId", "==", appointment.doctorId)
                     .where("patientId", "==", appointment.patientId)
-                    .get() 
+                    .get()
                     .then((querySnapshot) => {
                       querySnapshot.forEach((doc) => {
                         firestore()
@@ -374,6 +376,14 @@ export default function PatientProfile({ navigation, route }) {
             </Pressable>
           </View>
         </View>
+        <Pressable
+          style={styles.recordButton}
+          onPress={() => {
+            navigation.navigate("UploadMedicalRecord", { appointment });
+          }}
+        >
+          <Text style={styles.recordButtonText}>Add a record</Text>
+        </Pressable>
         <View style={styles.bottomContent}>
           <Text style={styles.label}>
             {appointment.appointmentType} Appointment
@@ -568,7 +578,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: colors.darkback,
-    paddingBottom: 80,
+    paddingBottom: height * 0.14,
   },
   pfp: {
     height: 90,
@@ -621,6 +631,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderTopColor: colors.tenpercent,
     borderTopWidth: 1,
+    height: height * 0.12,
   },
 
   button: {
@@ -658,6 +669,23 @@ const styles = StyleSheet.create({
     color: colors.whitetext,
     fontWeight: "500",
     marginLeft: 5,
+    fontSize: 16,
+  },
+
+  recordButton: {
+    marginTop: 10,
+    marginHorizontal: 16,
+    backgroundColor: colors.complementary,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+
+  recordButtonText: {
+    color: colors.whitetext,
+    fontWeight: "500",
     fontSize: 16,
   },
 });

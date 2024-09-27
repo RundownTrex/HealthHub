@@ -115,7 +115,7 @@ export default function DoctorChat({ navigation, route }) {
 
   useEffect(() => {
     console.log("Attempting to connect to socket server...");
-    socket.current = io("http://192.168.148.151:3000");
+    socket.current = io("http://192.168.8.151:3000");
 
     socket.current.on("connect", () => {
       console.log("Socket connected:", socket.current.id);

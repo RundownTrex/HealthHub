@@ -7,12 +7,19 @@ import {
   Pressable,
   Image,
   RefreshControl,
-  Alert,
   FlatList,
+  PermissionsAndroid,
+  Platform,
+  Alert,
 } from "react-native";
 import BackIcon from "../../assets/icons/BackIcon";
 import { Dropdown } from "react-native-element-dropdown";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import firestore from "@react-native-firebase/firestore";
+import auth from "@react-native-firebase/auth";
+import RNFS from "react-native-fs";
+import { ProgressBar } from "react-native-paper";
+import { format } from "date-fns";
 
 import colors from "../../utils/colors";
 import { useBottomSheet } from "../../context/BottomSheetContext";
@@ -30,7 +37,74 @@ export default function MedicalRecordsScreen({ navigation }) {
   const [recordType, setRecordType] = useState("Reports");
   const [records, setRecords] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const user = auth().currentUser;
 
+  const requestStoragePermission = async () => {
+    if (Platform.OS === "android") {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          {
+            title: "Storage Permission",
+            message: "HealthHub needs access to your storage to download files",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK",
+          }
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (err) {
+        console.warn(err);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const downloadFile = async (url, fileName) => {
+    const hasPermission = await requestStoragePermission();
+    if (hasPermission) {
+      try {
+        const downloadPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+
+        const downloadOptions = {
+          fromUrl: url,
+          toFile: downloadPath,
+          begin: () => {
+            console.log("Download has started.");
+          },
+          progress: (res) => {
+            const percentage = res.bytesWritten / res.contentLength;
+            setProgress(percentage);
+          },
+        };
+
+        const response = await RNFS.downloadFile(downloadOptions).promise;
+
+        if (response.statusCode === 200) {
+          Alert.alert("Download complete!", `File saved to ${downloadPath}`);
+          setProgress(0);
+        } else {
+          Alert.alert(
+            "Download failed",
+            "An error occurred while downloading the file."
+          );
+        }
+      } catch (error) {
+        console.error("Error downloading file:", error);
+        Alert.alert(
+          "Download failed",
+          "An error occurred while downloading the file."
+        );
+      }
+    } else {
+      Alert.alert(
+        "Permission denied",
+        "You need to allow storage access to download files."
+      );
+    }
+  };
   useEffect(() => {
     toggleBottomSheet(true);
     const backAction = () => {
@@ -49,18 +123,24 @@ export default function MedicalRecordsScreen({ navigation }) {
 
   const fetchRecords = useCallback(async () => {
     try {
-      const storedRecords = await AsyncStorage.getItem("medicalRecords");
-      if (storedRecords) {
-        const allRecords = JSON.parse(storedRecords);
-        console.log(allRecords);
-        const filteredRecords = allRecords.filter(
-          (record) => record.type === recordType
-        );
-        console.log(filteredRecords);
-        setRecords(filteredRecords);
-      }
+      const userId = user.uid;
+
+      const querySnapshot = await firestore()
+        .collection("users")
+        .doc(userId)
+        .collection("medicalRecords")
+        .where("type", "==", recordType)
+        .get();
+
+      const fetchedRecords = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      console.log(fetchedRecords);
+      setRecords(fetchedRecords);
     } catch (error) {
-      console.error("Error fetching records:", error);
+      console.error("Error fetching records from Firestore:", error);
     }
   }, [recordType]);
 
@@ -73,36 +153,6 @@ export default function MedicalRecordsScreen({ navigation }) {
     fetchRecords().finally(() => setRefreshing(false));
   }, [fetchRecords]);
 
-  const deleteRecord = useCallback(
-    async (indexToDelete) => {
-      try {
-        const updatedRecords = records.filter(
-          (_, index) => index !== indexToDelete
-        );
-        await AsyncStorage.setItem(
-          "medicalRecords",
-          JSON.stringify(updatedRecords)
-        );
-        setRecords(updatedRecords);
-      } catch (error) {
-        console.error("Error deleting record:", error);
-      }
-    },
-    [records]
-  );
-
-  const confirmDelete = (index) => {
-    Alert.alert(
-      "Delete Record",
-      "Are you sure you want to delete this record?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Delete", onPress: () => deleteRecord(index) },
-      ],
-      { cancelable: true }
-    );
-  };
-
   const renderRecord = ({ item, index }) => (
     <View style={styles.recordContainer}>
       <View
@@ -113,24 +163,35 @@ export default function MedicalRecordsScreen({ navigation }) {
       >
         <View style={{ padding: 16 }}>
           <Text style={styles.recordName}>Name: {item.name}</Text>
+          <Text style={styles.recordType}>Issued by: {item.doctorName}</Text>
           <Text style={styles.recordType}>Type: {item.type}</Text>
           <Text style={styles.filename}>File: {item.fileName}</Text>
+
+          <Text style={styles.filename}>
+            Issued on:{" "}
+            {format(
+              new Date(item.createdAt.seconds * 1000),
+              "d MMMM yyyy, h:mm a"
+            )}
+          </Text>
         </View>
-        <Pressable
-          style={styles.deleteButton}
-          onPress={() => confirmDelete(index)}
-        >
-          <Image
-            source={require("../../assets/red-cross.png")}
-            style={{ height: 35, width: 35 }}
-          />
-        </Pressable>
       </View>
+      {progress > 0 && (
+        <ProgressBar
+          progress={progress}
+          color={colors.lightaccent}
+          style={{ marginBottom: 20, marginHorizontal: 20 }}
+        />
+      )}
       <Pressable
         style={({ pressed }) => [
           styles.downloadButton,
           pressed && { opacity: 0.8 },
         ]}
+        onPress={() => {
+          // console.log(item.createdAt);
+          downloadFile(item.fileUrl, item.fileName);
+        }}
       >
         <Text style={styles.downloadButtonText}>Download</Text>
       </Pressable>
@@ -211,24 +272,10 @@ export default function MedicalRecordsScreen({ navigation }) {
                   here.
                 </Text>
               </View>
-
-              <Button1
-                text="Add record"
-                onPress={() => navigation.navigate("UploadMedicalRecord")}
-              />
             </View>
           }
         />
       </View>
-
-      {records.length > 0 && (
-        <View style={styles.addButtonContainer}>
-          <Button1
-            text="Add record"
-            onPress={() => navigation.navigate("UploadMedicalRecord")}
-          />
-        </View>
-      )}
     </>
   );
 }
@@ -285,7 +332,7 @@ const styles = StyleSheet.create({
   },
   recordType: {
     fontSize: 16,
-    marginTop: 8,
+    marginTop: 0,
     color: colors.blacktext,
   },
   filename: {

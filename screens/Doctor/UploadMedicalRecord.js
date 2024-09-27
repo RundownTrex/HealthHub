@@ -3,17 +3,18 @@ import {
   View,
   Text,
   StyleSheet,
-  BackHandler,
   Pressable,
   Image,
-  ScrollView,
   Dimensions,
 } from "react-native";
 import BackIcon from "../../assets/icons/BackIcon";
 import { Dropdown } from "react-native-element-dropdown";
 import * as DocumentPicker from "expo-document-picker";
 import Toast from "react-native-toast-message";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+import storage from "@react-native-firebase/storage";
+import * as FileSystem from "expo-file-system";
 
 import colors from "../../utils/colors";
 import { useBottomSheet } from "../../context/BottomSheetContext";
@@ -30,29 +31,20 @@ const bgroup = [
   { label: "Vaccination records", value: "vaccinationrecords" },
 ];
 
-export default function UploadMedicalRecord({ navigation }) {
+export default function UploadMedicalRecord({ navigation, route }) {
+  const { appointment } = route.params;
+
   const { toggleBottomSheet } = useBottomSheet();
   const [recordType, setRecordType] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedFileName, setSelectedFileName] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [rname, setRname] = useState("");
+  const user = auth().currentUser;
 
-  //   useEffect(() => {
-  //     toggleBottomSheet(true);
-  //     const backAction = () => {
-  //       navigation.pop();
-  //       return true;
-  //     };
-  //     const backHandler = BackHandler.addEventListener(
-  //       "hardwareBackPress",
-  //       backAction
-  //     );
-  //     return () => {
-  //       toggleBottomSheet(false);
-  //       backHandler.remove();
-  //     };
-  //   }, [toggleBottomSheet, navigation]);
+  useEffect(() => {
+    console.log(appointment);
+  }, []);
 
   const pickDocument = async () => {
     try {
@@ -61,13 +53,22 @@ export default function UploadMedicalRecord({ navigation }) {
         copyToCacheDirectory: false,
       });
 
-      console.log(result); // Log the entire result
+      console.log(result);
 
       if (result.assets && result.assets.length > 0) {
         const fileUri = result.assets[0].uri;
-        console.log("Document picked:", fileUri);
-        setSelectedFile(fileUri);
-        setSelectedFileName(result.assets[0].name);
+        const fileName = result.assets[0].name;
+
+        const cacheFileUri = `${FileSystem.cacheDirectory}${fileName}`;
+        await FileSystem.copyAsync({
+          from: fileUri,
+          to: cacheFileUri,
+        });
+
+        setSelectedFile(cacheFileUri);
+        setSelectedFileName(fileName);
+
+        console.log("Document picked and copied to cache:", cacheFileUri);
       } else if (result.canceled) {
         console.log("Document picking canceled.");
       } else {
@@ -90,36 +91,60 @@ export default function UploadMedicalRecord({ navigation }) {
     const lab = bgroup.find((option) => option.value === recordType);
     const selectedLabel = lab.label;
 
-    const record = {
-      name: rname,
-      type: selectedLabel,
-      fileUri: selectedFile,
-      fileName: selectedFileName,
-    };
+    const fileUri = selectedFile;
+    const fileName = selectedFileName;
+    const fileExtension = fileName.split(".").pop();
+
+    setIsLoading(true);
 
     try {
-      const existingRecords = await AsyncStorage.getItem("medicalRecords");
-      const updatedRecords = existingRecords
-        ? [...JSON.parse(existingRecords), record]
-        : [record];
-
-      await AsyncStorage.setItem(
-        "medicalRecords",
-        JSON.stringify(updatedRecords)
+      const storageRef = storage().ref(
+        `medicalRecords/${appointment.id}/${fileName}`
       );
+      await storageRef.putFile(fileUri);
+
+      console.log("here!!!!!!!!");
+
+      const downloadURL = await storageRef.getDownloadURL();
+
+      const docDoc = await firestore().collection("users").doc(user.uid).get();
+
+      const docData = docDoc.data();
+
+      const doctorName = `${docData.firstname} ${docData.lastname}`;
+
+      const record = {
+        name: rname,
+        type: selectedLabel,
+        fileName: fileName,
+        fileUrl: downloadURL,
+        createdAt: new Date(),
+        appointmentId: appointment.id,
+        patientId: appointment.patientId,
+        doctorId: appointment.doctorId,
+        doctorName: doctorName,
+      };
+
+      await firestore()
+        .collection("users")
+        .doc(appointment.patientId)
+        .collection("medicalRecords")
+        .add(record);
 
       Toast.show({
         type: "success",
-        text1: "Saved!",
+        text1: "Record uploaded successfully!",
       });
 
       navigation.pop();
     } catch (error) {
-      console.error("Error saving record:", error);
+      console.error("Error uploading record:", error);
       Toast.show({
         type: "error",
-        text1: "Failed to save record",
+        text1: "Failed to upload record",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 

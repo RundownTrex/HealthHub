@@ -23,6 +23,7 @@ const firestore = admin.firestore();
 
 const sendNotification = async (recipientId, message, title, pfp) => {
   try {
+    console.log("Trying to send notification here!");
     const userDoc = await firestore.collection("users").doc(recipientId).get();
     const userData = userDoc.data();
     const fcmToken = userData.fcmToken;
@@ -34,7 +35,6 @@ const sendNotification = async (recipientId, message, title, pfp) => {
         notification: {
           title: title,
           body: message,
-          image: pfp,
         },
         token: fcmToken,
       };

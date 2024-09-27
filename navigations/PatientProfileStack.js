@@ -4,7 +4,6 @@ import Profile from "../screens/Patient/Profile";
 import GeneralProfileScreen from "../screens/Patient/GeneralProfileScreen";
 import MedicalProfileScreen from "../screens/Patient/MedicalProfileScreen";
 import MedicalRecordsScreen from "../screens/Patient/MedicalRecordsScreen";
-import UploadMedicalRecord from "../screens/Patient/UploadMedicalRecord";
 import SupportScreen from "../screens/Patient/SupportScreen";
 import SettingsScreen from "../screens/Patient/SettingsScreen";
 import PasswordChangeScreen from "../screens/Patient/PasswordChangeScreen";
@@ -36,10 +35,7 @@ export default function PatientProfileStack() {
         name="MedicalRecordsScreen"
         component={MedicalRecordsScreen}
       />
-      <Stack.Screen
-        name="UploadMedicalRecord"
-        component={UploadMedicalRecord}
-      />
+
       <Stack.Screen name="AppointmentHistory" component={AppointmentHistory} />
       <Stack.Screen name="SupportScreen" component={SupportScreen} />
       <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
