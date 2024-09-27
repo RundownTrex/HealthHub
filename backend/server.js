@@ -4,7 +4,14 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 const cron = require("node-cron");
 const admin = require("firebase-admin");
-const { format, parse, addMinutes, isWithinInterval } = require("date-fns");
+const {
+  format,
+  parse,
+  addMinutes,
+  isWithinInterval,
+  parseISO,
+  isBefore,
+} = require("date-fns");
 
 const userRooms = {};
 
@@ -263,4 +270,51 @@ io.on("connection", (socket) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+const isPastDate = (dateStr) => {
+  const slotDate = parseISO(dateStr);
+  const today = new Date();
+
+  const slotDay = new Date(slotDate.setHours(0, 0, 0, 0));
+  const todayDay = new Date(today.setHours(0, 0, 0, 0));
+
+  return isBefore(slotDay, todayDay);
+};
+const deleteOldSlots = async () => {
+  try {
+    const profileCollection = firestore.collection("profile");
+
+    const profilesSnapshot = await profileCollection.get();
+
+    profilesSnapshot.forEach(async (profileDoc) => {
+      const clinicSlotsRef = profileDoc.ref.collection("clinicSlots");
+      const virtualSlotsRef = profileDoc.ref.collection("virtualSlots");
+
+      const clinicSlotsSnapshot = await clinicSlotsRef.get();
+      clinicSlotsSnapshot.forEach(async (doc) => {
+        if (isPastDate(doc.id)) {
+          await doc.ref.delete();
+          console.log(`Deleted clinic slot: ${doc.id}`);
+        }
+      });
+
+      const virtualSlotsSnapshot = await virtualSlotsRef.get();
+      virtualSlotsSnapshot.forEach(async (doc) => {
+        if (isPastDate(doc.id)) {
+          await doc.ref.delete();
+          console.log(`Deleted virtual slot: ${doc.id}`);
+        }
+      });
+    });
+
+    console.log("Old slots cleanup completed!");
+  } catch (error) {
+    console.error("Error deleting old slots: ", error);
+  }
+};
+
+cron.schedule("0 0 * * *", () => {
+  console.log("Running daily cleanup task...");
+  deleteOldSlots();
 });
