@@ -147,7 +147,7 @@ export default function UploadMedicalRecord({ navigation, route }) {
         .collection("medicalRecords")
         .add(record);
 
-      const API_URL = `http://192.168.8.151:3000/add-medical-record`;
+      const API_URL = `http://${LOCAL_IP}:3000/add-medical-record`;
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {

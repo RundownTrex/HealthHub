@@ -1,3 +1,5 @@
+require("dotenv").config({ path: "../.env" });
+
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -21,7 +23,8 @@ app.use(express.json());
 
 const server = http.createServer(app);
 
-const serviceAccount = require("./healthhub-2cbba-firebase-adminsdk-aej53-cb62774064.json");
+// const serviceAccount = require("./healthhub-2cbba-firebase-adminsdk-aej53-cb62774064.json");
+const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -320,9 +323,15 @@ cron.schedule("0 0 * * *", () => {
   deleteOldSlots();
 });
 
-const sendNotificationForNewMedicalRecord = async (appointmentId, doctorName) => {
+const sendNotificationForNewMedicalRecord = async (
+  appointmentId,
+  doctorName
+) => {
   try {
-    const appointmentDoc = await firestore.collection("appointments").doc(appointmentId).get();
+    const appointmentDoc = await firestore
+      .collection("appointments")
+      .doc(appointmentId)
+      .get();
     const appointmentData = appointmentDoc.data();
     const patientId = appointmentData.patientId;
 
@@ -353,7 +362,9 @@ app.post("/add-medical-record", async (req, res) => {
   const { appointmentId, doctorName } = req.body;
 
   if (!appointmentId || !doctorName) {
-    return res.status(400).json({ error: "appointmentId and doctorName are required" });
+    return res
+      .status(400)
+      .json({ error: "appointmentId and doctorName are required" });
   }
 
   try {
