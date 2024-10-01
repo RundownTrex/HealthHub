@@ -1,6 +1,7 @@
 require("dotenv").config({ path: "../.env" });
 
 const express = require("express");
+const axios = require("axios");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
@@ -376,3 +377,104 @@ app.post("/add-medical-record", async (req, res) => {
     res.status(500).json({ error: "Failed to send notification" });
   }
 });
+
+const sendNotificationToDoctorForNewAppointment = async (
+  doctorId,
+  patientName,
+  appointmentId
+) => {
+  try {
+    const doctorDoc = await firestore.collection("users").doc(doctorId).get();
+    const doctorData = doctorDoc.data();
+    const fcmToken = doctorData.fcmToken;
+
+    if (fcmToken) {
+      const notificationMessage = {
+        notification: {
+          title: "New Appointment",
+          body: `You have a new appointment with ${patientName}`,
+        },
+        token: fcmToken,
+      };
+
+      await admin.messaging().send(notificationMessage);
+      console.log("Notification sent to doctor successfully");
+
+      await firestore.collection("appointments").doc(appointmentId).update({
+        notificationSent: true,
+      });
+    } else {
+      console.log("FCM Token not available for this doctor.");
+    }
+  } catch (error) {
+    console.error(
+      doctorId,
+      "Error sending notification to doctor for new appointment:",
+      error
+    );
+  }
+};
+
+const appointmentsCollection = firestore.collection("appointments");
+
+appointmentsCollection.onSnapshot((snapshot) => {
+  snapshot.docChanges().forEach(async (change) => {
+    const appointmentData = change.doc.data();
+    const patientId = appointmentData.patientId;
+    const doctorId = appointmentData.doctorId;
+    const appointmentId = change.doc.id;
+
+    const patientDoc = await firestore.collection("users").doc(patientId).get();
+    const patientData = patientDoc.data();
+    const patientName = `${patientData.firstname} ${patientData.lastname}`;
+
+    // Check if the appointment is newly booked and notification hasn't been sent yet
+    if (
+      change.type === "added" &&
+      appointmentData.status === "booked" &&
+      !appointmentData.notificationSent
+    ) {
+      await sendNotificationToDoctorForNewAppointment(
+        doctorId,
+        patientName,
+        appointmentId
+      );
+    }
+
+    // Check if the appointment is modified and canceled
+    if (change.type === "modified" && appointmentData.status === "Cancelled") {
+      await sendNotificationToDoctorForCanceledAppointment(
+        doctorId,
+        patientName
+      );
+    }
+  });
+});
+
+const sendNotificationToDoctorForCanceledAppointment = async (
+  doctorId,
+  patientName
+) => {
+  try {
+    const doctorDoc = await firestore.collection("users").doc(doctorId).get();
+    const doctorData = doctorDoc.data();
+    const fcmToken = doctorData.fcmToken;
+
+    if (fcmToken) {
+      const notificationMessage = {
+        notification: {
+          title: "Appointment Canceled",
+          body: `Your appointment with ${patientName} has been canceled.`,
+        },
+        token: fcmToken,
+      };
+
+      await admin.messaging().send(notificationMessage);
+      console.log("Cancellation notification sent to doctor successfully");
+    } else {
+      console.log("FCM Token not available for this doctor.");
+    }
+  } catch (error) {
+    console.error("Error sending cancellation notification to doctor:", error);
+  }
+};

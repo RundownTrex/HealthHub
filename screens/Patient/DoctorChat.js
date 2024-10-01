@@ -117,7 +117,7 @@ export default function DoctorChat({ navigation, route }) {
 
   useEffect(() => {
     console.log("Attempting to connect to socket server...");
-    socket.current = io(`http://${LOCAL_IP}:3000`);
+    socket.current = io(`https://healthhub-6799.onrender.com`);
 
     socket.current.on("connect", () => {
       console.log("Socket connected:", socket.current.id);

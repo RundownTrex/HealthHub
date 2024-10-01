@@ -1,3 +1,4 @@
+import { RAZORPAY_TEST_KEY } from "@env";
 import { useEffect, useState } from "react";
 import {
   View,
@@ -6,6 +7,8 @@ import {
   Image,
   Pressable,
   ScrollView,
+  Alert,
+  Linking,
 } from "react-native";
 import { Avatar, Divider, RadioButton } from "react-native-paper";
 import {
@@ -18,6 +21,8 @@ import {
 import firestore from "@react-native-firebase/firestore";
 import auth from "@react-native-firebase/auth";
 import Toast from "react-native-toast-message";
+import axios from "axios";
+import RazorpayCheckout from "react-native-razorpay";
 
 import colors from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";
@@ -36,9 +41,10 @@ export default function Booking({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(false);
   const user = auth().currentUser;
 
-  // useEffect(() => {
-  //   console.log(slotno);
-  // }, [slotno]);
+  useEffect(() => {
+    console.log(doctor);
+    console.log(RAZORPAY_TEST_KEY);
+  }, [doctor]);
 
   const updateSlotStatus = async (date, time, type) => {
     try {
@@ -78,7 +84,30 @@ export default function Booking({ navigation, route }) {
     }
   };
 
-  const createAppointment = async (appointmentData) => {
+  const handlePayment = () => {
+    var options = {
+      description: "Payment for appointment",
+      image: require("../../assets/icon.png"),
+      currency: "INR",
+      key: RAZORPAY_TEST_KEY,
+      amount: parseInt(doctor.profileData.consultFees) * 100,
+      name: "HealthHub",
+      prefill: {
+        email: user.email,
+      },
+      theme: { color: "#53a20e" },
+    };
+
+    RazorpayCheckout.open(options)
+      .then((data) => {
+        createAppointment(data.razorpay_payment_id);
+      })
+      .catch((error) => {
+        alert(`Error: ${error.code} | ${error.description}`);
+      });
+  };
+
+  const createAppointment = async (paymentid) => {
     try {
       setIsLoading(true);
       const appointmentsRef = firestore().collection("appointments");
@@ -96,6 +125,7 @@ export default function Booking({ navigation, route }) {
         consultFees: doctor.profileData.consultFees,
         reminderSent: false,
         doctorReminder: false,
+        paymentid,
       };
 
       await appointmentsRef.add({
@@ -107,6 +137,7 @@ export default function Booking({ navigation, route }) {
       Toast.show({
         type: "success",
         text1: "Appointment booked successfully!",
+        text2: `Payment id: ${paymentid}`,
       });
       console.log("Appointment created successfully!");
       setIsLoading(false);
@@ -561,7 +592,13 @@ export default function Booking({ navigation, route }) {
           <Button1
             text={"Book Appointment"}
             style={{ alignSelf: "center", marginBottom: 16 }}
-            onPress={createAppointment}
+            onPress={async () => {
+              if (paymentMethod === "Online") {
+                handlePayment();
+              } else {
+                createAppointment("in-clinic");
+              }
+            }}
           />
         </View>
       </ScrollView>
