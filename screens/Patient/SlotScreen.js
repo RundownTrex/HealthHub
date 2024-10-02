@@ -6,7 +6,6 @@ import {
   StatusBar,
   Pressable,
   ScrollView,
-  Dimensions,
   Image,
   FlatList,
 } from "react-native";
@@ -274,14 +273,7 @@ export default function SlotScreen({ navigation, route }) {
       >
         {item.displayDate}
       </Text>
-      {/* <Text
-        style={[
-          styles.slotsAvailable,
-          selectedSlot === index && styles.selectedSlotText,
-        ]}
-      >
-        {item.available} slots available
-      </Text> */}
+
     </Pressable>
   );
 

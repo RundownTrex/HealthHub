@@ -37,29 +37,30 @@ export default function ClinicSlots({ navigation }) {
 
   const addClinicSlot = (selectedTime) => {
     const existingSlots = slotsByDate[selectedDate] || [];
-  
-    const isDuplicate = existingSlots.some(slot => slot.time === selectedTime);
-  
+
+    const isDuplicate = existingSlots.some(
+      (slot) => slot.time === selectedTime
+    );
+
     if (isDuplicate) {
       Toast.show({
         type: "error",
         text1: "Duplicate Slot",
         text2: "A slot with this time already exists.",
       });
-      return; 
+      return;
     }
-  
+
     const newSlot = {
       time: selectedTime,
       status: "not booked",
     };
-  
+
     setSlotsByDate((prev) => ({
       ...prev,
       [selectedDate]: [...(prev[selectedDate] || []), newSlot],
     }));
   };
-  
 
   const removeSlot = (index) => {
     setSlotsByDate((prev) => ({
@@ -101,6 +102,7 @@ export default function ClinicSlots({ navigation }) {
   }, [toggleBottomSheet, navigation]);
 
   const fetchSlots = async (selectedDate) => {
+    setIsLoading(true);
     try {
       const clinicSlotsRef = firestore()
         .collection("profile")
@@ -143,6 +145,8 @@ export default function ClinicSlots({ navigation }) {
         type: "error",
         text1: "Failed to fetch slots",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -152,55 +156,55 @@ export default function ClinicSlots({ navigation }) {
     }
   }, [selectedDate]);
 
-  useEffect(() => {
-    const firstFetch = async () => {
-      try {
-        const virtualSlotsRef = firestore()
-          .collection("profile")
-          .doc(user.uid)
-          .collection("virtualSlots");
-        const slotsSnapshot = await virtualSlotsRef.get();
+  // useEffect(() => {
+  //   const firstFetch = async () => {
+  //     try {
+  //       const virtualSlotsRef = firestore()
+  //         .collection("profile")
+  //         .doc(user.uid)
+  //         .collection("virtualSlots");
+  //       const slotsSnapshot = await virtualSlotsRef.get();
 
-        if (slotsSnapshot.empty) {
-          setNoSlot(true);
-          setSlotsByDate((prev) => ({
-            ...prev,
-            [selectedDate]: [],
-          }));
-        } else {
-          setNoSlot(false);
-          const slotsRef = virtualSlotsRef.doc(selectedDate);
-          const doc = await slotsRef.get();
+  //       if (slotsSnapshot.empty) {
+  //         setNoSlot(true);
+  //         setSlotsByDate((prev) => ({
+  //           ...prev,
+  //           [selectedDate]: [],
+  //         }));
+  //       } else {
+  //         setNoSlot(false);
+  //         const slotsRef = virtualSlotsRef.doc(selectedDate);
+  //         const doc = await slotsRef.get();
 
-          if (doc.exists) {
-            const data = doc.data();
-            const slots = (data.slots || []).map((slot) => ({
-              time: slot.time,
-              status: slot.status || "not booked",
-            }));
-            setSlotsByDate((prev) => ({
-              ...prev,
-              [selectedDate]: slots,
-            }));
-          } else {
-            console.log("No slots found for this date.");
-            setSlotsByDate((prev) => ({
-              ...prev,
-              [selectedDate]: [],
-            }));
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching slots: ", error);
-        Toast.show({
-          type: "error",
-          text1: "Failed to fetch slots",
-        });
-      }
-    };
+  //         if (doc.exists) {
+  //           const data = doc.data();
+  //           const slots = (data.slots || []).map((slot) => ({
+  //             time: slot.time,
+  //             status: slot.status || "not booked",
+  //           }));
+  //           setSlotsByDate((prev) => ({
+  //             ...prev,
+  //             [selectedDate]: slots,
+  //           }));
+  //         } else {
+  //           console.log("No slots found for this date.");
+  //           setSlotsByDate((prev) => ({
+  //             ...prev,
+  //             [selectedDate]: [],
+  //           }));
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching slots: ", error);
+  //       Toast.show({
+  //         type: "error",
+  //         text1: "Failed to fetch slots",
+  //       });
+  //     }
+  //   };
 
-    firstFetch();
-  }, []);
+  //   firstFetch();
+  // }, []);
 
   const saveSlots = async () => {
     setIsLoading(true);

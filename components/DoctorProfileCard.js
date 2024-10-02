@@ -34,7 +34,15 @@ const DoctorProfileCard = ({ doctor }) => {
     <View style={styles.card}>
       <View style={styles.profileSection}>
         <View style={styles.avatarwrap}>
-          <Avatar.Image source={{ uri: doctor.pfpUrl }} size={90} />
+          <Image
+            source={{ uri: doctor.pfpUrl }}
+            style={{
+              height: 90,
+              width: 90,
+              borderRadius: 100,
+              overflow: "hidden",
+            }}
+          />
           {doctor.profileData.virtualConsultation && (
             <View style={styles.cameraIcon}>
               <Image

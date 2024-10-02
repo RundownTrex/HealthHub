@@ -118,14 +118,6 @@ export default function SupportScreen({ navigation }) {
             />
             <Text style={styles.itemText}>Email</Text>
           </Pressable>
-          {/* <Divider />
-          <Pressable style={styles.item} onPress={() => console.log("Called")}>
-            <Image
-              source={require("../../assets/contactus-call.png")}
-              style={styles.icon}
-            />
-            <Text style={styles.itemText}>Call</Text>
-          </Pressable> */}
         </View>
       </View>
     </>

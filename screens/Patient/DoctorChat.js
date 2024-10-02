@@ -20,7 +20,6 @@ import firestore from "@react-native-firebase/firestore";
 import RoleContext from "../../context/RoleContext";
 import io from "socket.io-client";
 import { TypingAnimation } from "react-native-typing-animation";
-import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 
 import colors from "../../utils/colors";
 import BackIcon from "../../assets/icons/BackIcon";

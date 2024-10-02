@@ -43,7 +43,7 @@ export default function Booking({ navigation, route }) {
 
   useEffect(() => {
     console.log(doctor);
-    console.log(RAZORPAY_TEST_KEY);
+    // console.log(RAZORPAY_TEST_KEY);
   }, [doctor]);
 
   const updateSlotStatus = async (date, time, type) => {
@@ -103,7 +103,11 @@ export default function Booking({ navigation, route }) {
         createAppointment(data.razorpay_payment_id);
       })
       .catch((error) => {
-        alert(`Error: ${error.code} | ${error.description}`);
+        Toast.show({
+          type: "error",
+          text1: "Payment failed!",
+          text2: error.description,
+        });
       });
   };
 

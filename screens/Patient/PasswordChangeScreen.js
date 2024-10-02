@@ -37,8 +37,8 @@ export default function PasswordChangeScreen({ navigation }) {
 
     try {
       const email = user.email;
-      const credential = auth.EmailAuthProvider.credential(email, curPass); // Create credentials with email and password
-      await user.reauthenticateWithCredential(credential); // Reauthenticate the user with email and password
+      const credential = auth.EmailAuthProvider.credential(email, curPass); 
+      await user.reauthenticateWithCredential(credential); 
       console.log("User reauthenticated successfully");
       await user.updatePassword(newPass);
       console.log("Password updated successfully!");

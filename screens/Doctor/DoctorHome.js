@@ -24,7 +24,6 @@ import colors from "../../utils/colors";
 import LoadingOverlay from "../../components/LoadingOverlay";
 import { useBottomSheet } from "../../context/BottomSheetContext";
 
-
 const tips = [
   "Remember to take breaks between consultations.",
   "Keep your workspace organized for better efficiency.",
@@ -75,9 +74,9 @@ export default function DoctorHome({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [randomTip, setRandomTip] = useState("");
   const [appointments, setAppointments] = useState([]);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const isFocused = useIsFocused();
   const { toggleBottomSheet } = useBottomSheet();
-
 
   const user = auth().currentUser;
 
@@ -179,12 +178,34 @@ export default function DoctorHome({ navigation }) {
       console.error("Error fetching appointments: ", error);
     }
   };
+
+  const fetchUnreadMessages = async () => {
+    try {
+      const snapshot = await firestore()
+        .collection("recentChats")
+        .where("doctorId", "==", user.uid)
+        .where("doctorUnread", ">", 0)
+        .get();
+
+      let totalUnread = 0;
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        totalUnread += data.doctorUnread;
+      });
+
+      setUnreadMessages(totalUnread);
+    } catch (error) {
+      console.error("Error fetching unread messages:", error);
+    }
+  };
+
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * tips.length);
     setRandomTip(tips[randomIndex]);
 
     fetchUserProfile();
     fetchAppointments();
+    fetchUnreadMessages();
   }, []);
 
   useEffect(() => {
@@ -207,6 +228,7 @@ export default function DoctorHome({ navigation }) {
 
     fetchUserProfile();
     fetchAppointments();
+    fetchUnreadMessages();
 
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
 
@@ -295,7 +317,7 @@ export default function DoctorHome({ navigation }) {
               <Text style={styles.topcardSubtitle}>Appointments today</Text>
             </View>
             <View style={styles.topcard}>
-              <Text style={styles.topcardHeading}>0</Text>
+              <Text style={styles.topcardHeading}>{unreadMessages}</Text>
               <Text style={styles.topcardSubtitle}>New messages</Text>
             </View>
           </View>
@@ -409,7 +431,7 @@ export default function DoctorHome({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    height: "auto",
+    height: "100%",
     backgroundColor: colors.darkback,
     // alignItems: "center",
     justifyContent: "center",

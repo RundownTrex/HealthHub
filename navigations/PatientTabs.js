@@ -1,5 +1,5 @@
 import { useEffect, useCallback } from "react";
-import { Image, Alert, Text, StyleSheet, Dimensions } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import messaging from "@react-native-firebase/messaging";
@@ -7,11 +7,7 @@ import firestore from "@react-native-firebase/firestore";
 import auth from "@react-native-firebase/auth";
 import Toast from "react-native-toast-message";
 
-import HomeScreen from "../screens/Patient/HomeScreen";
 import HomeStack from "./HomeStack";
-import Appointment from "../screens/Patient/Appointment";
-import Messages from "../screens/Patient/Messages";
-import Profile from "../screens/Patient/Profile";
 import colors from "../utils/colors";
 import AppointmentStack from "./AppointmentStack";
 import MessagesStack from "./MessagesStack";

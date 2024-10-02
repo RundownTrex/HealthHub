@@ -153,6 +153,7 @@ export default function DoctorProfile({ navigation }) {
           {userPfp !== null ? (
             <Image
               source={{ uri: userPfp }}
+              defaultSource={require("../../assets/avatar.png")}
               style={{
                 width: 90,
                 height: 90,
