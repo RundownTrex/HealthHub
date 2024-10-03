@@ -43,7 +43,7 @@ export default function Booking({ navigation, route }) {
 
   useEffect(() => {
     console.log(doctor);
-    // console.log(RAZORPAY_TEST_KEY);
+    console.log(process.env.RAZORPAY_TEST_KEY);
   }, [doctor]);
 
   const updateSlotStatus = async (date, time, type) => {
@@ -89,7 +89,7 @@ export default function Booking({ navigation, route }) {
       description: "Payment for appointment",
       image: require("../../assets/icon.png"),
       currency: "INR",
-      key: RAZORPAY_TEST_KEY,
+      key: process.env.RAZORPAY_TEST_KEY,
       amount: parseInt(doctor.profileData.consultFees) * 100,
       name: "HealthHub",
       prefill: {

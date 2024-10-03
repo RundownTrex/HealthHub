@@ -108,6 +108,7 @@ cron.schedule("* * * * *", async () => {
   const now = new Date();
   const thirtyMinutesLater = addMinutes(now, 30);
   const tenMinutesLater = addMinutes(now, 10);
+  console.log(thirtyMinutesLater);
 
   try {
     const appointmentsSnapshot = await firestore

@@ -103,9 +103,6 @@ export default function Profile({ navigation }) {
     }
   };
 
-  // useEffect(() => {
-  //   fetchUserProfile();
-  // }, []);
 
   useEffect(() => {
     if (isFocused) {
@@ -131,19 +128,35 @@ export default function Profile({ navigation }) {
     );
   };
 
-  const signOut = () => {
-    auth()
-      .signOut()
-      .then(() => {
+  const signOut = async () => {
+    try {
+  
+      if (user) {
+        await firestore.collection("users").doc(user.uid).update({
+          fcmToken: firestore.FieldValue.delete(),
+        });
+  
+        await auth().signOut();
+  
         setUserRole(null);
-        AsyncStorage.removeItem("userRole");
+        await AsyncStorage.removeItem("userRole");
+  
         Toast.show({
           type: "info",
           text1: "Signing you out",
           text2: "Redirecting...",
         });
-        console.log("Logged out!");
+  
+        console.log("Logged out successfully!");
+      }
+    } catch (error) {
+      console.error("Error during sign out: ", error);
+      Toast.show({
+        type: "error",
+        text1: "Sign Out Error",
+        text2: "Failed to sign out. Please try again.",
       });
+    }
   };
 
   const CustomHeader = () => {

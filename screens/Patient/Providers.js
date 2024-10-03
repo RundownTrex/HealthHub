@@ -285,7 +285,7 @@ export default function Providers({ navigation, route }) {
               renderItem={({ item }) => <DoctorProfileCard doctor={item} />}
               keyExtractor={(item, index) => index.toString()}
               // contentContainerStyle={{ paddingBottom: 80 }}
-              estimatedItemSize={10}
+              estimatedItemSize={50}
             />
           )}
         </View>

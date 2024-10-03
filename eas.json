@@ -12,6 +12,9 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "RAZORPAY_TEST_KEY": "rzp_test_AgM0uJnj7yyQKO"
       }
     },
     "production": {
