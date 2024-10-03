@@ -17,9 +17,9 @@ import Toast from "react-native-toast-message";
 import { useIsFocused } from "@react-navigation/native";
 
 import colors from "../../utils/colors";
-import Button1 from "../../components/Button1";
 import RoleContext from "../../context/RoleContext";
 import { Ionicons } from "@expo/vector-icons";
+import LoadingOverlay from "../../components/LoadingOverlay";
 
 const windowHeight = Dimensions.get("screen").height;
 const menuitems = [
@@ -70,6 +70,7 @@ const menuitems = [
 export default function Profile({ navigation }) {
   const { userRole, setUserRole } = useContext(RoleContext);
   const [pfp, setPfp] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [fetchedName, setFetchedName] = useState("");
   const [userPfp, setUserPfp] = useState(null);
   const isFocused = useIsFocused();
@@ -103,7 +104,6 @@ export default function Profile({ navigation }) {
     }
   };
 
-
   useEffect(() => {
     if (isFocused) {
       console.log(
@@ -129,24 +129,24 @@ export default function Profile({ navigation }) {
   };
 
   const signOut = async () => {
+    setIsLoading(true);
     try {
-  
       if (user) {
-        await firestore.collection("users").doc(user.uid).update({
+        await firestore().collection("users").doc(user.uid).update({
           fcmToken: firestore.FieldValue.delete(),
         });
-  
+
         await auth().signOut();
-  
+
         setUserRole(null);
         await AsyncStorage.removeItem("userRole");
-  
+
         Toast.show({
           type: "info",
           text1: "Signing you out",
           text2: "Redirecting...",
         });
-  
+
         console.log("Logged out successfully!");
       }
     } catch (error) {
@@ -156,6 +156,8 @@ export default function Profile({ navigation }) {
         text1: "Sign Out Error",
         text2: "Failed to sign out. Please try again.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -225,6 +227,7 @@ export default function Profile({ navigation }) {
   return (
     <>
       <StatusBar backgroundColor={colors.lightaccent} />
+      <LoadingOverlay isVisible={isLoading} />
       <View style={styles.container}>
         <View style={styles.custom}>
           <CustomHeader />

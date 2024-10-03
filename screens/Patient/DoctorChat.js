@@ -66,12 +66,6 @@ export default function DoctorChat({ navigation, route }) {
   };
 
   useEffect(() => {
-    // console.log(doctorName);
-    // console.log(patientName);
-    // console.log("Receiver's : ", userpfp);
-    // console.log("Senders's : ", userData.pfpUrl);
-    // console.log(doctorId);
-    // console.log(patientId);
     console.log(LOCAL_IP);
   }, [userData]);
 
@@ -397,13 +391,16 @@ export default function DoctorChat({ navigation, route }) {
             }}
           />
         </View>
-        <View>
+        <View style={{ flex: 1 }}>
+          {/* Flex added to ensure text uses remaining space */}
           <Text
             style={{
               color: colors.whitetext,
               fontWeight: "bold",
               fontSize: 18,
             }}
+            numberOfLines={1} 
+            ellipsizeMode="tail" 
           >
             {userRole === "patient" ? doctorName : patientName}
           </Text>
@@ -420,24 +417,12 @@ export default function DoctorChat({ navigation, route }) {
               />
             </View>
           ) : null}
-          {/* <View style={{ flexDirection: "row" }}>
-            <Text style={{ color: colors.whitetext }}>Typing</Text>
-            <TypingAnimation
-              dotColor="white"
-              dotMargin={5}
-              dotAmplitude={3}
-              dotRadius={2.2}
-              dotX={12}
-              dotY={0}
-            />
-          </View> */}
         </View>
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "flex-end",
-            flex: 1,
           }}
         >
           <Pressable
@@ -460,6 +445,7 @@ export default function DoctorChat({ navigation, route }) {
           </Pressable>
         </View>
       </View>
+
       <View style={styles.container}>
         <GiftedChat
           key={user.uid}

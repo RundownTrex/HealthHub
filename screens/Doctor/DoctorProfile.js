@@ -17,9 +17,9 @@ import Toast from "react-native-toast-message";
 import { useIsFocused } from "@react-navigation/native";
 
 import colors from "../../utils/colors";
-import Button1 from "../../components/Button1";
 import RoleContext from "../../context/RoleContext";
 import { Ionicons } from "@expo/vector-icons";
+import LoadingOverlay from "../../components/LoadingOverlay";
 
 const windowHeight = Dimensions.get("screen").height;
 const menuitems = [
@@ -71,6 +71,7 @@ export default function DoctorProfile({ navigation }) {
   const { userRole, setUserRole } = useContext(RoleContext);
   const [pfp, setPfp] = useState(null);
   const [fetchedName, setFetchedName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [userPfp, setUserPfp] = useState(null);
   const isFocused = useIsFocused();
   const user = auth().currentUser;
@@ -133,8 +134,7 @@ export default function DoctorProfile({ navigation }) {
 
   const signOut = async () => {
     try {
-      const user = auth().currentUser;
-
+      setIsLoading(true);
       if (user) {
         await firestore().collection("users").doc(user.uid).update({
           fcmToken: firestore.FieldValue.delete(),
@@ -160,6 +160,8 @@ export default function DoctorProfile({ navigation }) {
         text1: "Sign Out Error",
         text2: "Failed to sign out. Please try again.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -229,6 +231,7 @@ export default function DoctorProfile({ navigation }) {
   return (
     <>
       <StatusBar backgroundColor={colors.lightaccent} />
+      <LoadingOverlay isVisible={isLoading} />
       <View style={styles.container}>
         <View style={styles.custom}>
           <CustomHeader />

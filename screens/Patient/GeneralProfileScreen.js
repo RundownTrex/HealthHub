@@ -12,8 +12,6 @@ import {
 import auth from "@react-native-firebase/auth";
 import * as ImagePicker from "expo-image-picker";
 import { Divider } from "react-native-paper";
-import { TextInputMask } from "react-native-masked-text";
-import { Dropdown } from "react-native-element-dropdown";
 import firestore from "@react-native-firebase/firestore";
 import storage from "@react-native-firebase/storage";
 import Toast from "react-native-toast-message";
