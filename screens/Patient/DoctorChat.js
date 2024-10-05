@@ -392,7 +392,6 @@ export default function DoctorChat({ navigation, route }) {
           />
         </View>
         <View style={{ flex: 1 }}>
-          {/* Flex added to ensure text uses remaining space */}
           <Text
             style={{
               color: colors.whitetext,

@@ -213,6 +213,7 @@ export default function Providers({ navigation, route }) {
               rippleColor={colors.lightaccent}
               traileringIconColor={colors.lightaccent}
               selectionHandleColor={colors.lightaccent}
+              selectionColor={colors.lightaccent}    
               theme={MD3LightTheme}
               // loading={true}
               ref={searchBarRef}

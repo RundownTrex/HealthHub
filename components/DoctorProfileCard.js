@@ -72,7 +72,12 @@ const DoctorProfileCard = ({ doctor }) => {
           </Text>
         </View>
       </View>
-      <Button mode="contained" style={styles.button} onPress={handleNavigate}>
+      <Button
+        mode="contained"
+        style={styles.button}
+        onPress={handleNavigate}
+        textColor={colors.whitetext}
+      >
         View profile
       </Button>
     </View>

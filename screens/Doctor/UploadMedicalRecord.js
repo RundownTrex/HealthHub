@@ -147,7 +147,7 @@ export default function UploadMedicalRecord({ navigation, route }) {
         .collection("medicalRecords")
         .add(record);
 
-      const API_URL = `http://${LOCAL_IP}:3000/add-medical-record`;
+      const API_URL = `https://healthhub-6799.onrender.com/add-medical-record`;
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
