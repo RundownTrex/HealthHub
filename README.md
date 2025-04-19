@@ -9,25 +9,30 @@ HealthHub is a comprehensive telehealth mobile application designed to connect p
 ## Features
 
 - **User Authentication**:
+
   - Secure login and registration for patients and healthcare providers
   - Profile management with medical history and preferences
 
 - **Appointment Management**:
+
   - Schedule virtual or in-clinic appointments
   - View available time slots for healthcare providers
   - Automatic appointment reminders
   - Appointment cancellation with notifications
 
 - **Healthcare Provider Search**:
+
   - Find doctors by specialty, location, and availability
   - View doctor profiles and credentials
 
 - **Telemedicine**:
+
   - Secure virtual consultations
   - Real-time chat with healthcare providers
   - Typing indicators during chat sessions
 
 - **Medical Records**:
+
   - Medical records management
   - Share medical documents securely
   - Receive notifications when new records are added
@@ -39,6 +44,7 @@ HealthHub is a comprehensive telehealth mobile application designed to connect p
 ## Technologies Used
 
 ### Frontend
+
 - **React Native**: Core framework for mobile app development
 - **Expo**: Development toolchain for React Native
 - **Firebase Authentication**: User authentication system
@@ -47,6 +53,7 @@ HealthHub is a comprehensive telehealth mobile application designed to connect p
 - **React Navigation**: App navigation management
 
 ### Backend
+
 - **Node.js**: Server environment
 - **Express**: Web application framework
 - **Socket.io**: Real-time bidirectional event-based communication
@@ -57,12 +64,14 @@ HealthHub is a comprehensive telehealth mobile application designed to connect p
 ## Installation
 
 ### Prerequisites
+
 - Node.js (v14 or higher)
 - npm or yarn
 - Firebase account
 - Expo CLI (for frontend development)
 
 ### Backend Setup
+
 ```bash
 # Navigate to backend directory
 cd backend
@@ -78,6 +87,7 @@ node server.js
 ```
 
 ### Frontend Setup
+
 ```bash
 # Navigate to frontend directory
 cd frontend
@@ -94,6 +104,7 @@ npx expo run android # or npx expo run ios for iOS
 ```
 
 ## Project Structure
+
 ```
 HealthHub/
 ├── backend/              # Node.js Express server
@@ -119,6 +130,26 @@ HealthHub/
 - **Doctor Notifications**: Alerts for new appointments, cancellations, and chat messages
 - **Medical Records Management**: Notification system when new records are added
 - **Automatic Cleanup**: Daily cron job to remove expired appointment slots
+
+## Screenshots
+
+<table>
+    <tr>
+        <td><img src="/frontend/assets/screenshots/PatientLogin.jpg" width="200" alt="Patient Login"/></td>
+        <td><img src="/frontend/assets/screenshots/PatientHome.jpg" width="200" alt="Patient Home Screen"/></td>
+        <td><img src="/frontend/assets/screenshots/DoctorHome.jpg" width="200" alt="Doctor Home Screen"/></td>
+    </tr>
+    <tr>
+        <td><img src="/frontend/assets/screenshots/VideoCall.jpg" width="200" alt="Video Call"/></td>
+        <td><img src="/frontend/assets/screenshots/Chat.jpg" width="200" alt="Chat Interface"/></td>
+        <td><img src="/frontend/assets/screenshots/DoctorProfile.jpg" width="200" alt="Doctor Profile"/></td>
+    </tr>
+    <tr>
+        <td><img src="/frontend/assets/screenshots/PatientProfile.jpg" width="200" alt="Patient Profile"/></td>
+        <td><img src="/frontend/assets/screenshots/DoctorSearch.jpg" width="200" alt="Doctor Search"/></td>
+        <td><img src="/frontend/assets/screenshots/SlotSchedule.jpg" width="200" alt="Slot Schedule"/></td>
+    </tr>
+</table>
 
 ## Running the App
 
