@@ -153,9 +153,9 @@ HealthHub/
 
 ## Running the App
 
-- **Expo Development Client**: Use `npx expo run` in the frontend directory
+- Use `npx expo run` in the frontend directory
 - **Android/iOS Simulator**: Select the running emulator after running the above command
-- **Physical Device**: Connect via USB or wirelessly using adb
+- **Physical Device**: Connect via USB or wirelessly using adb and run the above command
 - **Backend Server**: Must be running for full functionality (`node server.js`)
 
 ## Contributing
